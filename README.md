@@ -5,6 +5,9 @@
 * [System components](#floppy_disk-system-components)
 * [Quickstart for devs](#arrow_forward-quickstart-for-devs)
 
+### :skull: Warning
+This is prototype-grade software!
+
 ### :question: What is Broflake?
 Broflake is a system for distributed peer-to-peer proxying. The Broflake system includes a 
 browser-based client which enables volunteers to instantly provide proxying services just by 
