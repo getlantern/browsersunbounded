@@ -20,6 +20,7 @@ type tableRouter interface{
   onWorker(msg ipcMsg, workerIdx workerID)
 }
 
+// A baseRouter implements basic router functionality
 type baseRouter struct{
   bus *ipcChan
   table *workerTable
@@ -57,6 +58,7 @@ func (r *baseRouter) onWorker(msg ipcMsg, workerIdx workerID) {
   r.workerHook(r, msg, workerIdx)
 }
 
+// An upstreamRouter parameterizes a baseRouter to send on rx and receive on tx
 type upstreamRouter struct{
   baseRouter
 }
@@ -101,6 +103,7 @@ func (r *upstreamRouter) toWorker(msg ipcMsg, peerIdx workerID) {
   }
 }
 
+// A downstreamRouter parameterizes a baseRouter to send on tx and receive on rx
 type downstreamRouter struct{
   baseRouter
 }
@@ -156,13 +159,11 @@ func (r *downstreamRouter) toAllWorkers(msg ipcMsg) {
 // will route all N consumers through a single producer until that producer fails, at which point
 // it will reroute all N consumers to the next available producer. This routing strategy is 
 // certainly inefficient, and it also provides no redundancy or fault recovery wrt end-to-end 
-// connection state. That is, when a proxied TCP stream fails over to a new producer mid-request,
-// it's likely to appear as garbage to its destination host, and we rely on endpoints to send RSTs
-// appropriately to un-bork things. A producerSerialRouter announces a non-nil path assertion when 
-// it has > 0 connected producers. TODO: We have intentionally ignored the added complexity of
-// evaluating path assertions as part of the routing strategy, since we hypothesize that path
-// mismatches (ie, traffic destined for an endpoint which a producer cannot reach) will be fixed
-// for free by redundantly sending all N consumers' traffic through all M producers in a multipath
+// connection state. A producerSerialRouter announces a non-nil path assertion when it has > 0 
+// connected producers. TODO: We have intentionally ignored the added complexity of evaluating path 
+// assertions as part of the routing strategy, since we hypothesize that path mismatches (ie, 
+// traffic destined for an endpoint which a producer cannot reach) will be fixed for free by 
+// redundantly sending all N consumers' traffic through all M producers in a multipath
 // configuration. The multipath router to provide this functionality is forthcoming after the MVP.
 // Despite its obvious inefficiencies, we hypothesize that the producerSerialRouter should work 
 // fine for the MVP, since desktop peers do not share their connectivity - ie, any peer that 
@@ -252,19 +253,18 @@ func (r *producerSerialRouter) backRoute(wid workerID) (bool, workerID) {
     return false, NoRoute
   }
   
-  // TODO: The below line is the hack that enables us to ride TCP on the wire without a multiplexing
-  // tunneling protocol during the MVP phase. Why this works: the producerSerialRouter is only
-  // used in the MVP-phase desktop client, and during MVP phase it's only used in conjunction with a 
-  // consumerRouter that manages a table with exactly 1 worker (the producerUserStream that manages
-  // the desktop user's browser stream). Since a producerSerialRouter maps many consumers to a 
-  // single producer, it's impossible to backroute a packet from producer -> consumer without
-  // piggybacking some kind of consumer ID data with the packet. But since we know we only have
-  // a single consumer right now, we can just route all returning streams to them. That solves demux
-  // in the client, but we also rely on two other constraints to make this work: during MVP, there
-  // is no multi-hop routing (and thus no downstream multiplexing), and the "free" peers on our
-  // network implement a producerPoolRouter which guarantees a 1:1 mapping from webRTC datachannel
-  // to WebSocket to the egress server.
-  fmt.Printf("******\nBACKROUTE: %v\n******\n", consumers[0])
+  // TODO: this line is the hack that enables us to route packets without a real mux/demux protocol
+  // during the MVP phase. Why this works: the producerSerialRouter is only used in the MVP-phase
+  // desktop client, and during MVP phase it's only used in conjunction with a consumerRouter that
+  // manages a table consisting of exactly 1 worker (the producerUserStream). Since a
+  // producerSerialRouter maps many consumers to a single producer, it would be impossible to
+  // round trip a packet from producer -> consumer without piggybacking some kind of consumer ID
+  // information on the packet. But since we know we only have a single consumer right now, we can
+  // just route all returning streams to him. That solves demux in the client, but we also rely on
+  // two other constraints to make this work: during MVP phase, there is no multi-hop routing (and
+  // thus no downstream multiplexing), and the "free" peers on our network implement a 
+  // producerPoolRouter which guarantees a 1:1 mapping between WebRTC datachannel and WebSocket
+  // connection to the egress server
   return true, consumers[0]
 }
 
@@ -279,8 +279,6 @@ func (psr *producerSerialRouter) busHook(r *baseRouter, msg ipcMsg) {
 }
 
 func (psr *producerSerialRouter) workerHook(r *baseRouter, msg ipcMsg, workerIdx workerID) {
-  // fmt.Printf("producerSerialRouter heard a msg from workerFSM %v: %v\n", workerIdx, msg) 
-  
   switch msg.ipcType {
   case PathAssertionIPC:
     psr.onPathAssertion(msg.data.(common.PathAssertion), workerIdx)
@@ -364,8 +362,6 @@ func (r *producerPoolRouter) backRoute(wid workerID) (bool, workerID) {
 }
 
 func (ppr *producerPoolRouter) busHook(r *baseRouter, msg ipcMsg) {
-  // fmt.Printf("producerPoolRouter heard a bus msg: %v\n", msg)
-  
   switch msg.ipcType {
   case ConnectivityCheckIPC:
     ppr.toBus(ipcMsg{ipcType: PathAssertionIPC, data: ppr.globalPathAssertion(), wid: msg.wid})
@@ -380,8 +376,6 @@ func (ppr *producerPoolRouter) busHook(r *baseRouter, msg ipcMsg) {
 }
 
 func (ppr *producerPoolRouter) workerHook(r *baseRouter, msg ipcMsg, workerIdx workerID) {
-  // fmt.Printf("producerPoolRouter heard a msg from workerFSM %v: %v\n", workerIdx, msg) 
-  
   switch msg.ipcType {
   case PathAssertionIPC:
     ppr.onPathAssertion(msg.data.(common.PathAssertion), workerIdx) 
@@ -399,16 +393,6 @@ func (ppr *producerPoolRouter) workerHook(r *baseRouter, msg ipcMsg, workerIdx w
     ppr.toBus(msg)
   }
 }
-
-// TODO: Not strictly necessary for the MVP, but we need to write the producerJITRouter as an
-// optimization. The producerJITRouter, like the producerPoolRouter, maps consumers 1:1 to 
-// producers, so it's really only suitable for managing egress consumers. But unlike the 
-// producerPoolRouter, it creates egress connections "just in time," and tears them down when
-// the associated consumer has departed. This will require adoption of a new special path 
-// assertion character, $, which indicates that the producer worker will create a circuit
-// "on-demand" whenever the consumer indicates that it wants one. It's not yet clear how the 
-// consumer worker should signal to the producer router when it wants and does not want upstream
-// connectivity; perhaps by parameterizing a ConnectivityCheckIPC message?
 
 // A consumerRouter is the standard downstream tableRouter. Since workers in the downstream 
 // router(s) handle ingress traffic, the consumerRouter just muxes and demuxes to/from the bus
@@ -434,8 +418,6 @@ func newConsumerRouter(bus *ipcChan, table *workerTable) *consumerRouter {
 }
 
 func (cr *consumerRouter) busHook(r *baseRouter, msg ipcMsg) {
-  // fmt.Printf("consumerRouter heard a bus msg: %v\n", msg)
-  
   // TODO: we currently forward all msg types without any filter... maybe it's worth revisiting
   switch msg.wid {
   case BroadcastRoute:
@@ -446,7 +428,7 @@ func (cr *consumerRouter) busHook(r *baseRouter, msg ipcMsg) {
 }
 
 func (cr *consumerRouter) workerHook(r *baseRouter, msg ipcMsg, workerIdx workerID) {
-  // fmt.Printf("consumerRouter heard a msg from workerFSM %v: %v\n", workerIdx, msg) 
+  // Do nothing
 }
 
 // workerTable ts the structure we use to represent the producer and consumer tables
@@ -461,6 +443,7 @@ func newWorkerTable(list []workerFSM) *workerTable {
   pt := workerTable{slot: list, size: len(list)}
   return &pt
 }
+
 // Start each of this workerTable's workerFSMs on separate goroutines
 func (t workerTable) start() {
   for i := range t.slot {
