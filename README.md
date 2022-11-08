@@ -73,4 +73,5 @@ finds your desktop client, signals, and establishes several WebRTC connections. 
 and you'll see all the things going on.
 
 13. Start **Mozilla Firefox**. Use the browser as you normally would, visiting all your favorite
-websites. Your traffic is proxied in a chain: browser -> desktop client -> web widget -> egress server. 
+websites. Your traffic is proxied in a chain: Firefox -> local HTTP proxy -> desktop client -> 
+webRTC -> web widget executing in Chrome -> WebSocket -> egress server -> remote HTTP proxy -> the internet. 
