@@ -66,7 +66,7 @@ leading "stun:".
 
 10. Start the egress server: `cd egress && go run egress.go`
 
-11. Start the desktop client: `cd dist/bin && ./desktop`
+11. Start the desktop client: `cd client/dist/bin && ./desktop`
 
 12. Start **Google Chrome**. Navigate to `localhost:9000`. The web widget loads, accesses Freddie, 
 finds your desktop client, signals, and establishes several WebRTC connections. Pop open the console
