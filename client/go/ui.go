@@ -2,56 +2,56 @@
 package main
 
 import (
-  "sync/atomic"
-  "time"
+	"sync/atomic"
+	"time"
 
-  "github.com/getlantern/broflake/common"
+	"github.com/getlantern/broflake/common"
 )
 
-type UI interface{
-  OnDownstreamChunk(size int, workerIdx int)
+type UI interface {
+	OnDownstreamChunk(size int, workerIdx int)
 
-  OnDownstreamThroughput(bytesPerSec int)
+	OnDownstreamThroughput(bytesPerSec int)
 
-  OnConsumerConnectionChange(newState int, workerIdx int, loc string)
+	OnConsumerConnectionChange(newState int, workerIdx int, loc string)
 }
 
 func downstreamUIHandler(ui UIImpl) func(msg ipcMsg) {
-  var bytesPerSec int64
-  var tick uint
-  tickMs := time.Duration(1000 / uiRefreshHz)
+	var bytesPerSec int64
+	var tick uint
+	tickMs := time.Duration(1000 / uiRefreshHz)
 
-  go func() {
-    for {
-      <-time.After(tickMs * time.Millisecond)
-      ui.OnDownstreamThroughput(int(atomic.LoadInt64(&bytesPerSec)))
-      if tick % uiRefreshHz == 0 {
-        atomic.SwapInt64(&bytesPerSec, 0)
-      }
-      tick++
-    }
-  }()
+	go func() {
+		for {
+			<-time.After(tickMs * time.Millisecond)
+			ui.OnDownstreamThroughput(int(atomic.LoadInt64(&bytesPerSec)))
+			if tick%uiRefreshHz == 0 {
+				atomic.SwapInt64(&bytesPerSec, 0)
+			}
+			tick++
+		}
+	}()
 
-  return func(msg ipcMsg) {
-    switch msg.ipcType {
-    case ChunkIPC:
-      size := len(msg.data.([]byte))
-      atomic.AddInt64(&bytesPerSec, int64(size))
-      ui.OnDownstreamChunk(size, int(msg.wid))
-    }
-  }
+	return func(msg ipcMsg) {
+		switch msg.ipcType {
+		case ChunkIPC:
+			size := len(msg.data.([]byte))
+			atomic.AddInt64(&bytesPerSec, int64(size))
+			ui.OnDownstreamChunk(size, int(msg.wid))
+		}
+	}
 }
 
 func upstreamUIHandler(ui UIImpl) func(msg ipcMsg) {
-  return func(msg ipcMsg) {
-    switch msg.ipcType {
-    case ConsumerInfoIPC:
-      ci := msg.data.(common.ConsumerInfo)
-      newState := 1
-      if ci.Nil() {
-        newState = -1
-      }
-      ui.OnConsumerConnectionChange(newState, int(msg.wid), ci.Location) 
-    }
-  }
+	return func(msg ipcMsg) {
+		switch msg.ipcType {
+		case ConsumerInfoIPC:
+			ci := msg.data.(common.ConsumerInfo)
+			newState := 1
+			if ci.Nil() {
+				newState = -1
+			}
+			ui.OnConsumerConnectionChange(newState, int(msg.wid), ci.Location)
+		}
+	}
 }
