@@ -1,0 +1,4 @@
+*.*.swp
+client/dist/bin/*
+client/dist/public/bindings.js
+client/dist/public/*.wasm
