@@ -80,6 +80,7 @@ func newEgressConsumerWebSocket() *workerFSM {
 					_, b, err := c.Read(context.Background())
 					if err != nil {
 						readStatus <- err
+						return
 					}
 
 					// Wrap the chunk and send it on to the router
