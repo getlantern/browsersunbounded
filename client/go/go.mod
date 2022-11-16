@@ -17,6 +17,8 @@ require (
 	nhooyr.io/websocket v1.8.7
 )
 
+require github.com/stretchr/testify v1.8.0
+
 require (
 	crawshaw.io/sqlite v0.3.3-0.20210127221821-98b1f83c5508 // indirect
 	github.com/RoaringBitmap/roaring v1.2.1 // indirect
@@ -130,7 +132,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/refraction-networking/utls v1.0.0 // indirect
 	github.com/rs/dnscache v0.0.0-20211102005908-e0241e321417 // indirect
-	github.com/stretchr/testify v1.8.0 // indirect
 	github.com/tidwall/btree v1.3.1 // indirect
 	github.com/tkuchiki/go-timezone v0.2.0 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect

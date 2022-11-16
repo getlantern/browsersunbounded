@@ -69,6 +69,7 @@ leading "stun:".
 10. Start the egress server: `cd egress && go run egress.go`
 
 11. Start the desktop client: `cd client/dist/bin && ./desktop`
+  - See "Desktop Client Usage" section for run options
 
 12. To start the wasm client in "headless" mode (no [embed ui](#nail_careart-ui-quickstart-for-devs)): Start **Google Chrome**. Navigate to `localhost:9000`. The web widget loads, accesses Freddie, finds your desktop client, signals, and establishes several WebRTC connections. Pop open the console
 and you'll see all the things going on. Alternatively, to start the wasm client wrapped in the embed ui, follow the [UI quickstart](#nail_careart-ui-quickstart-for-devs).
@@ -107,6 +108,17 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 7. To deploy to Github pages: `yarn deploy`
 
 8. Coming soon to a repo near you: `yarn test`
+
+# Desktop Client Usage
+
+Build the desktop client with `cd client && ./build.sh desktop`.
+
+Run it with `cd client/dist/bin && ./desktop` and the following environment variables:
+
+- `ENABLE_DOMAIN_FRONTING`
+  - Values: `true` or `false`
+  - Determines whether to domain-front requests to Freddie
+  - True by default
 
 # Gotchas
 

@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"net/url"
 	"strconv"
 	"time"
@@ -134,8 +133,7 @@ func newProducerWebRTC() *workerFSM {
 			g := common.GenesisMsg{PathAssertion: pa}.ToJSON()
 
 			// Signal the genesis message
-			// TODO: use a custom http.Client and control our TCP connections
-			res, err := http.PostForm(
+			res, err := defaultHTTPClient.PostForm(
 				discoverySrv+signalEndpoint,
 				url.Values{"data": {string(g)}, "send-to": {genesisAddr}, "type": {strconv.Itoa(int(common.SignalMsgGenesis))}},
 			)
@@ -224,8 +222,7 @@ func newProducerWebRTC() *workerFSM {
 			}
 
 			// Signal our answer
-			// TODO: use a custom http.Client and control our TCP connections
-			res, err := http.PostForm(
+			res, err := defaultHTTPClient.PostForm(
 				discoverySrv+signalEndpoint,
 				url.Values{"data": {string(a)}, "send-to": {replyTo}, "type": {strconv.Itoa(int(common.SignalMsgAnswer))}},
 			)
