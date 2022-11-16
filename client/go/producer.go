@@ -24,14 +24,6 @@ func newProducerWebRTC() *workerFSM {
 			// (no input data)
 			fmt.Printf("Producer state 0, constructing RTCPeerConnection...\n")
 
-			// We're resetting this slot, so announce the nil connectivity situation
-			select {
-			case com.tx <- ipcMsg{ipcType: ConsumerInfoIPC, data: common.ConsumerInfo{}}:
-				// Do nothing, message sent
-			default:
-				panic("Producer buffer overflow")
-			}
-
 			// TODO: STUN servers will eventually be provided in a more sophisticated way
 			config := webrtc.Configuration{
 				ICEServers: []webrtc.ICEServer{
@@ -317,14 +309,14 @@ func newProducerWebRTC() *workerFSM {
 				}
 			})
 
+		proxyloop:
 			for {
 				select {
 				// Handle connection failure
 				case s := <-connectionChange:
 					if s == webrtc.PeerConnectionStateFailed || s == webrtc.PeerConnectionStateDisconnected {
 						fmt.Printf("Connection failure, resetting!\n")
-						peerConnection.Close() // TODO: there's an err we should handle here
-						return 0, []interface{}{}
+						break proxyloop
 					}
 				// Handle messages from the router
 				case msg := <-com.rx:
@@ -332,18 +324,25 @@ func newProducerWebRTC() *workerFSM {
 					case ChunkIPC:
 						if err := d.Send(msg.data.([]byte)); err != nil {
 							fmt.Printf("Error sending to datachannel, resetting!\n")
-							peerConnection.Close() // TODO: there's an err we should handle here
-							return 0, []interface{}{}
+							break proxyloop
 						}
 					}
 				// Since we're putting this state into an infinite loop, explicitly handle cancellation
 				case <-ctx.Done():
-					peerConnection.Close() // TODO: there's an err we should handle here
-					return 0, []interface{}{}
+					break proxyloop
 				}
 			}
 
-			// This code path should be unreachable
+			peerConnection.Close() // TODO: there's an err we should handle here
+
+			// We've reset this slot, so announce the nil connectivity situation
+			select {
+			case com.tx <- ipcMsg{ipcType: ConsumerInfoIPC, data: common.ConsumerInfo{}}:
+				// Do nothing, message sent
+			default:
+				panic("Producer buffer overflow")
+			}
+
 			return 0, []interface{}{}
 		}),
 	})
