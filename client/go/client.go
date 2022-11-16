@@ -34,14 +34,14 @@ var (
 // manage their worker tables. The notion of client type is decoupled from build target -- that is,
 // both widget and desktop can be compiled to native binary AND wasm.
 
-func main() {
-	ui := UIImpl{}
-	bus := newIpcObserver(busBufferSz, upstreamUIHandler(ui), downstreamUIHandler(ui))
-	var cTable *workerTable
-	var cRouter tableRouter
-	var pTable *workerTable
-	var pRouter tableRouter
+var ui = UIImpl{}
+var bus = newIpcObserver(busBufferSz, upstreamUIHandler(ui), downstreamUIHandler(ui))
+var cTable *workerTable
+var cRouter tableRouter
+var pTable *workerTable
+var pRouter tableRouter
 
+func main() {
 	switch clientType {
 	case "desktop":
 		// Desktop peers don't share connectivity for the MVP, so the consumer table only gets one
@@ -56,6 +56,11 @@ func main() {
 		}
 		pTable = newWorkerTable(pfsms)
 		pRouter = newProducerSerialRouter(bus.upstream, pTable, cTable.size)
+
+		// TODO nelson 11/16/22: there will eventually be some driver code which lives in or near
+		// Flashlight (and also prob a UI mechanism) to start and stop the desktop client... until
+		// then, we bring it to life right here:
+		start()
 	case "widget":
 		// Widget peers share connectivity over WebRTC
 		var cfsms []workerFSM
@@ -80,7 +85,15 @@ func main() {
 	bus.start()
 	cRouter.init()
 	pRouter.init()
+	select {}
+}
+
+func start() {
 	cTable.start()
 	pTable.start()
-	select {}
+}
+
+func stop() {
+	cTable.stop()
+	pTable.stop()
 }

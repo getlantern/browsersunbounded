@@ -19,3 +19,11 @@ func (ui *UIImpl) OnDownstreamThroughput(bytesPerSec int) {
 func (ui *UIImpl) OnConsumerConnectionChange(newState int, workerIdx int, loc string) {
 	// TODO: do something?
 }
+
+func (ui *UIImpl) Start() {
+	start()
+}
+
+func (ui *UIImpl) Stop() {
+	stop()
+}

@@ -14,6 +14,10 @@ type UI interface {
 	OnDownstreamThroughput(bytesPerSec int)
 
 	OnConsumerConnectionChange(newState int, workerIdx int, loc string)
+
+	Start()
+
+	Stop()
 }
 
 func downstreamUIHandler(ui UIImpl) func(msg ipcMsg) {

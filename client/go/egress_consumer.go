@@ -15,7 +15,7 @@ import (
 
 func newEgressConsumerWebSocket() *workerFSM {
 	return newWorkerFSM([]FSMstate{
-		FSMstate(func(com *ipcChan, input []interface{}) (int, []interface{}) {
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 0
 			// (no input data)
 			fmt.Printf("Egress consumer state 0, opening WebSocket connection...\n")
@@ -53,7 +53,7 @@ func newEgressConsumerWebSocket() *workerFSM {
 
 			return 1, []interface{}{c}
 		}),
-		FSMstate(func(com *ipcChan, input []interface{}) (int, []interface{}) {
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 1
 			// input[0]: *websocket.Conn
 			c := input[0].(*websocket.Conn)
@@ -69,15 +69,11 @@ func newEgressConsumerWebSocket() *workerFSM {
 				panic("Egress consumer buffer overflow!")
 			}
 
-			// Seems to be 3 strategies for detecting connection failure: catch the error on calls
-			// to Read and Write, try pinging the peer every so often, or somehow detect when the
-			// underlying TCP connection gets borked. It seems like detecting error on Read works well?
-
 			// WebSocket read loop:
 			readStatus := make(chan error)
-			go func() {
+			go func(ctx context.Context) {
 				for {
-					_, b, err := c.Read(context.Background())
+					_, b, err := c.Read(ctx)
 					if err != nil {
 						readStatus <- err
 						return
@@ -91,26 +87,37 @@ func newEgressConsumerWebSocket() *workerFSM {
 						panic("Egress consumer buffer overflow!")
 					}
 				}
-			}()
+			}(ctx)
 
 			// Main loop:
 			// 1. handle chunks from the bus, write them to the WebSocket, detect and handle write errors
-			// 2. listen for errors from the read process and handle them
+			// 2. listen for errors from the read goroutine and handle them
+
+			// Upon read and write errors, we contradictorily close the websocket with StatusNormalClosure.
+			// This is to ensure that the egress server detects closed connections while respecting a
+			// quirk in our WS library's net.Conn wrapper: https://pkg.go.dev/nhooyr.io/websocket#NetConn
 			for {
 				select {
 				case msg := <-com.rx:
-					// write the chunk to the websocket, detect and handle error
+					// Write the chunk to the websocket, detect and handle error
 					// TODO: is it safe to assume the message is a chunk type? Do we trust the router?
 					err := c.Write(context.Background(), websocket.MessageBinary, msg.data.([]byte))
 					if err != nil {
-						c.Close(websocket.StatusAbnormalClosure, err.Error())
+						c.Close(websocket.StatusNormalClosure, err.Error())
 						fmt.Printf("Egress consumer WebSocket write error: %v\n", err)
 						return 0, []interface{}{}
 					}
 				case err := <-readStatus:
-					c.Close(websocket.StatusAbnormalClosure, err.Error())
+					c.Close(websocket.StatusNormalClosure, err.Error())
 					fmt.Printf("Egress consumer WebSocket read error: %v\n", err)
 					return 0, []interface{}{}
+
+					// Ordinarily it would be incorrect to put a worker into an infinite loop without including
+					// a case to listen for context cancellation, but here we handle context cancellation in a
+					// non-explicit way. Since the worker context bounds the call to websocket.Read, worker
+					// context cancellation results in a Read error, which we trap to stop the child read
+					// goroutine, close the websocket, and return from this state, at which point the worker
+					// stop logic in protocol.go takes over and kills this goroutine.
 				}
 			}
 

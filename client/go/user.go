@@ -28,7 +28,7 @@ import (
 
 func newProducerUserStream(proxyAddr string) *workerFSM {
 	return newWorkerFSM([]FSMstate{
-		FSMstate(func(com *ipcChan, input []interface{}) (int, []interface{}) {
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 0
 			// (no input data)
 			fmt.Printf("User stream producer state 0...\n")
@@ -94,7 +94,7 @@ func newProducerUserStream(proxyAddr string) *workerFSM {
 
 			return 1, []interface{}{proxy, downWrite}
 		}),
-		FSMstate(func(com *ipcChan, input []interface{}) (int, []interface{}) {
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 1
 			// input[0]: *goproxy.ProxyHttpServer
 			// input[1]: *io.PipeWriter

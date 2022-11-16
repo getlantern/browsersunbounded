@@ -5,6 +5,10 @@
 
 var wasmClient = new EventTarget(); // must use 'var' to put wasmClient in the global scope
 
+// These two stubs are only here for code comprehension, Wasm World overwrites them during init
+wasmClient.start = () => {}
+wasmClient.stop = () => {}
+
 wasmClient._fire = (eventName, detail) => {
   wasmClient.dispatchEvent(new CustomEvent(eventName, {detail: detail}))
 }

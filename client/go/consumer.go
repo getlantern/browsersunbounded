@@ -6,6 +6,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -20,7 +21,7 @@ import (
 
 func newConsumerWebRTC() *workerFSM {
 	return newWorkerFSM([]FSMstate{
-		FSMstate(func(com *ipcChan, input []interface{}) (int, []interface{}) {
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 0
 			// (no input data)
 			fmt.Printf("Consumer state 0, constructing RTCPeerConnection...\n")
@@ -77,7 +78,7 @@ func newConsumerWebRTC() *workerFSM {
 
 			return 1, []interface{}{peerConnection, connectionEstablished, connectionChange}
 		}),
-		FSMstate(func(com *ipcChan, input []interface{}) (int, []interface{}) {
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 1
 			// input[0]: *webrtc.PeerConnection
 			// input[1]: chan *webrtc.DataChannel
@@ -120,7 +121,7 @@ func newConsumerWebRTC() *workerFSM {
 			// We listened as long as we could, but we never heard a suitable genesis message
 			return 1, []interface{}{peerConnection, connectionEstablished, connectionChange}
 		}),
-		FSMstate(func(com *ipcChan, input []interface{}) (int, []interface{}) {
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 2
 			// input[0]: *webrtc.PeerConnection
 			// input[1]: string (reply-to UUID)
@@ -213,7 +214,7 @@ func newConsumerWebRTC() *workerFSM {
 
 			return 3, []interface{}{peerConnection, replyTo, candidates, connectionEstablished, connectionChange}
 		}),
-		FSMstate(func(com *ipcChan, input []interface{}) (int, []interface{}) {
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 3
 			// input[0]: *webrtc.PeerConnection
 			// input[1]: string (replyTo)
@@ -262,7 +263,7 @@ func newConsumerWebRTC() *workerFSM {
 			peerConnection.Close() // TODO: there's an err we should handle here
 			return 0, []interface{}{}
 		}),
-		FSMstate(func(com *ipcChan, input []interface{}) (int, []interface{}) {
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 4
 			// input[0]: *webrtc.PeerConnection
 			// input[1]: chan *webrtc.DataChannel
@@ -283,7 +284,7 @@ func newConsumerWebRTC() *workerFSM {
 				return 0, []interface{}{}
 			}
 		}),
-		FSMstate(func(com *ipcChan, input []interface{}) (int, []interface{}) {
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 5
 			// input[0]: *webrtc.PeerConnection
 			// input[1]: *webrtc.DataChannel
@@ -315,14 +316,14 @@ func newConsumerWebRTC() *workerFSM {
 
 			for {
 				select {
-				// Detect connection failure
+				// Handle connection failure
 				case s := <-connectionChange:
 					if s == webrtc.PeerConnectionStateFailed || s == webrtc.PeerConnectionStateDisconnected {
 						fmt.Printf("Connection failure, resetting!\n")
 						peerConnection.Close() // TODO: there's an err we should handle here
 						return 0, []interface{}{}
 					}
-				// Handle messages from the router:
+				// Handle messages from the router
 				case msg := <-com.rx:
 					switch msg.ipcType {
 					case ChunkIPC:
@@ -332,6 +333,10 @@ func newConsumerWebRTC() *workerFSM {
 							return 0, []interface{}{}
 						}
 					}
+					// Since we're putting this state into an infinite loop, explicitly handle cancellation
+				case <-ctx.Done():
+					peerConnection.Close() // TODO: there's an err we should handle here
+					return 0, []interface{}{}
 				}
 			}
 

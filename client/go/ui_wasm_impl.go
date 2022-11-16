@@ -8,6 +8,18 @@ import (
 	"syscall/js"
 )
 
+func init() {
+	js.Global().Get("wasmClient").Set(
+		"start",
+		js.FuncOf(func(this js.Value, args []js.Value) interface{} { ui.Start(); return nil }),
+	)
+
+	js.Global().Get("wasmClient").Set(
+		"stop",
+		js.FuncOf(func(this js.Value, args []js.Value) interface{} { ui.Stop(); return nil }),
+	)
+}
+
 type UIImpl struct {
 	UI
 }
@@ -22,4 +34,12 @@ func (ui *UIImpl) OnDownstreamThroughput(bytesPerSec int) {
 
 func (ui *UIImpl) OnConsumerConnectionChange(newState int, workerIdx int, loc string) {
 	js.Global().Get("wasmClient").Call("_onConsumerConnectionChange", newState, workerIdx, loc)
+}
+
+func (ui *UIImpl) Start() {
+	start()
+}
+
+func (ui *UIImpl) Stop() {
+	stop()
 }

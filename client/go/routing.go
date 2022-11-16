@@ -444,9 +444,16 @@ func newWorkerTable(list []workerFSM) *workerTable {
 	return &pt
 }
 
-// Start each of this workerTable's workerFSMs on separate goroutines
+// Start all of this table's workers
 func (t workerTable) start() {
 	for i := range t.slot {
-		go t.slot[i].start()
+		t.slot[i].start()
+	}
+}
+
+// Stop all of this table's workers
+func (t workerTable) stop() {
+	for i := range t.slot {
+		t.slot[i].stop()
 	}
 }

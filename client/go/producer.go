@@ -4,6 +4,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -18,7 +19,7 @@ import (
 
 func newProducerWebRTC() *workerFSM {
 	return newWorkerFSM([]FSMstate{
-		FSMstate(func(com *ipcChan, input []interface{}) (int, []interface{}) {
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 0
 			// (no input data)
 			fmt.Printf("Producer state 0, constructing RTCPeerConnection...\n")
@@ -75,7 +76,7 @@ func newProducerWebRTC() *workerFSM {
 
 			return 1, []interface{}{peerConnection, connectionEstablished, connectionChange}
 		}),
-		FSMstate(func(com *ipcChan, input []interface{}) (int, []interface{}) {
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 1
 			// input[0]: *webrtc.PeerConnection
 			// input[1]: chan *webrtc.DataChannel
@@ -97,14 +98,20 @@ func newProducerWebRTC() *workerFSM {
 			}
 
 			for {
-				msg := <-com.rx
-				if msg.ipcType == PathAssertionIPC && !msg.data.(common.PathAssertion).Nil() {
-					pa := msg.data.(common.PathAssertion)
-					return 2, []interface{}{peerConnection, pa, connectionEstablished, connectionChange}
+				select {
+				// Handle inbound IPC messages, wait for a non-nil path assertion
+				case msg := <-com.rx:
+					if msg.ipcType == PathAssertionIPC && !msg.data.(common.PathAssertion).Nil() {
+						pa := msg.data.(common.PathAssertion)
+						return 2, []interface{}{peerConnection, pa, connectionEstablished, connectionChange}
+					}
+				// Since we're putting this state into an infinite loop, explicitly handle cancellation
+				case <-ctx.Done():
+					return 0, []interface{}{}
 				}
 			}
 		}),
-		FSMstate(func(com *ipcChan, input []interface{}) (int, []interface{}) {
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 2
 			// input[0]: *webrtc.PeerConnection
 			// input[1]: common.PathAssertion
@@ -153,7 +160,7 @@ func newProducerWebRTC() *workerFSM {
 			// TODO: here we assume we've received a valid offer SDP, we also need to handle invalid case
 			return 3, []interface{}{peerConnection, replyTo, offer, connectionEstablished, connectionChange}
 		}),
-		FSMstate(func(com *ipcChan, input []interface{}) (int, []interface{}) {
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 3
 			// input[0]: *webrtc.PeerConnection
 			// input[1]: string (replyTo)
@@ -259,7 +266,7 @@ func newProducerWebRTC() *workerFSM {
 
 			return 4, []interface{}{peerConnection, connectionEstablished, connectionChange}
 		}),
-		FSMstate(func(com *ipcChan, input []interface{}) (int, []interface{}) {
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 4
 			// input[0]: *webrtc.PeerConnection
 			// input[1]: chan *webrtc.DataChannel
@@ -280,7 +287,7 @@ func newProducerWebRTC() *workerFSM {
 				return 0, []interface{}{}
 			}
 		}),
-		FSMstate(func(com *ipcChan, input []interface{}) (int, []interface{}) {
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 5
 			// input[0]: *webrtc.PeerConnection
 			// input[1]: *webrtc.DataChannel
@@ -312,14 +319,14 @@ func newProducerWebRTC() *workerFSM {
 
 			for {
 				select {
-				// Detect connection failure
+				// Handle connection failure
 				case s := <-connectionChange:
 					if s == webrtc.PeerConnectionStateFailed || s == webrtc.PeerConnectionStateDisconnected {
 						fmt.Printf("Connection failure, resetting!\n")
 						peerConnection.Close() // TODO: there's an err we should handle here
 						return 0, []interface{}{}
 					}
-				// Handle messages from the router:
+				// Handle messages from the router
 				case msg := <-com.rx:
 					switch msg.ipcType {
 					case ChunkIPC:
@@ -329,6 +336,10 @@ func newProducerWebRTC() *workerFSM {
 							return 0, []interface{}{}
 						}
 					}
+				// Since we're putting this state into an infinite loop, explicitly handle cancellation
+				case <-ctx.Done():
+					peerConnection.Close() // TODO: there's an err we should handle here
+					return 0, []interface{}{}
 				}
 			}
 
