@@ -76,7 +76,7 @@ and you'll see all the things going on. To start the wasm client with the embed 
 websites. Your traffic is proxied in a chain: Firefox -> local HTTP proxy -> desktop client -> 
 webRTC -> web widget executing in Chrome -> WebSocket -> egress server -> remote HTTP proxy -> the internet. 
 
-### :arrow_forward: UI Quickstart for devs
+### 💅🎨 UI quickstart for devs
 
 The UI is bootstrapped with [Create React App](https://github.com/facebook/create-react-app). Then "re-wired" to build one single js bundle using [rewire](https://www.npmjs.com/package/rewire). The React app will bind to a custom `lantern-p2p-proxy` DOM el and render based on settings passed to the `data-features` attribute via stringified JSON:
 
