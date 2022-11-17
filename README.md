@@ -33,6 +33,7 @@ perfectly straightforward.
 |common |shared libraries                                                               |
 |egress |egress server                                                                  |
 |freddie|discovery server + signaling & matchmaking logic                               |
+|ui     |embeddable web user interface                                                  |
 
 
 ### :arrow_forward: Quickstart for devs
