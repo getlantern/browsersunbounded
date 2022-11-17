@@ -4,6 +4,7 @@
 * [What is Broflake?](#question-what-is-broflake)
 * [System components](#floppy_disk-system-components)
 * [Quickstart for devs](#arrow_forward-quickstart-for-devs)
+* [UI quickstart for devs](#nail_careart-ui-quickstart-for-devs)
 
 ### :skull: Warning
 This is prototype-grade software!
