@@ -76,7 +76,7 @@ and you'll see all the things going on. To start the wasm client with the embed 
 websites. Your traffic is proxied in a chain: Firefox -> local HTTP proxy -> desktop client -> 
 webRTC -> web widget executing in Chrome -> WebSocket -> egress server -> remote HTTP proxy -> the internet. 
 
-### 💅🎨 UI quickstart for devs
+### :nail_care::art: UI quickstart for devs
 
 The UI is bootstrapped with [Create React App](https://github.com/facebook/create-react-app). Then "re-wired" to build one single js bundle using [rewire](https://www.npmjs.com/package/rewire). The React app will bind to a custom `lantern-p2p-proxy` DOM el and render based on settings passed to the `data-features` attribute via stringified JSON:
 
@@ -90,7 +90,7 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 1. Work from the ui dir: `cd ui`
 
 2. Configure your .env file: `cp .env.example .env` 
-   1. Set `REACT_APP_MOCK_DATA=true` to use mock data in place of the wasm widget, or `false` to use the wasm widget.
+   1. Set `REACT_APP_MOCK_DATA=false` to use the wasm widget as data source, or `true` to develop with mock "real-time" data.
    2. Set `REACT_APP_WIDGET_WASM_URL` to your intended hosted `widget.wasm` file. If you are serving it from `client` in [step #8](#arrow_forward-quickstart-for-devs), use [http://localhost:9000/widget.wasm](http://localhost:9000/widget.wasm). If you ran `./build_web.sh` ([step #7](#arrow_forward-quickstart-for-devs)) you can also use `/broflake/widget.wasm`. To config for prod point to a publicly hosted `widget.wasm` e.g. `https://devblog.getlantern.org/broflake/widget.wasm`. If you know you know, if not, you likely want to use `/broflake/widget.wasm`.
 
 3. Install the dependencies: `yarn`
