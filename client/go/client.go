@@ -12,7 +12,8 @@ const (
 	discoverySrv         = "http://localhost:8000"
 	signalEndpoint       = "/v1/signal"
 	consumerEndpoint     = "/v1/signal"
-	stunSrv              = "stun:freefood.is:3478" // "stun:stun.l.google.com:19302"
+// 	stunSrv              = "stun:freefood.is:3478" // "stun:stun.l.google.com:19302"
+	stunSrv              = "stun:157.230.209.241:3478" // "stun:stun.l.google.com:19302"
 	cTableSize           = 5
 	pTableSize           = 5
 	genesisAddr          = "genesis"

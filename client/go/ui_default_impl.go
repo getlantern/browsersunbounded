@@ -16,7 +16,7 @@ func (ui *UIImpl) OnDownstreamThroughput(bytesPerSec int) {
 	// TODO: do something?
 }
 
-func (ui *UIImpl) OnConsumerConnectionChange(newState int, workerIdx int, loc string) {
+func (ui *UIImpl) OnConsumerConnectionChange(state int, workerIdx int, loc string) {
 	// TODO: do something?
 }
 

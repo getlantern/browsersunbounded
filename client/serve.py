@@ -2,7 +2,7 @@
 
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
-ADDR = "0.0.0.0"
+ADDR = "localhost"
 PORT = 9000
 DIR = "dist/public/"
 
