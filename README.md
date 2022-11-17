@@ -60,7 +60,7 @@ leading "stun:".
 
 7. Build the browser widget: `cd client && ./build_web.sh`
 
-8. Serve the browser widget: `cd client/dist/public && python3 -m http.server 9000`
+8. Serve the browser widget with a permissive CORS policy: `cd client && ./serve.py`
 
 9. Start Freddie: `cd freddie && go run freddie.go`
 
