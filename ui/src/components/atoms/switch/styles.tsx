@@ -18,15 +18,18 @@ const Input = styled.input`
   width: 0;
   height: 0;
 `
-
+interface Props {
+	disabled: boolean
+	checked: boolean
+}
 const Slider = styled.span`
   position: absolute;
-  cursor: pointer;
+  cursor: ${({disabled}: Props) => disabled ? 'not-allowed' : 'pointer'};
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: ${(props: {checked: boolean}) => props.checked ? COLORS.green : COLORS.grey};
+  background-color: ${({checked}: Props) => checked ? COLORS.green : COLORS.grey};
   transition: 0.4s;
   border-radius: 34px;
 	&:before {
@@ -39,7 +42,7 @@ const Slider = styled.span`
     background-color: ${COLORS.white};
     border-radius: 50%;
     transition: transform 250ms;
-    transform: translateX(${(props: {checked: boolean}) => props.checked ? '18px' : 0});
+    transform: translateX(${({checked}: Props) => checked ? '18px' : 0});
 	}
 `
 

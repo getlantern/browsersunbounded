@@ -4,9 +4,10 @@ import {Label, Input, Slider, Container} from './styles'
 interface Props {
 	onToggle: (e: boolean) => void
 	checked: boolean
+	disabled: boolean
 }
 
-const Switch = ({onToggle, checked}: Props) => {
+const Switch = ({onToggle, checked, disabled}: Props) => {
 	return (
 		<Container>
 			<Label>
@@ -17,8 +18,12 @@ const Switch = ({onToggle, checked}: Props) => {
 					}
 					checked={checked}
 					aria-label={'metric'}
+					disabled={disabled}
 				/>
-				<Slider checked={checked} />
+				<Slider
+					checked={checked}
+					disabled={disabled}
+				/>
 			</Label>
 		</Container>
 	);

@@ -26,6 +26,7 @@ export interface Throughput {
 // create state emitters
 export const connectionsEmitter = new StateEmitter<Connection[]>([])
 export const lifetimeConnectionsEmitter = new StateEmitter<number>(0)
+export const readyEmitter = new StateEmitter<boolean>(false)
 
 class WasmInterface {
 	go: typeof go
@@ -35,6 +36,7 @@ class WasmInterface {
 	chunkMap: {[key: number]: Chunk}
 	connectionMap: {[key: number]: Connection}
 	throughput: Throughput
+	ready: boolean
 	// smoothed and agg data
 	movingAverageThroughput: number
 	lifetimeConnections: number
@@ -42,6 +44,7 @@ class WasmInterface {
 	connections: Connection[]
 
 	constructor() {
+		this.ready = false
 		this.chunkMap = {}
 		this.connectionMap = {}
 		this.throughput = { bytesPerSec: 0 }
@@ -61,15 +64,19 @@ class WasmInterface {
 			this.instance = res.instance
 			this.initListeners()
 			await this.go.run(this.instance)
+			this.ready = true
 		}
 		return this.instance
 	}
 
 	start = () => {
-		this.wasmClient.start()
+		if (!this.ready) console.warn('Wasm client is not in ready state, aborting start')
+		else this.wasmClient.start()
 	}
 
 	stop = () => {
+		this.ready = false
+		readyEmitter.update(this.ready)
 		this.wasmClient.stop()
 	}
 
@@ -110,15 +117,22 @@ class WasmInterface {
 		lifetimeConnectionsEmitter.update(this.lifetimeConnections)
 	}
 
+	handleReady = () => {
+		this.ready = true
+		readyEmitter.update(this.ready)
+	}
+
 	initListeners = () => {
 		// rm listeners in case they exist (hot reload)
 		this.wasmClient.removeEventListener('downstreamChunk', this.handleChunk)
 		this.wasmClient.removeEventListener('downstreamThroughput', this.handleThroughput)
 		this.wasmClient.removeEventListener('consumerConnectionChange', this.handleConnection)
+		this.wasmClient.removeEventListener('ready', this.handleReady)
 		// register listeners
 		this.wasmClient.addEventListener('downstreamChunk', this.handleChunk)
 		this.wasmClient.addEventListener('downstreamThroughput', this.handleThroughput)
 		this.wasmClient.addEventListener('consumerConnectionChange', this.handleConnection)
+		this.wasmClient.addEventListener('ready', this.handleReady)
 	}
 }
 
