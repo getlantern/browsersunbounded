@@ -8,18 +8,6 @@ type UIImpl struct {
 	UI
 }
 
-func (ui *UIImpl) OnDownstreamChunk(size int, workerIdx int) {
-	// TODO: do something?
-}
-
-func (ui *UIImpl) OnDownstreamThroughput(bytesPerSec int) {
-	// TODO: do something?
-}
-
-func (ui *UIImpl) OnConsumerConnectionChange(newState int, workerIdx int, loc string) {
-	// TODO: do something?
-}
-
 func (ui *UIImpl) Start() {
 	start()
 }
@@ -30,4 +18,20 @@ func (ui *UIImpl) Stop() {
 
 func (ui *UIImpl) Debug() {
 	debug()
+}
+
+func (ui *UIImpl) OnReady() {
+	// TODO: do something?
+}
+
+func (ui *UIImpl) OnDownstreamChunk(size int, workerIdx int) {
+	// TODO: do something?
+}
+
+func (ui *UIImpl) OnDownstreamThroughput(bytesPerSec int) {
+	// TODO: do something?
+}
+
+func (ui *UIImpl) OnConsumerConnectionChange(newState int, workerIdx int, loc string) {
+	// TODO: do something?
 }

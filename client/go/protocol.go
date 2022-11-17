@@ -35,6 +35,7 @@ func newWorkerFSM(states []FSMstate) *workerFSM {
 // Start this workerFSM
 func (fsm *workerFSM) start() {
 	go func() {
+		defer wgReady.Done()
 		fmt.Println("Starting workerFSM...")
 		fsm.ctx, fsm.cancel = context.WithCancel(context.Background())
 

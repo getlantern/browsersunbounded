@@ -9,17 +9,19 @@ import (
 )
 
 type UI interface {
-	OnDownstreamChunk(size int, workerIdx int)
-
-	OnDownstreamThroughput(bytesPerSec int)
-
-	OnConsumerConnectionChange(newState int, workerIdx int, loc string)
-
 	Start()
 
 	Stop()
 
 	Debug()
+
+	OnReady()
+
+	OnDownstreamChunk(size int, workerIdx int)
+
+	OnDownstreamThroughput(bytesPerSec int)
+
+	OnConsumerConnectionChange(newState int, workerIdx int, loc string)
 }
 
 func downstreamUIHandler(ui UIImpl) func(msg ipcMsg) {
