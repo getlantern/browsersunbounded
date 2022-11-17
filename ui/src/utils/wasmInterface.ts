@@ -6,10 +6,6 @@ import {StateEmitter} from '../hooks/useStateEmitter'
 
 type WebAssemblyInstance = InstanceType<typeof WebAssembly.Instance>
 
-interface Go {
-	run(instance: WebAssemblyInstance): Promise<void>
-	importObject: {}
-}
 export interface Chunk {
 	size: number
 	workerIdx: number
@@ -32,7 +28,8 @@ export const connectionsEmitter = new StateEmitter<Connection[]>([])
 export const lifetimeConnectionsEmitter = new StateEmitter<number>(0)
 
 class WasmInterface {
-	go: Go
+	go: typeof go
+	wasmClient: typeof wasmClient
 	instance: WebAssemblyInstance | undefined
 	// raw data
 	chunkMap: {[key: number]: Chunk}
@@ -53,6 +50,7 @@ class WasmInterface {
 		this.chunks = []
 		this.connections = []
 		this.go = go
+		this.wasmClient = wasmClient
 	}
 
 	initialize = async (): Promise<WebAssemblyInstance> => {
@@ -63,17 +61,16 @@ class WasmInterface {
 			this.instance = res.instance
 			this.initListeners()
 			await this.go.run(this.instance)
-			console.log('ran')
 		}
 		return this.instance
 	}
 
 	start = () => {
-		wasmClient.start()
+		this.wasmClient.start()
 	}
 
 	stop = () => {
-		wasmClient.stop()
+		this.wasmClient.stop()
 	}
 
 	idxMapToArr = (map: {[key: number]: any}) => {
@@ -115,13 +112,13 @@ class WasmInterface {
 
 	initListeners = () => {
 		// rm listeners in case they exist (hot reload)
-		wasmClient.removeEventListener('downstreamChunk', this.handleChunk)
-		wasmClient.removeEventListener('downstreamThroughput', this.handleThroughput)
-		wasmClient.removeEventListener('consumerConnectionChange', this.handleConnection)
+		this.wasmClient.removeEventListener('downstreamChunk', this.handleChunk)
+		this.wasmClient.removeEventListener('downstreamThroughput', this.handleThroughput)
+		this.wasmClient.removeEventListener('consumerConnectionChange', this.handleConnection)
 		// register listeners
-		wasmClient.addEventListener('downstreamChunk', this.handleChunk)
-		wasmClient.addEventListener('downstreamThroughput', this.handleThroughput)
-		wasmClient.addEventListener('consumerConnectionChange', this.handleConnection)
+		this.wasmClient.addEventListener('downstreamChunk', this.handleChunk)
+		this.wasmClient.addEventListener('downstreamThroughput', this.handleThroughput)
+		this.wasmClient.addEventListener('consumerConnectionChange', this.handleConnection)
 	}
 }
 

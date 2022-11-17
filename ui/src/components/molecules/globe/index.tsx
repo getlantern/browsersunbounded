@@ -33,7 +33,7 @@ const Globe = ({isSharing}: {isSharing: boolean}) => {
 				altitude: 2.5,
 			}, 1000)
 		}
-	}, [arcs])
+	}, [arcs, isSharing])
 
 	useEffect(() => {
 		const controls = globe.current.controls()
