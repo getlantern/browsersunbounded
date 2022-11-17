@@ -5,12 +5,19 @@
 
 globalThis.wasmClient = new EventTarget() // must be in global scope
 
-// These two stubs are only here for code comprehension, Wasm World overwrites them during init
-wasmClient.start = () => {}
-wasmClient.stop = () => {}
-
 wasmClient._fire = (eventName, detail) => {
 	wasmClient.dispatchEvent(new CustomEvent(eventName, {detail: detail}))
+}
+
+// These three stubs are only here for code comprehension, Wasm World overwrites them during init
+wasmClient.start = () => {}
+wasmClient.stop = () => {}
+wasmClient.debug = () => {}
+
+// 'ready' fires when the client is ready to be started with a call to `start`
+// after calling `stop`, you must wait for the `ready` event before calling `start` again!
+wasmClient._onReady = () => {
+	wasmClient._fire("ready", {})
 }
 
 // 'downstreamChunk' fires once for each chunk of data received
@@ -25,11 +32,7 @@ wasmClient._onDownstreamThroughput = (bytesPerSec) => {
 	wasmClient._fire("downstreamThroughput", {bytesPerSec: bytesPerSec})
 }
 
-<<<<<<< HEAD
 // 'consumerConnectionChange' fires when a consumer connects or disconnects. 'state' is 1 or -1,
-=======
-// 'consumerConnectionChange' fires when a consumer connects or disconnects. 'newState' is 1 or -1,
->>>>>>> c3599ca (rebase w/ main and fix conflict)
 // representing connection or disconnection, respectively; 'workerIdx' is the 0-indexed ID of the
 // connection slot; 'loc' represents the geographic location of the consumer
 wasmClient._onConsumerConnectionChange = (state, workerIdx, loc) => {
