@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"sync"
 )
 
 // TODO: some of these are more appropriately scoped at the workerFSM (or some other) level?
@@ -42,6 +43,7 @@ var cTable *workerTable
 var cRouter tableRouter
 var pTable *workerTable
 var pRouter tableRouter
+var wgReady sync.WaitGroup
 
 func main() {
 	switch clientType {
@@ -87,10 +89,12 @@ func main() {
 	bus.start()
 	cRouter.init()
 	pRouter.init()
+	ui.OnReady()
 	select {}
 }
 
 func start() {
+	wgReady.Add(cTable.size + pTable.size)
 	cTable.start()
 	pTable.start()
 }
@@ -98,6 +102,11 @@ func start() {
 func stop() {
 	cTable.stop()
 	pTable.stop()
+
+	go func() {
+		wgReady.Wait()
+		ui.OnReady()
+	}()
 }
 
 func debug() {

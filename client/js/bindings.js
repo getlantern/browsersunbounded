@@ -1,19 +1,25 @@
 "use strict";
 
 // Usage:
-// wasmClient.addEventListener("downstreamChunk", (e) => {})
+// wasmClient.addEventListener("ready", (e) => {})
 // wasmClient.start()
 // wasmClient.stop()
 
 var wasmClient = new EventTarget(); // must use 'var' to put wasmClient in the global scope
+
+wasmClient._fire = (eventName, detail) => {
+  wasmClient.dispatchEvent(new CustomEvent(eventName, {detail: detail}))
+}
 
 // These three stubs are only here for code comprehension, Wasm World overwrites them during init
 wasmClient.start = () => {}
 wasmClient.stop = () => {}
 wasmClient.debug = () => {}
 
-wasmClient._fire = (eventName, detail) => {
-  wasmClient.dispatchEvent(new CustomEvent(eventName, {detail: detail}))
+// 'ready' fires when the client is ready to be started with a call to `start`
+// after calling `stop`, you must wait for the `ready` event before calling `start` again!
+wasmClient._onReady = () => {
+  wasmClient._fire("ready", {})
 }
 
 // 'downstreamChunk' fires once for each chunk of data received 

@@ -25,7 +25,7 @@ wasmClient._onDownstreamThroughput = (bytesPerSec) => {
 	wasmClient._fire("downstreamThroughput", {bytesPerSec: bytesPerSec})
 }
 
-// 'consumerConnectionChange' fires when a consumer connects or disconnects. 'newState' is 1 or -1,
+// 'consumerConnectionChange' fires when a consumer connects or disconnects. 'state' is 1 or -1,
 // representing connection or disconnection, respectively; 'workerIdx' is the 0-indexed ID of the
 // connection slot; 'loc' represents the geographic location of the consumer
 wasmClient._onConsumerConnectionChange = (state, workerIdx, loc) => {

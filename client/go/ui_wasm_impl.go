@@ -29,18 +29,6 @@ type UIImpl struct {
 	UI
 }
 
-func (ui *UIImpl) OnDownstreamChunk(size int, workerIdx int) {
-	js.Global().Get("wasmClient").Call("_onDownstreamChunk", size, workerIdx)
-}
-
-func (ui *UIImpl) OnDownstreamThroughput(bytesPerSec int) {
-	js.Global().Get("wasmClient").Call("_onDownstreamThroughput", bytesPerSec)
-}
-
-func (ui *UIImpl) OnConsumerConnectionChange(state int, workerIdx int, loc string) {
-	js.Global().Get("wasmClient").Call("_onConsumerConnectionChange", state, workerIdx, loc)
-}
-
 func (ui *UIImpl) Start() {
 	start()
 }
@@ -51,4 +39,20 @@ func (ui *UIImpl) Stop() {
 
 func (ui *UIImpl) Debug() {
 	debug()
+}
+
+func (ui *UIImpl) OnReady() {
+	js.Global().Get("wasmClient").Call("_onReady")
+}
+
+func (ui *UIImpl) OnDownstreamChunk(size int, workerIdx int) {
+	js.Global().Get("wasmClient").Call("_onDownstreamChunk", size, workerIdx)
+}
+
+func (ui *UIImpl) OnDownstreamThroughput(bytesPerSec int) {
+	js.Global().Get("wasmClient").Call("_onDownstreamThroughput", bytesPerSec)
+}
+
+func (ui *UIImpl) OnConsumerConnectionChange(state int, workerIdx int, loc string) {
+	js.Global().Get("wasmClient").Call("_onConsumerConnectionChange", state, workerIdx, loc)
 }
