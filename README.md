@@ -88,14 +88,21 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 [Github pages live demo](https://devblog.getlantern.org/broflake)
 
 1. Work from the ui dir: `cd ui`
+
 2. Configure your .env file: `cp .env.example .env` 
    1. Set `REACT_APP_MOCK_DATA=true` to use mock data in place of the wasm widget, or `false` to use the wasm widget.
-   2. Set `REACT_APP_WIDGET_WASM_URL` to your intended hosted `widget.wasm` file. If you are serving it from `client` in step #8 above, use [http://localhost:9000/widget.wasm](http://localhost:9000/widget.wasm). If you ran `./build_web.sh` (step #7) you can also use `/broflake/widget.wasm`. To config for prod point to a publicly hosted `widget.wasm` e.g. `https://devblog.getlantern.org/broflake/widget.wasm`
+   2. Set `REACT_APP_WIDGET_WASM_URL` to your intended hosted `widget.wasm` file. If you are serving it from `client` in [step #8](#arrow_forward-quickstart-for-devs), use [http://localhost:9000/widget.wasm](http://localhost:9000/widget.wasm). If you ran `./build_web.sh` ([step #7](#arrow_forward-quickstart-for-devs)) you can also use `/broflake/widget.wasm`. To config for prod point to a publicly hosted `widget.wasm` e.g. `https://devblog.getlantern.org/broflake/widget.wasm`. If you know you know, if not, you likely want to use `/broflake/widget.wasm`.
+
 3. Install the dependencies: `yarn`
+
 4. To start in developer mode with hot-refresh server (degraded performance): run `yarn start` and visit [http://localhost:3000/broflake](http://localhost:3000/broflake)
+
 5. To build optimized for best performance run: `yarn build`
-6. To serve a build:`cd build && http-server` or your simple server 
-   1. Install a simple server e.g. `npm install -g serve`
+
+6. To serve a build:
+   1. Install a simple server e.g. `npm install -g serve` (or your lightweight http server of choice)
    2. Serve the build dir e.g. `serve -s build -l 3000` and visit [http://localhost:3000/broflake](http://localhost:3000/broflake)
+
 7. To deploy to Github pages: `yarn deploy`
+
 8. Coming soon to a repo near you: `yarn test`
