@@ -4,6 +4,7 @@
 * [What is Broflake?](#question-what-is-broflake)
 * [System components](#floppy_disk-system-components)
 * [Quickstart for devs](#arrow_forward-quickstart-for-devs)
+* [UI quickstart for devs](#nail_careart-ui-quickstart-for-devs)
 
 ### :skull: Warning
 This is prototype-grade software!
@@ -32,6 +33,7 @@ perfectly straightforward.
 |common |shared libraries                                                               |
 |egress |egress server                                                                  |
 |freddie|discovery server + signaling & matchmaking logic                               |
+|ui     |embeddable web user interface                                                  |
 
 
 ### :arrow_forward: Quickstart for devs
@@ -68,10 +70,41 @@ leading "stun:".
 
 11. Start the desktop client: `cd client/dist/bin && ./desktop`
 
-12. Start **Google Chrome**. Navigate to `localhost:9000`. The web widget loads, accesses Freddie, 
+12. To start the wasm client in "headless" mode (no [embed ui](#nail_careart-ui-quickstart-for-devs)): Start **Google Chrome**. Navigate to `localhost:9000`. The web widget loads, accesses Freddie, 
 finds your desktop client, signals, and establishes several WebRTC connections. Pop open the console
-and you'll see all the things going on.
+and you'll see all the things going on. Alternatively, to start the wasm client wrapped in the embed ui, follow the [UI quickstart](#nail_careart-ui-quickstart-for-devs).
 
 13. Start **Mozilla Firefox**. Use the browser as you normally would, visiting all your favorite
 websites. Your traffic is proxied in a chain: Firefox -> local HTTP proxy -> desktop client -> 
 webRTC -> web widget executing in Chrome -> WebSocket -> egress server -> remote HTTP proxy -> the internet. 
+
+### :nail_care::art: UI quickstart for devs
+
+The UI is bootstrapped with [Create React App](https://github.com/facebook/create-react-app). Then "re-wired" to build one single js bundle using [rewire](https://www.npmjs.com/package/rewire). The React app will bind to a custom `lantern-p2p-proxy` DOM el and render based on settings passed to the `data-features` attribute via stringified JSON:
+
+```html
+<lantern-p2p-proxy data-features='{ "globe": true, "stats": true, "about": true, "toast": true }'></lantern-p2p-proxy>
+<script defer="defer" src="https://devblog.getlantern.org/broflake/static/js/main.js"></script>
+```
+
+[Github pages live demo](https://devblog.getlantern.org/broflake)
+
+1. Work from the ui dir: `cd ui`
+
+2. Configure your .env file: `cp .env.example .env` 
+   1. Set `REACT_APP_MOCK_DATA=false` to use the wasm widget as data source, or `true` to develop with mock "real-time" data.
+   2. Set `REACT_APP_WIDGET_WASM_URL` to your intended hosted `widget.wasm` file. If you are serving it from `client` in [step #8](#arrow_forward-quickstart-for-devs), use [http://localhost:9000/widget.wasm](http://localhost:9000/widget.wasm). If you ran `./build_web.sh` ([step #7](#arrow_forward-quickstart-for-devs)) you can also use `/broflake/widget.wasm`. To config for prod point to a publicly hosted `widget.wasm` e.g. `https://devblog.getlantern.org/broflake/widget.wasm`. If you know you know, if not, you likely want to use `/broflake/widget.wasm`.
+
+3. Install the dependencies: `yarn`
+
+4. To start in developer mode with hot-refresh server (degraded performance): run `yarn start` and visit [http://localhost:3000/broflake](http://localhost:3000/broflake)
+
+5. To build optimized for best performance run: `yarn build`
+
+6. To serve a build:
+   1. Install a simple server e.g. `npm install -g serve` (or your lightweight http server of choice)
+   2. Serve the build dir e.g. `serve -s build -l 3000` and visit [http://localhost:3000/broflake](http://localhost:3000/broflake)
+
+7. To deploy to Github pages: `yarn deploy`
+
+8. Coming soon to a repo near you: `yarn test`

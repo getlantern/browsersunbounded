@@ -21,7 +21,7 @@ type UI interface {
 
 	OnDownstreamThroughput(bytesPerSec int)
 
-	OnConsumerConnectionChange(newState int, workerIdx int, loc string)
+	OnConsumerConnectionChange(state int, workerIdx int, loc string)
 }
 
 func downstreamUIHandler(ui UIImpl) func(msg ipcMsg) {
@@ -55,11 +55,11 @@ func upstreamUIHandler(ui UIImpl) func(msg ipcMsg) {
 		switch msg.ipcType {
 		case ConsumerInfoIPC:
 			ci := msg.data.(common.ConsumerInfo)
-			newState := 1
+			state := 1
 			if ci.Nil() {
-				newState = -1
+				state = -1
 			}
-			ui.OnConsumerConnectionChange(newState, int(msg.wid), ci.Location)
+			ui.OnConsumerConnectionChange(state, int(msg.wid), ci.Location)
 		}
 	}
 }

@@ -1,4 +1,19 @@
+# wasm
 *.*.swp
 client/dist/bin/*
 client/dist/public/bindings.js
 client/dist/public/*.wasm
+
+# misc
+.DS_Store
+
+# ide
+.idea/*
+
+# ui
+ui/node_modules
+ui/coverage
+ui/build
+ui/yarn-debug.log*
+ui/yarn-error.log*
+ui/.env

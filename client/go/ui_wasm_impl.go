@@ -53,6 +53,6 @@ func (ui *UIImpl) OnDownstreamThroughput(bytesPerSec int) {
 	js.Global().Get("wasmClient").Call("_onDownstreamThroughput", bytesPerSec)
 }
 
-func (ui *UIImpl) OnConsumerConnectionChange(newState int, workerIdx int, loc string) {
-	js.Global().Get("wasmClient").Call("_onConsumerConnectionChange", newState, workerIdx, loc)
+func (ui *UIImpl) OnConsumerConnectionChange(state int, workerIdx int, loc string) {
+	js.Global().Get("wasmClient").Call("_onConsumerConnectionChange", state, workerIdx, loc)
 }
