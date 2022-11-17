@@ -27,3 +27,7 @@ func (ui *UIImpl) Start() {
 func (ui *UIImpl) Stop() {
 	stop()
 }
+
+func (ui *UIImpl) Debug() {
+	debug()
+}

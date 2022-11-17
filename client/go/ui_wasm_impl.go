@@ -18,6 +18,11 @@ func init() {
 		"stop",
 		js.FuncOf(func(this js.Value, args []js.Value) interface{} { ui.Stop(); return nil }),
 	)
+
+	js.Global().Get("wasmClient").Set(
+		"debug",
+		js.FuncOf(func(this js.Value, args []js.Value) interface{} { ui.Debug(); return nil }),
+	)
 }
 
 type UIImpl struct {
@@ -42,4 +47,8 @@ func (ui *UIImpl) Start() {
 
 func (ui *UIImpl) Stop() {
 	stop()
+}
+
+func (ui *UIImpl) Debug() {
+	debug()
 }

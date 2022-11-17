@@ -18,6 +18,8 @@ type UI interface {
 	Start()
 
 	Stop()
+
+	Debug()
 }
 
 func downstreamUIHandler(ui UIImpl) func(msg ipcMsg) {

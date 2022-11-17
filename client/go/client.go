@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 )
 
 // TODO: some of these are more appropriately scoped at the workerFSM (or some other) level?
@@ -96,4 +97,8 @@ func start() {
 func stop() {
 	cTable.stop()
 	pTable.stop()
+}
+
+func debug() {
+	fmt.Printf("NumGoroutine: %v\n", runtime.NumGoroutine())
 }
