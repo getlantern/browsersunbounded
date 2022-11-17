@@ -85,7 +85,7 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 <script defer="defer" src="https://devblog.getlantern.org/broflake/static/js/main.js"></script>
 ```
 
-Live demo: https://devblog.getlantern.org/p2p-web-proxy/
+[Github pages live demo](https://devblog.getlantern.org/broflake)
 
 1. Work from the ui dir: `cd ui`
 2. Configure your .env file: `cp .env.example .env` 
