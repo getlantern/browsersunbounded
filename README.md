@@ -69,7 +69,7 @@ leading "stun:".
 
 11. Start the desktop client: `cd client/dist/bin && ./desktop`
 
-12. To start the wasm client in "headless" mode (no embed ui): Start **Google Chrome**. Navigate to `localhost:9000`. The web widget loads, accesses Freddie, 
+12. To start the wasm client in "headless" mode (no [embed ui](#nail_careart-ui-quickstart-for-devs)): Start **Google Chrome**. Navigate to `localhost:9000`. The web widget loads, accesses Freddie, 
 finds your desktop client, signals, and establishes several WebRTC connections. Pop open the console
 and you'll see all the things going on. To start the wasm client with the embed ui, follow the UI quickstart.
 
