@@ -6,6 +6,13 @@ import {StateEmitter} from '../hooks/useStateEmitter'
 
 type WebAssemblyInstance = InstanceType<typeof WebAssembly.Instance>
 
+<<<<<<< HEAD
+=======
+interface Go {
+	run(instance: WebAssemblyInstance): Promise<void>
+	importObject: {}
+}
+>>>>>>> c3599ca (rebase w/ main and fix conflict)
 export interface Chunk {
 	size: number
 	workerIdx: number
@@ -28,8 +35,12 @@ export const connectionsEmitter = new StateEmitter<Connection[]>([])
 export const lifetimeConnectionsEmitter = new StateEmitter<number>(0)
 
 class WasmInterface {
+<<<<<<< HEAD
 	go: typeof go
 	wasmClient: typeof wasmClient
+=======
+	go: Go
+>>>>>>> c3599ca (rebase w/ main and fix conflict)
 	instance: WebAssemblyInstance | undefined
 	// raw data
 	chunkMap: {[key: number]: Chunk}
@@ -50,7 +61,10 @@ class WasmInterface {
 		this.chunks = []
 		this.connections = []
 		this.go = go
+<<<<<<< HEAD
 		this.wasmClient = wasmClient
+=======
+>>>>>>> c3599ca (rebase w/ main and fix conflict)
 	}
 
 	initialize = async (): Promise<WebAssemblyInstance> => {
@@ -61,16 +75,28 @@ class WasmInterface {
 			this.instance = res.instance
 			this.initListeners()
 			await this.go.run(this.instance)
+<<<<<<< HEAD
+=======
+			console.log('ran')
+>>>>>>> c3599ca (rebase w/ main and fix conflict)
 		}
 		return this.instance
 	}
 
 	start = () => {
+<<<<<<< HEAD
 		this.wasmClient.start()
 	}
 
 	stop = () => {
 		this.wasmClient.stop()
+=======
+		wasmClient.start()
+	}
+
+	stop = () => {
+		wasmClient.stop()
+>>>>>>> c3599ca (rebase w/ main and fix conflict)
 	}
 
 	idxMapToArr = (map: {[key: number]: any}) => {
@@ -112,6 +138,7 @@ class WasmInterface {
 
 	initListeners = () => {
 		// rm listeners in case they exist (hot reload)
+<<<<<<< HEAD
 		this.wasmClient.removeEventListener('downstreamChunk', this.handleChunk)
 		this.wasmClient.removeEventListener('downstreamThroughput', this.handleThroughput)
 		this.wasmClient.removeEventListener('consumerConnectionChange', this.handleConnection)
@@ -119,6 +146,15 @@ class WasmInterface {
 		this.wasmClient.addEventListener('downstreamChunk', this.handleChunk)
 		this.wasmClient.addEventListener('downstreamThroughput', this.handleThroughput)
 		this.wasmClient.addEventListener('consumerConnectionChange', this.handleConnection)
+=======
+		wasmClient.removeEventListener('downstreamChunk', this.handleChunk)
+		wasmClient.removeEventListener('downstreamThroughput', this.handleThroughput)
+		wasmClient.removeEventListener('consumerConnectionChange', this.handleConnection)
+		// register listeners
+		wasmClient.addEventListener('downstreamChunk', this.handleChunk)
+		wasmClient.addEventListener('downstreamThroughput', this.handleThroughput)
+		wasmClient.addEventListener('consumerConnectionChange', this.handleConnection)
+>>>>>>> c3599ca (rebase w/ main and fix conflict)
 	}
 }
 
