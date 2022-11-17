@@ -1,9 +1,17 @@
-import {Chunk, Connection, connectionsEmitter, lifetimeConnectionsEmitter, Throughput} from '../utils/wasmInterface'
+import {
+	Chunk,
+	Connection,
+	connectionsEmitter,
+	lifetimeConnectionsEmitter,
+	readyEmitter,
+	Throughput
+} from '../utils/wasmInterface'
 import {mockGeo, mockRandomInt} from './mockData'
 
 export class MockWasmInterface {
 	// raw data
 	throughput: Throughput
+	ready: boolean
 	// smoothed and agg data
 	movingAverageThroughput: number
 	lifetimeConnections: number
@@ -13,6 +21,7 @@ export class MockWasmInterface {
 	interval: NodeJS.Timer | undefined
 
 	constructor() {
+		this.ready = false
 		this.throughput = { bytesPerSec: 0 }
 		this.movingAverageThroughput = 0
 		this.lifetimeConnections = 0
@@ -25,6 +34,8 @@ export class MockWasmInterface {
 
 	initialize = async () => {
 		// nada
+		this.ready = true
+		readyEmitter.update(this.ready)
 	}
 	start = () => {
 		this.interval = setInterval(() => {
@@ -53,7 +64,14 @@ export class MockWasmInterface {
 		this.throughput = {bytesPerSec: 0}
 		this.movingAverageThroughput = 0
 		this.connections = this.connections.map(c => ({...c, state: -1}))
+		this.ready = false
 		// emit state
 		connectionsEmitter.update(this.connections)
+		readyEmitter.update(this.ready)
+		// fake ready again
+		setTimeout(() => {
+			this.ready = true
+			readyEmitter.update(this.ready)
+		}, 1000)
 	}
 }
