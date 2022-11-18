@@ -17,6 +17,8 @@ type UI interface {
 
 	OnReady()
 
+  OnStartup()
+
 	OnDownstreamChunk(size int, workerIdx int)
 
 	OnDownstreamThroughput(bytesPerSec int)

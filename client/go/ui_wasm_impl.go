@@ -45,6 +45,10 @@ func (ui *UIImpl) OnReady() {
 	js.Global().Get("wasmClient").Call("_onReady")
 }
 
+func (ui *UIImpl) OnStartup() {
+  // Do nothing
+}
+
 func (ui *UIImpl) OnDownstreamChunk(size int, workerIdx int) {
 	js.Global().Get("wasmClient").Call("_onDownstreamChunk", size, workerIdx)
 }

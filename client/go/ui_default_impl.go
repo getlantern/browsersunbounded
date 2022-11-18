@@ -24,6 +24,10 @@ func (ui *UIImpl) OnReady() {
 	// TODO: do something?
 }
 
+func (ui *UIImpl) OnStartup() {
+  start()
+}
+
 func (ui *UIImpl) OnDownstreamChunk(size int, workerIdx int) {
 	// TODO: do something?
 }

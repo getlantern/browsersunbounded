@@ -59,11 +59,6 @@ func main() {
 		}
 		pTable = newWorkerTable(pfsms)
 		pRouter = newProducerSerialRouter(bus.upstream, pTable, cTable.size)
-
-		// TODO nelson 11/16/22: there will eventually be some driver code which lives in or near
-		// Flashlight (and also prob a UI mechanism) to start and stop the desktop client... until
-		// then, we bring it to life right here:
-		start()
 	case "widget":
 		// Widget peers share connectivity over WebRTC
 		var cfsms []workerFSM
@@ -89,7 +84,8 @@ func main() {
 	cRouter.init()
 	pRouter.init()
 	ui.OnReady()
-	select {}
+  ui.OnStartup()
+  select {}
 }
 
 func start() {
