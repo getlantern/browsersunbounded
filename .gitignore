@@ -1,11 +1,11 @@
 # wasm
-*.*.swp
 client/dist/bin/*
 client/dist/public/bindings.js
 client/dist/public/*.wasm
 
 # misc
 .DS_Store
+*.*.swp
 
 # ide
 .idea/*
