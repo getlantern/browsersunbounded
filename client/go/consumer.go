@@ -63,7 +63,7 @@ func newConsumerWebRTC() *workerFSM {
 			// possible that magical ICE mysteries could cause the connection to open as early as the end
 			// of state 2. In practice, the differences here should be on the order of nanoseconds. But
 			// we should monitor the logs to see if connections open too long before we check for them.
-			connectionEstablished := make(chan *webrtc.DataChannel, 16)
+			connectionEstablished := make(chan *webrtc.DataChannel, 1)
 
 			d.OnOpen(func() {
 				fmt.Printf("A datachannel has opened!\n")
@@ -81,7 +81,7 @@ func newConsumerWebRTC() *workerFSM {
 			})
 
 			// Ditto, but for connection state changes
-			connectionChange := make(chan webrtc.PeerConnectionState, 10)
+			connectionChange := make(chan webrtc.PeerConnectionState, 16)
 			peerConnection.OnConnectionStateChange(func(s webrtc.PeerConnectionState) {
 				fmt.Printf("Peer connection state change: %v\n", s.String())
 				connectionChange <- s
@@ -335,38 +335,35 @@ func newConsumerWebRTC() *workerFSM {
 				}
 			})
 
+		proxyloop:
 			for {
 				select {
 				// Handle connection failure
 				case s := <-connectionChange:
 					if s == webrtc.PeerConnectionStateFailed || s == webrtc.PeerConnectionStateDisconnected {
 						fmt.Printf("Connection failure, resetting!\n")
-						peerConnection.Close() // TODO: there's an err we should handle here
-						return 0, []interface{}{}
+						break proxyloop
 					}
 				// Handle connection failure for Firefox
 				case _ = <-connectionClosed:
 					fmt.Printf("Firefox connection failure, resetting!\n")
-					peerConnection.Close() // TODO: there's an err we should handle here
-					return 0, []interface{}{}
-				// Handle messages from the router
+					break proxyloop
+					// Handle messages from the router
 				case msg := <-com.rx:
 					switch msg.ipcType {
 					case ChunkIPC:
 						if err := d.Send(msg.data.([]byte)); err != nil {
 							fmt.Printf("Error sending to datachannel, resetting!\n")
-							peerConnection.Close() // TODO: there's an err we should handle here
-							return 0, []interface{}{}
+							break proxyloop
 						}
 					}
 					// Since we're putting this state into an infinite loop, explicitly handle cancellation
 				case <-ctx.Done():
-					peerConnection.Close() // TODO: there's an err we should handle here
-					return 0, []interface{}{}
+					break proxyloop
 				}
 			}
 
-			// This code path should be unreachable
+			peerConnection.Close() // TODO: there's an err we should handle here
 			return 0, []interface{}{}
 		}),
 	})
