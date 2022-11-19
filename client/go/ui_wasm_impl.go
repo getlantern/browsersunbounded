@@ -46,7 +46,7 @@ func (ui *UIImpl) OnReady() {
 }
 
 func (ui *UIImpl) OnStartup() {
-  // Do nothing
+	// Do nothing
 }
 
 func (ui *UIImpl) OnDownstreamChunk(size int, workerIdx int) {

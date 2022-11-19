@@ -17,7 +17,7 @@ type UI interface {
 
 	OnReady()
 
-  OnStartup()
+	OnStartup()
 
 	OnDownstreamChunk(size int, workerIdx int)
 

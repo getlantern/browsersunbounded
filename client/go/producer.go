@@ -50,6 +50,12 @@ func newProducerWebRTC() *workerFSM {
 			// of state 2. In practice, the differences here should be on the order of nanoseconds. But
 			// we should monitor the logs to see if connections open too long before we check for them.
 			connectionEstablished := make(chan *webrtc.DataChannel, 1)
+
+			// connectionClosed (and the OnClose handler below) is implemented for Firefox, the only
+			// browser which doesn't implement WebRTC's onconnectionstatechange event. We listen for both
+			// onclose and onconnectionstatechange under the assumption that non-Firefox browsers can
+			// benefit from faster connection failure detection by listening for the `failed` event.
+			connectionClosed := make(chan struct{}, 1)
 			peerConnection.OnDataChannel(func(d *webrtc.DataChannel) {
 				fmt.Printf("Created new datachannel...\n")
 
@@ -57,25 +63,32 @@ func newProducerWebRTC() *workerFSM {
 					fmt.Printf("A datachannel has opened!\n")
 					connectionEstablished <- d
 				})
+
+				d.OnClose(func() {
+					fmt.Printf("A datachannel has closed!\n")
+					connectionClosed <- struct{}{}
+				})
 			})
 
 			// Ditto, but for connection state changes
-			connectionChange := make(chan webrtc.PeerConnectionState, 10)
+			connectionChange := make(chan webrtc.PeerConnectionState, 16)
 			peerConnection.OnConnectionStateChange(func(s webrtc.PeerConnectionState) {
 				fmt.Printf("Peer connection state change: %v\n", s.String())
 				connectionChange <- s
 			})
 
-			return 1, []interface{}{peerConnection, connectionEstablished, connectionChange}
+			return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 		}),
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 1
 			// input[0]: *webrtc.PeerConnection
 			// input[1]: chan *webrtc.DataChannel
 			// input[2]: chan webrtc.PeerConnectionState
+			// input[3]: chan struct{}
 			peerConnection := input[0].(*webrtc.PeerConnection)
 			connectionEstablished := input[1].(chan *webrtc.DataChannel)
 			connectionChange := input[2].(chan webrtc.PeerConnectionState)
+			connectionClosed := input[3].(chan struct{})
 			fmt.Printf("Producer state 1...\n")
 
 			// Do we have a non-nil path assertion, indicating that we have upstream connectivity to share?
@@ -95,7 +108,7 @@ func newProducerWebRTC() *workerFSM {
 				case msg := <-com.rx:
 					if msg.ipcType == PathAssertionIPC && !msg.data.(common.PathAssertion).Nil() {
 						pa := msg.data.(common.PathAssertion)
-						return 2, []interface{}{peerConnection, pa, connectionEstablished, connectionChange}
+						return 2, []interface{}{peerConnection, pa, connectionEstablished, connectionChange, connectionClosed}
 					}
 				// Since we're putting this state into an infinite loop, explicitly handle cancellation
 				case <-ctx.Done():
@@ -109,10 +122,12 @@ func newProducerWebRTC() *workerFSM {
 			// input[1]: common.PathAssertion
 			// input[2]: chan *webrtc.DataChannel
 			// input[3]: chan webrtc.PeerConnectionState
+			// input[4]: chan struct{}
 			peerConnection := input[0].(*webrtc.PeerConnection)
 			pa := input[1].(common.PathAssertion)
 			connectionEstablished := input[2].(chan *webrtc.DataChannel)
 			connectionChange := input[3].(chan webrtc.PeerConnectionState)
+			connectionClosed := input[4].(chan struct{})
 			fmt.Printf("Producer state 2...\n")
 
 			// Construct a genesis message
@@ -126,7 +141,7 @@ func newProducerWebRTC() *workerFSM {
 			)
 			if err != nil {
 				fmt.Printf("Couldn't signal genesis message to %v\n", discoverySrv+signalEndpoint)
-				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange}
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
 			defer res.Body.Close()
 
@@ -135,14 +150,14 @@ func newProducerWebRTC() *workerFSM {
 			// The HTTP request is complete
 			offerBytes, err := ioutil.ReadAll(res.Body)
 			if err != nil {
-				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange}
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
 
 			// TODO: Freddie sends back a 0-length body when nobody replied to our message. Is that the
 			// smartest way to handle this case systemwide?
 			if len(offerBytes) == 0 {
 				fmt.Printf("No answer for genesis message!\n")
-				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange}
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
 
 			// Looks like we got some kind of response. It ought to be an offer SDP wrapped in a SignalMsg
@@ -150,7 +165,7 @@ func newProducerWebRTC() *workerFSM {
 			replyTo, offer := common.DecodeSignalMsg(offerBytes)
 
 			// TODO: here we assume we've received a valid offer SDP, we also need to handle invalid case
-			return 3, []interface{}{peerConnection, replyTo, offer, connectionEstablished, connectionChange}
+			return 3, []interface{}{peerConnection, replyTo, offer, connectionEstablished, connectionChange, connectionClosed}
 		}),
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 3
@@ -159,11 +174,13 @@ func newProducerWebRTC() *workerFSM {
 			// input[2]: webrtc.SessionDescription (remote offer)
 			// input[3]: chan *webrtc.DataChannel
 			// input[4]: chan webrtc.PeerConnectionState
+			// input[5]: chan struct{}
 			peerConnection := input[0].(*webrtc.PeerConnection)
 			replyTo := input[1].(string)
 			offer := input[2].(webrtc.SessionDescription)
 			connectionEstablished := input[3].(chan *webrtc.DataChannel)
 			connectionChange := input[4].(chan webrtc.PeerConnectionState)
+			connectionClosed := input[5].(chan struct{})
 			fmt.Printf("Producer state 3...\n")
 
 			// Create a channel that's blocked until ICE gathering is complete
@@ -256,22 +273,24 @@ func newProducerWebRTC() *workerFSM {
 				peerConnection.AddICECandidate(c.ToJSON())
 			}
 
-			return 4, []interface{}{peerConnection, connectionEstablished, connectionChange}
+			return 4, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 		}),
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 4
 			// input[0]: *webrtc.PeerConnection
 			// input[1]: chan *webrtc.DataChannel
 			// input[2]: chan webrtc.PeerConnectionState
+			// input[3]: chan struct{}
 			peerConnection := input[0].(*webrtc.PeerConnection)
 			connectionEstablished := input[1].(chan *webrtc.DataChannel)
 			connectionChange := input[2].(chan webrtc.PeerConnectionState)
+			connectionClosed := input[3].(chan struct{})
 			fmt.Printf("Producer state 4, signaling complete!\n")
 
 			select {
 			case d := <-connectionEstablished:
 				fmt.Printf("A WebRTC connection has been established!\n")
-				return 5, []interface{}{peerConnection, d, connectionChange}
+				return 5, []interface{}{peerConnection, d, connectionChange, connectionClosed}
 			case <-time.After(natFailTimeout * time.Second):
 				fmt.Printf("NAT failure, aborting!\n")
 				// Borked!
@@ -284,10 +303,11 @@ func newProducerWebRTC() *workerFSM {
 			// input[0]: *webrtc.PeerConnection
 			// input[1]: *webrtc.DataChannel
 			// input[2]: chan webrtc.PeerConnectionState
+			// input[3]: chan struct{}
 			peerConnection := input[0].(*webrtc.PeerConnection)
 			d := input[1].(*webrtc.DataChannel)
 			connectionChange := input[2].(chan webrtc.PeerConnectionState)
-
+			connectionClosed := input[3].(chan struct{})
 			fmt.Printf("Producer state 5...\n")
 
 			// Announce the new connectivity situation for this slot
@@ -318,6 +338,10 @@ func newProducerWebRTC() *workerFSM {
 						fmt.Printf("Connection failure, resetting!\n")
 						break proxyloop
 					}
+				// Handle connection failure for Firefox
+				case _ = <-connectionClosed:
+					fmt.Printf("Firefox connection failure, resetting!\n")
+					break proxyloop
 				// Handle messages from the router
 				case msg := <-com.rx:
 					switch msg.ipcType {

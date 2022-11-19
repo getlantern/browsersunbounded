@@ -84,8 +84,8 @@ func main() {
 	cRouter.init()
 	pRouter.init()
 	ui.OnReady()
-  ui.OnStartup()
-  select {}
+	ui.OnStartup()
+	select {}
 }
 
 func start() {
