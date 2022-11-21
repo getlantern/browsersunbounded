@@ -6,6 +6,8 @@ import (
 	"os"
 	"runtime"
 	"sync"
+
+	"github.com/getlantern/golog"
 )
 
 // TODO: some of these are more appropriately scoped at the workerFSM (or some other) level?
@@ -28,6 +30,7 @@ const (
 
 var (
 	clientType = "desktop"
+	logger     = golog.LoggerFor("broflake_client")
 )
 
 // Two client types are supported: 'desktop' and 'widget'. Informally, widget is a "free" peer and
@@ -45,6 +48,7 @@ var pRouter tableRouter
 var wgReady sync.WaitGroup
 
 func main() {
+	logger.Debugf("starting client: %s\n", clientType)
 	switch clientType {
 	case "desktop":
 		// Desktop peers don't share connectivity for the MVP, so the consumer table only gets one

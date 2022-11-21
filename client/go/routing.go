@@ -38,6 +38,8 @@ func (r *baseRouter) init(
 		go func(i int) {
 			for {
 				msg := <-r.table.slot[i].com.tx
+				logger.Tracef("baseRouter.init: Msg %+v received from worker with slot %d com.tx\n",
+					msg, i)
 				onWorker(msg, workerID(i))
 			}
 		}(i)
@@ -51,6 +53,8 @@ func (r *baseRouter) init(
 }
 
 func (r *baseRouter) onBus(msg ipcMsg) {
+	logger.Tracef("baseRouter.onBus: Msg %s with wid %d received from bus\n",
+		msg.ipcType, msg.wid)
 	r.busHook(r, msg)
 }
 
@@ -72,6 +76,8 @@ func (r *upstreamRouter) onBus(msg ipcMsg) {
 }
 
 func (r *upstreamRouter) onWorker(msg ipcMsg, workerIdx workerID) {
+	logger.Tracef("upstreamRouter.onWorker: Msg %s with wid %d received from worker\n",
+		msg.ipcType, msg.wid)
 	// TODO: a brittle assumption here: upstreamRouter.workerHook will call backRoute and add the
 	// wid to the ipcMsg, and it will also forward all appropriate messages to the bus. This is
 	// the opposite of downstreamRouter.onWorker, which adds the wid to the ipcMsg and forwards all
@@ -81,6 +87,8 @@ func (r *upstreamRouter) onWorker(msg ipcMsg, workerIdx workerID) {
 }
 
 func (r *upstreamRouter) toBus(msg ipcMsg) {
+	logger.Tracef("upstreamRouter.toBus: Msg %s with wid %d sent to bus.rx\n",
+		msg.ipcType, msg.wid)
 	select {
 	case r.bus.rx <- msg:
 		// Do nothing, message sent
@@ -90,6 +98,8 @@ func (r *upstreamRouter) toBus(msg ipcMsg) {
 }
 
 func (r *upstreamRouter) toWorker(msg ipcMsg, peerIdx workerID) {
+	logger.Tracef("upstreamRouter.toWorker: Msg %s with peerIdx %d sent to worker com.rx\n",
+		msg.ipcType, peerIdx)
 	select {
 	case r.table.slot[peerIdx].com.rx <- msg:
 		// Do nothing, message sent
@@ -117,6 +127,8 @@ func (r *downstreamRouter) onBus(msg ipcMsg) {
 }
 
 func (r *downstreamRouter) onWorker(msg ipcMsg, workerIdx workerID) {
+	logger.Tracef("downstreamRouter.onWorker: Msg %s with wid %d received from worker\n",
+		msg.ipcType, msg.wid)
 	// Add the worker's ID to the msg
 	msg.wid = workerIdx
 	r.toBus(msg)
@@ -124,6 +136,8 @@ func (r *downstreamRouter) onWorker(msg ipcMsg, workerIdx workerID) {
 }
 
 func (r *downstreamRouter) toBus(msg ipcMsg) {
+	logger.Tracef("downstreamRouter.toBus: sending msg %s with wid %d to bus.tx\n",
+		msg.ipcType, msg.wid)
 	select {
 	case r.bus.tx <- msg:
 		// Do nothing, message sent
@@ -133,6 +147,8 @@ func (r *downstreamRouter) toBus(msg ipcMsg) {
 }
 
 func (r *downstreamRouter) toWorker(msg ipcMsg) {
+	logger.Tracef("downstreamRouter.toWorker: Msg %+v sent to worker with slot %d com.rx\n",
+		msg, msg.wid)
 	select {
 	case r.table.slot[msg.wid].com.rx <- msg:
 		// Do nothing, message sent
@@ -205,6 +221,8 @@ func newProducerSerialRouter(bus *ipcChan, table *workerTable, cTableSize int) *
 }
 
 func (r *producerSerialRouter) onPathAssertion(pa common.PathAssertion, workerIdx workerID) {
+	logger.Tracef("producerSerialRouter:onPathAssertion: onPathAssertion %+v with worker %d\n",
+		pa, workerIdx)
 	r.Lock()
 	defer r.Unlock()
 	r.producerPA[workerIdx] = pa
@@ -279,6 +297,8 @@ func (psr *producerSerialRouter) busHook(r *baseRouter, msg ipcMsg) {
 }
 
 func (psr *producerSerialRouter) workerHook(r *baseRouter, msg ipcMsg, workerIdx workerID) {
+	logger.Tracef("producerSerialRouter:workerHook: Msg %s from worker %d seen\n",
+		msg.ipcType, workerIdx)
 	switch msg.ipcType {
 	case PathAssertionIPC:
 		psr.onPathAssertion(msg.data.(common.PathAssertion), workerIdx)
@@ -362,8 +382,10 @@ func (r *producerPoolRouter) backRoute(wid workerID) (bool, workerID) {
 }
 
 func (ppr *producerPoolRouter) busHook(r *baseRouter, msg ipcMsg) {
+	logger.Tracef("producerPoolRouter:busHook: Msg %s from bus seen\n", msg.ipcType)
 	switch msg.ipcType {
 	case ConnectivityCheckIPC:
+		logger.Tracef("producerPoolRouter.busHook: sending broadcast PathAssertionIPC to worker %d\n", msg.wid)
 		ppr.toBus(ipcMsg{ipcType: PathAssertionIPC, data: ppr.globalPathAssertion(), wid: msg.wid})
 	case ChunkIPC:
 		// TODO: is this necessary?
@@ -378,6 +400,7 @@ func (ppr *producerPoolRouter) busHook(r *baseRouter, msg ipcMsg) {
 func (ppr *producerPoolRouter) workerHook(r *baseRouter, msg ipcMsg, workerIdx workerID) {
 	switch msg.ipcType {
 	case PathAssertionIPC:
+		logger.Tracef("producerPoolRouter.workerHook: sending broadcast PathAssertionIPC to all workers\n")
 		ppr.onPathAssertion(msg.data.(common.PathAssertion), workerIdx)
 		pa := ppr.globalPathAssertion()
 		// TODO: currently we send a new path assertion IPC every time we receive a new path
@@ -421,13 +444,19 @@ func (cr *consumerRouter) busHook(r *baseRouter, msg ipcMsg) {
 	// TODO: we currently forward all msg types without any filter... maybe it's worth revisiting
 	switch msg.wid {
 	case BroadcastRoute:
+		logger.Tracef("consumerRouter.busHook: sending broadcast msg %+v to all workers\n",
+			msg)
 		cr.toAllWorkers(msg)
 	default:
+		logger.Tracef("consumerRouter.busHook: sending msg %+v to single worker\n",
+			msg)
 		cr.toWorker(msg)
 	}
 }
 
 func (cr *consumerRouter) workerHook(r *baseRouter, msg ipcMsg, workerIdx workerID) {
+	logger.Tracef("consumerRouter:workerHook: Msg %s from worker %d seen\n",
+		msg.ipcType, workerIdx)
 	// Do nothing
 }
 

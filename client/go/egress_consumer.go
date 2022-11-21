@@ -21,6 +21,7 @@ func newEgressConsumerWebSocket() *workerFSM {
 			fmt.Printf("Egress consumer state 0, opening WebSocket connection...\n")
 
 			// We're resetting this slot, so send a nil path assertion IPC message
+			logger.Tracef("EgressConsumerWebSocket state 0: Sending nil path assertion\n")
 			select {
 			case com.tx <- ipcMsg{ipcType: PathAssertionIPC, data: common.PathAssertion{}}:
 				// Do nothing, message sent
@@ -61,6 +62,7 @@ func newEgressConsumerWebSocket() *workerFSM {
 
 			// Send a path assertion IPC message representing the connectivity now provided by this slot
 			// TODO: post-MVP we shouldn't be hardcoding (*, 1) here...
+			logger.Tracef("EgressConsumerWebSocket state 1: Sending (*, 1) path assertion\n")
 			allowAll := []common.Endpoint{{Host: "*", Distance: 1}}
 			select {
 			case com.tx <- ipcMsg{ipcType: PathAssertionIPC, data: common.PathAssertion{Allow: allowAll}}:
@@ -80,6 +82,7 @@ func newEgressConsumerWebSocket() *workerFSM {
 					}
 
 					// Wrap the chunk and send it on to the router
+					logger.Tracef("EgressConsumerWebSocket state 1: Sending chunk to router\n")
 					select {
 					case com.tx <- ipcMsg{ipcType: ChunkIPC, data: b}:
 						// Do nothing, message sent

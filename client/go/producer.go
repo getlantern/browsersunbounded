@@ -95,6 +95,7 @@ func newProducerWebRTC() *workerFSM {
 			// We find out by sending an ConnectivityCheckIPC message, which asks the process responsible
 			// for path assertions to send a message reflecting the current state of our path assertion.
 			// If yes, we can proceed right now! If no, just wait for the next non-nil path assertion message...
+			logger.Tracef("ProducerWebRTC state 1: Sending ConnectivityCheckIPC\n")
 			select {
 			case com.tx <- ipcMsg{ipcType: ConnectivityCheckIPC}:
 				// Do nothing, message sent
@@ -106,6 +107,7 @@ func newProducerWebRTC() *workerFSM {
 				select {
 				// Handle inbound IPC messages, wait for a non-nil path assertion
 				case msg := <-com.rx:
+					logger.Tracef("ProducerWebRTC state 1: Received msg %v\n", msg)
 					if msg.ipcType == PathAssertionIPC && !msg.data.(common.PathAssertion).Nil() {
 						pa := msg.data.(common.PathAssertion)
 						return 2, []interface{}{peerConnection, pa, connectionEstablished, connectionChange, connectionClosed}
@@ -312,6 +314,7 @@ func newProducerWebRTC() *workerFSM {
 
 			// Announce the new connectivity situation for this slot
 			// TODO: actually acquire the location
+			logger.Tracef("ProducerWebRTC state 5: Sending DEBUG ConsumerInfoIPC\n")
 			select {
 			case com.tx <- ipcMsg{ipcType: ConsumerInfoIPC, data: common.ConsumerInfo{Location: "DEBUG"}}:
 				// Do nothing, message sent
@@ -321,6 +324,7 @@ func newProducerWebRTC() *workerFSM {
 
 			// Inbound from datachannel:
 			d.OnMessage(func(msg webrtc.DataChannelMessage) {
+				logger.Tracef("ProducerWebRTC state 5: Sending chunk\n")
 				select {
 				case com.tx <- ipcMsg{ipcType: ChunkIPC, data: msg.Data}:
 					// Do nothing, message sent
@@ -344,6 +348,7 @@ func newProducerWebRTC() *workerFSM {
 					break proxyloop
 				// Handle messages from the router
 				case msg := <-com.rx:
+					logger.Tracef("ProducerWebRTC state 5: Received msg %v\n", msg)
 					switch msg.ipcType {
 					case ChunkIPC:
 						if err := d.Send(msg.data.([]byte)); err != nil {

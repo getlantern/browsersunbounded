@@ -318,6 +318,7 @@ func newConsumerWebRTC() *workerFSM {
 			// TODO: post-MVP we shouldn't be hardcoding (*, 1) here...
 			allowAll := []common.Endpoint{{Host: "*", Distance: 1}}
 
+			logger.Tracef("consumerWebRTC: sending path assertion to com.tx\n")
 			select {
 			case com.tx <- ipcMsg{ipcType: PathAssertionIPC, data: common.PathAssertion{Allow: allowAll}}:
 				// Do nothing, message sent

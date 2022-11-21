@@ -43,6 +43,8 @@ func downstreamUIHandler(ui UIImpl) func(msg ipcMsg) {
 	}()
 
 	return func(msg ipcMsg) {
+		logger.Tracef("bus.onRx: seen msg %+v\n", msg)
+
 		switch msg.ipcType {
 		case ChunkIPC:
 			size := len(msg.data.([]byte))
@@ -54,6 +56,7 @@ func downstreamUIHandler(ui UIImpl) func(msg ipcMsg) {
 
 func upstreamUIHandler(ui UIImpl) func(msg ipcMsg) {
 	return func(msg ipcMsg) {
+		logger.Tracef("bus.onTx: seen msg %+v\n", msg)
 		switch msg.ipcType {
 		case ConsumerInfoIPC:
 			ci := msg.data.(common.ConsumerInfo)
