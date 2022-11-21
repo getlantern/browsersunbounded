@@ -150,7 +150,14 @@ func newConsumerWebRTC() *workerFSM {
 			connectionClosed := input[5].(chan struct{})
 			fmt.Printf("Consumer state 2...\n")
 
-			offerJSON, err := json.Marshal(offer)
+			// Wrap the offer and the ConsumerInfo in a signal message
+			p := &common.ConsumerOfferMsg{
+				Offer: offer,
+				ConsumerInfo: common.ConsumerInfo{
+					Location: "TODO",
+				},
+			}
+			consumerOfferJSON, err := json.Marshal(p)
 			if err != nil {
 				panic(err)
 			}
@@ -159,7 +166,7 @@ func newConsumerWebRTC() *workerFSM {
 			// TODO: use a custom http.Client and control our TCP connections
 			res, err := http.PostForm(
 				discoverySrv+consumerEndpoint,
-				url.Values{"data": {string(offerJSON)}, "send-to": {replyTo}, "type": {strconv.Itoa(int(common.SignalMsgOffer))}},
+				url.Values{"data": {string(consumerOfferJSON)}, "send-to": {replyTo}, "type": {strconv.Itoa(int(common.SignalMsgConsumerOffer))}},
 			)
 			if err != nil {
 				fmt.Printf("Couldn't signal offer SDP to %v\n", discoverySrv+consumerEndpoint)

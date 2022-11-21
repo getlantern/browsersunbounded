@@ -179,17 +179,25 @@ func newProducerWebRTC() *workerFSM {
 			// input[5]: chan struct{}
 			peerConnection := input[0].(*webrtc.PeerConnection)
 			replyTo := input[1].(string)
-			offer := input[2].(webrtc.SessionDescription)
+			consumerMsg := input[2].(common.ConsumerOfferMsg)
 			connectionEstablished := input[3].(chan *webrtc.DataChannel)
 			connectionChange := input[4].(chan webrtc.PeerConnectionState)
 			connectionClosed := input[5].(chan struct{})
 			fmt.Printf("Producer state 3...\n")
 
+			// Send the ConsumerInfoIPC up the chain
+			select {
+			case com.tx <- ipcMsg{ipcType: ConsumerInfoIPC, data: consumerMsg.ConsumerInfo}:
+				// Do nothing, message sent
+			default:
+				panic("Producer buffer overflow")
+			}
+
 			// Create a channel that's blocked until ICE gathering is complete
 			gatherComplete := webrtc.GatheringCompletePromise(peerConnection)
 
 			// Assign the offer to our connection
-			err := peerConnection.SetRemoteDescription(offer)
+			err := peerConnection.SetRemoteDescription(consumerMsg.Offer)
 			if err != nil {
 				// TODO: Definitely shouldn't panic here, it just indicates the offer is malformed
 				panic(err)
