@@ -99,7 +99,7 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 
 4. To start in developer mode with hot-refresh server (degraded performance): run `yarn start` and visit [http://localhost:3000/broflake](http://localhost:3000/broflake)
 
-5. To build optimized for best performance run: `yarn build`
+5. To build optimized for best performance run: `PUBLIC_URL=/ yarn build`
 
 6. To serve a build:
    1. Install a simple server e.g. `npm install -g serve` (or your lightweight http server of choice)
