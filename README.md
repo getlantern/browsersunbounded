@@ -103,7 +103,7 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 
 6. To serve a build:
    1. Install a simple server e.g. `npm install -g serve` (or your lightweight http server of choice)
-   2. Serve the build dir e.g. `serve -s build -l 3000` and visit [http://localhost:3000/broflake](http://localhost:3000/broflake)
+   2. Serve the build dir e.g. `serve -s build -l 3000` and visit [http://localhost:3000](http://localhost:3000)
 
 7. To deploy to Github pages: `yarn deploy`
 
