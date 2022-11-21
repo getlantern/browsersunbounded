@@ -8,7 +8,7 @@ import (
 
 const (
 	SignalMsgGenesis SignalMsgType = iota
-	SignalMsgOffer
+	SignalMsgConsumerOffer
 	SignalMsgAnswer
 	SignalMsgICE
 )
@@ -58,6 +58,37 @@ func (msg GenesisMsg) ToJSON() []byte {
 	return g
 }
 
+type ConsumerOfferMsg struct {
+	*innerConsumerOfferMsg
+	Offer        webrtc.SessionDescription `json:"-"`
+	ConsumerInfo ConsumerInfo              `json:"-"`
+}
+
+type innerConsumerOfferMsg struct {
+	Offer        string       `json:"offer"`
+	ConsumerInfo ConsumerInfo `json:"consumer-info"`
+}
+
+func (m *ConsumerOfferMsg) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&innerConsumerOfferMsg{
+		Offer:        m.Offer.SDP,
+		ConsumerInfo: m.ConsumerInfo,
+	})
+}
+
+func (m *ConsumerOfferMsg) UnmarshalJSON(b []byte) error {
+	var inner innerConsumerOfferMsg
+	if err := json.Unmarshal(b, &inner); err != nil {
+		return err
+	}
+	m.innerConsumerOfferMsg = &inner
+	m.Offer = webrtc.SessionDescription{
+		Type: webrtc.SDPTypeOffer,
+		SDP:  inner.Offer,
+	}
+	return nil
+}
+
 type SignalMsg struct {
 	ReplyTo string
 	Type    SignalMsgType
@@ -81,13 +112,13 @@ func DecodeSignalMsg(raw []byte) (string, interface{}) {
 			panic(err)
 		}
 		return msg.ReplyTo, genesis
-	case SignalMsgOffer:
-		var offer webrtc.SessionDescription
-		err := json.Unmarshal([]byte(msg.Payload), &offer)
+	case SignalMsgConsumerOffer:
+		var p ConsumerOfferMsg
+		err := json.Unmarshal([]byte(msg.Payload), &p)
 		if err != nil {
 			panic(err)
 		}
-		return msg.ReplyTo, offer
+		return msg.ReplyTo, p
 	case SignalMsgAnswer:
 		var answer webrtc.SessionDescription
 		err := json.Unmarshal([]byte(msg.Payload), &answer)
