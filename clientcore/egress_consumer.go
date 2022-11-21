@@ -2,19 +2,19 @@
 // establishment, connection error detection, and reset. See:
 // https://docs.google.com/spreadsheets/d/1qM1gwPRtTKTFfZZ0e51R7AdS6qkPlKMuJX3D3vmpG_U/edit#gid=654426763
 
-package main
+package clientcore
 
 import (
 	"context"
 	"fmt"
-	"time"
+	"sync"
 
 	"github.com/getlantern/broflake/common"
 	"nhooyr.io/websocket"
 )
 
-func newEgressConsumerWebSocket() *workerFSM {
-	return newWorkerFSM([]FSMstate{
+func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *WorkerFSM {
+	return NewWorkerFSM([]FSMstate{
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 0
 			// (no input data)
@@ -22,32 +22,32 @@ func newEgressConsumerWebSocket() *workerFSM {
 
 			// We're resetting this slot, so send a nil path assertion IPC message
 			select {
-			case com.tx <- ipcMsg{ipcType: PathAssertionIPC, data: common.PathAssertion{}}:
+			case com.tx <- IpcMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{}}:
 				// Do nothing, message sent
 			default:
 				panic("Egress consumer buffer overflow!")
 			}
 
-			// TODO: interesting quirk here: if the table router which manages this workerFSM implements
+			// TODO: interesting quirk here: if the table router which manages this WorkerFSM implements
 			// non-multiplexed just-in-time strategy wherein it creates a new websocket connection for
 			// each new censored peer, we've got a chicken and egg deadlock: the consumer table won't
 			// start advertising connectivity until it detects a non-nil path assertion, and we won't
 			// have a non-nil path assertion until a censored peer connects to us. 3 poss solutions: make
-			// this egress consumer workerFSM always emit a (*, 1) path assertion, even when it doesn't
+			// this egress consumer WorkerFSM always emit a (*, 1) path assertion, even when it doesn't
 			// have upstream connectivity... OR invent another special case for the host field which
 			// indicates "on request", as an escape hatch which indicates to a consumer table that it
 			// can use that slot to dial a lantern-controlled exit node, so we'd be emitting something
 			// like ($, 1)... OR just disallow just-in-time strategies, and make egress consumers
 			// pre-establish N websocket connections
 
-			ctx, cancel := context.WithTimeout(context.Background(), egressConnectTimeout*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), options.ConnectTimeout)
 			defer cancel()
 
 			// TODO: WSS
 
-			c, _, err := websocket.Dial(ctx, egressSrv+egressEndpoint, nil)
+			c, _, err := websocket.Dial(ctx, options.Addr+options.Endpoint, nil)
 			if err != nil {
-				fmt.Printf("Couldn't connect to egress server at %v\n", egressSrv)
+				fmt.Printf("Couldn't connect to egress server at %v\n", options.Addr)
 				return 0, []interface{}{}
 			}
 
@@ -63,7 +63,7 @@ func newEgressConsumerWebSocket() *workerFSM {
 			// TODO: post-MVP we shouldn't be hardcoding (*, 1) here...
 			allowAll := []common.Endpoint{{Host: "*", Distance: 1}}
 			select {
-			case com.tx <- ipcMsg{ipcType: PathAssertionIPC, data: common.PathAssertion{Allow: allowAll}}:
+			case com.tx <- IpcMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{Allow: allowAll}}:
 				// Do nothing, message sent
 			default:
 				panic("Egress consumer buffer overflow!")
@@ -81,7 +81,7 @@ func newEgressConsumerWebSocket() *workerFSM {
 
 					// Wrap the chunk and send it on to the router
 					select {
-					case com.tx <- ipcMsg{ipcType: ChunkIPC, data: b}:
+					case com.tx <- IpcMsg{IpcType: ChunkIPC, Data: b}:
 						// Do nothing, message sent
 					default:
 						panic("Egress consumer buffer overflow!")
@@ -101,7 +101,7 @@ func newEgressConsumerWebSocket() *workerFSM {
 				case msg := <-com.rx:
 					// Write the chunk to the websocket, detect and handle error
 					// TODO: is it safe to assume the message is a chunk type? Do we trust the router?
-					err := c.Write(context.Background(), websocket.MessageBinary, msg.data.([]byte))
+					err := c.Write(context.Background(), websocket.MessageBinary, msg.Data.([]byte))
 					if err != nil {
 						c.Close(websocket.StatusNormalClosure, err.Error())
 						fmt.Printf("Egress consumer WebSocket write error: %v\n", err)
@@ -124,5 +124,5 @@ func newEgressConsumerWebSocket() *workerFSM {
 			// TODO: We shouldn't reach this code path, right?
 			return 0, []interface{}{}
 		}),
-	})
+	}, wg)
 }

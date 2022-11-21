@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/getlantern/broflake/clientcore"
 	"github.com/getlantern/broflake/common"
 )
 
@@ -26,7 +27,7 @@ type UI interface {
 	OnConsumerConnectionChange(state int, workerIdx int, loc string)
 }
 
-func downstreamUIHandler(ui UIImpl) func(msg ipcMsg) {
+func downstreamUIHandler(ui UIImpl) func(msg clientcore.IpcMsg) {
 	var bytesPerSec int64
 	var tick uint
 	tickMs := time.Duration(1000 / uiRefreshHz)
@@ -42,26 +43,26 @@ func downstreamUIHandler(ui UIImpl) func(msg ipcMsg) {
 		}
 	}()
 
-	return func(msg ipcMsg) {
-		switch msg.ipcType {
-		case ChunkIPC:
-			size := len(msg.data.([]byte))
+	return func(msg clientcore.IpcMsg) {
+		switch msg.IpcType {
+		case clientcore.ChunkIPC:
+			size := len(msg.Data.([]byte))
 			atomic.AddInt64(&bytesPerSec, int64(size))
-			ui.OnDownstreamChunk(size, int(msg.wid))
+			ui.OnDownstreamChunk(size, int(msg.Wid))
 		}
 	}
 }
 
-func upstreamUIHandler(ui UIImpl) func(msg ipcMsg) {
-	return func(msg ipcMsg) {
-		switch msg.ipcType {
-		case ConsumerInfoIPC:
-			ci := msg.data.(common.ConsumerInfo)
+func upstreamUIHandler(ui UIImpl) func(msg clientcore.IpcMsg) {
+	return func(msg clientcore.IpcMsg) {
+		switch msg.IpcType {
+		case clientcore.ConsumerInfoIPC:
+			ci := msg.Data.(common.ConsumerInfo)
 			state := 1
 			if ci.Nil() {
 				state = -1
 			}
-			ui.OnConsumerConnectionChange(state, int(msg.wid), ci.Location)
+			ui.OnConsumerConnectionChange(state, int(msg.Wid), ci.Location)
 		}
 	}
 }

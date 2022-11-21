@@ -1,5 +1,5 @@
 // ipc.go defines structures and functionality for communication between client system components
-package main
+package clientcore
 
 // ChunkIPC: data plane traffic
 // PathAssertionIPC: how upstream processes describe their connectivity for downstream processes
@@ -21,35 +21,35 @@ const (
 type msgType int
 type workerID int
 
-type ipcMsg struct {
-	ipcType msgType
-	data    interface{}
-	wid     workerID
+type IpcMsg struct {
+	IpcType msgType
+	Data    interface{}
+	Wid     workerID
 }
 
 type ipcChan struct {
-	tx chan ipcMsg
-	rx chan ipcMsg
+	tx chan IpcMsg
+	rx chan IpcMsg
 }
 
 func newIpcChan(bufferSz int) *ipcChan {
-	return &ipcChan{tx: make(chan ipcMsg, bufferSz), rx: make(chan ipcMsg, bufferSz)}
+	return &ipcChan{tx: make(chan IpcMsg, bufferSz), rx: make(chan IpcMsg, bufferSz)}
 }
 
 type ipcObserver struct {
-	downstream *ipcChan
-	upstream   *ipcChan
-	onTx       func(ipcMsg)
-	onRx       func(ipcMsg)
+	Downstream *ipcChan
+	Upstream   *ipcChan
+	onTx       func(IpcMsg)
+	onRx       func(IpcMsg)
 }
 
-func (o *ipcObserver) start() {
+func (o *ipcObserver) Start() {
 	go func() {
 		for {
-			msg := <-o.downstream.tx
+			msg := <-o.Downstream.tx
 			o.onTx(msg)
 			select {
-			case o.upstream.tx <- msg:
+			case o.Upstream.tx <- msg:
 				// Do nothing, message sent
 			default:
 				panic("Observer buffer overflow!")
@@ -59,10 +59,10 @@ func (o *ipcObserver) start() {
 
 	go func() {
 		for {
-			msg := <-o.upstream.rx
+			msg := <-o.Upstream.rx
 			o.onRx(msg)
 			select {
-			case o.downstream.rx <- msg:
+			case o.Downstream.rx <- msg:
 				// Do nothing, message sent
 			default:
 				panic("Observer buffer overflow!")
@@ -71,18 +71,18 @@ func (o *ipcObserver) start() {
 	}()
 }
 
-func newIpcObserver(bufferSz int, onTx, onRx func(ipcMsg)) *ipcObserver {
+func NewIpcObserver(bufferSz int, onTx, onRx func(IpcMsg)) *ipcObserver {
 	if onTx == nil {
-		onTx = func(ipcMsg) {}
+		onTx = func(IpcMsg) {}
 	}
 
 	if onRx == nil {
-		onRx = func(ipcMsg) {}
+		onRx = func(IpcMsg) {}
 	}
 
 	return &ipcObserver{
-		downstream: newIpcChan(bufferSz),
-		upstream:   newIpcChan(bufferSz),
+		Downstream: newIpcChan(bufferSz),
+		Upstream:   newIpcChan(bufferSz),
 		onTx:       onTx,
 		onRx:       onRx,
 	}

@@ -1,5 +1,4 @@
 //go:build !wasm
-// +build !wasm
 
 // ui_default_impl.go implements the UI interface (see ui.go) for non-wasm build targets
 package main

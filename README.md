@@ -27,13 +27,14 @@ Broflake is a suite of several software applications. We have deployed some tric
 Broflake's codebase as small as possible, and so the mapping between applications and modules isn't
 perfectly straightforward.
 
-|Module |Description                                                                                               |
-|-------|-------------------------------------------------------------------------------|
-|client |client software for native binary (desktop, mobile) **and** browser-based users|
-|common |shared libraries                                                               |
-|egress |egress server                                                                  |
-|freddie|discovery server + signaling & matchmaking logic                               |
-|ui     |embeddable web user interface                                                  |
+| Module     | Description                                                                    |
+|------------|--------------------------------------------------------------------------------|
+| clientcore | core code for Broflake clients                                                 |
+| client     | executable binaries for desktop, mobile and web that use clientcore            |
+| common     | shared code between different Broflake components (e.g., egress, freddie, etc) |
+| egress     | egress server                                                                  |
+| freddie    | discovery server + signaling & matchmaking logic                               |
+| ui         | embeddable web user interface                                                  |
 
 
 ### :arrow_forward: Quickstart for devs

@@ -1,5 +1,5 @@
 // routing.go defines upstream and downstream router components
-package main
+package clientcore
 
 import (
 	"fmt"
@@ -8,30 +8,30 @@ import (
 	"github.com/getlantern/broflake/common"
 )
 
-// A tableRouter is a multiplexer/demultiplexer which functions as the interface to a workerTable,
-// abstracting the complexity of connecting a workerTable of arbitrary size to the message bus. An
-// upstream tableRouter, in managing a workerTable consisting of workers which handle egress traffic,
+// A tableRouter is a multiplexer/demultiplexer which functions as the interface to a WorkerTable,
+// abstracting the complexity of connecting a WorkerTable of arbitrary size to the message bus. An
+// upstream tableRouter, in managing a WorkerTable consisting of workers which handle egress traffic,
 // decides how to best utilize those connections (ie, in serial, in parallel, 1:1, multipath, etc.)
-type tableRouter interface {
-	init()
+type TableRouter interface {
+	Init()
 
-	onBus(msg ipcMsg)
+	onBus(msg IpcMsg)
 
-	onWorker(msg ipcMsg, workerIdx workerID)
+	onWorker(msg IpcMsg, workerIdx workerID)
 }
 
 // A baseRouter implements basic router functionality
 type baseRouter struct {
 	bus        *ipcChan
-	table      *workerTable
-	busHook    func(r *baseRouter, msg ipcMsg)
-	workerHook func(r *baseRouter, msg ipcMsg, workerIdx workerID)
+	table      *WorkerTable
+	busHook    func(r *baseRouter, msg IpcMsg)
+	workerHook func(r *baseRouter, msg IpcMsg, workerIdx workerID)
 }
 
-func (r *baseRouter) init(
-	listen chan ipcMsg,
-	onBus func(msg ipcMsg),
-	onWorker func(msg ipcMsg,
+func (r *baseRouter) Init(
+	listen chan IpcMsg,
+	onBus func(msg IpcMsg),
+	onWorker func(msg IpcMsg,
 		workerIdx workerID),
 ) {
 	for i := range r.table.slot {
@@ -50,11 +50,11 @@ func (r *baseRouter) init(
 	}()
 }
 
-func (r *baseRouter) onBus(msg ipcMsg) {
+func (r *baseRouter) onBus(msg IpcMsg) {
 	r.busHook(r, msg)
 }
 
-func (r *baseRouter) onWorker(msg ipcMsg, workerIdx workerID) {
+func (r *baseRouter) onWorker(msg IpcMsg, workerIdx workerID) {
 	r.workerHook(r, msg, workerIdx)
 }
 
@@ -63,24 +63,24 @@ type upstreamRouter struct {
 	baseRouter
 }
 
-func (r *upstreamRouter) init() {
-	r.baseRouter.init(r.bus.tx, r.onBus, r.onWorker)
+func (r *upstreamRouter) Init() {
+	r.baseRouter.Init(r.bus.tx, r.onBus, r.onWorker)
 }
 
-func (r *upstreamRouter) onBus(msg ipcMsg) {
+func (r *upstreamRouter) onBus(msg IpcMsg) {
 	r.baseRouter.onBus(msg)
 }
 
-func (r *upstreamRouter) onWorker(msg ipcMsg, workerIdx workerID) {
+func (r *upstreamRouter) onWorker(msg IpcMsg, workerIdx workerID) {
 	// TODO: a brittle assumption here: upstreamRouter.workerHook will call backRoute and add the
-	// wid to the ipcMsg, and it will also forward all appropriate messages to the bus. This is
-	// the opposite of downstreamRouter.onWorker, which adds the wid to the ipcMsg and forwards all
+	// wid to the IpcMsg, and it will also forward all appropriate messages to the bus. This is
+	// the opposite of downstreamRouter.onWorker, which adds the wid to the IpcMsg and forwards all
 	// msgs to the bus. The funkiness here is part of the larger issue concerning the two different
 	// ways in which we use the wid field and the asymmetry in how wids are assigned.
 	r.baseRouter.onWorker(msg, workerIdx)
 }
 
-func (r *upstreamRouter) toBus(msg ipcMsg) {
+func (r *upstreamRouter) toBus(msg IpcMsg) {
 	select {
 	case r.bus.rx <- msg:
 		// Do nothing, message sent
@@ -89,7 +89,7 @@ func (r *upstreamRouter) toBus(msg ipcMsg) {
 	}
 }
 
-func (r *upstreamRouter) toWorker(msg ipcMsg, peerIdx workerID) {
+func (r *upstreamRouter) toWorker(msg IpcMsg, peerIdx workerID) {
 	select {
 	case r.table.slot[peerIdx].com.rx <- msg:
 		// Do nothing, message sent
@@ -108,22 +108,22 @@ type downstreamRouter struct {
 	baseRouter
 }
 
-func (r *downstreamRouter) init() {
-	r.baseRouter.init(r.bus.rx, r.onBus, r.onWorker)
+func (r *downstreamRouter) Init() {
+	r.baseRouter.Init(r.bus.rx, r.onBus, r.onWorker)
 }
 
-func (r *downstreamRouter) onBus(msg ipcMsg) {
+func (r *downstreamRouter) onBus(msg IpcMsg) {
 	r.baseRouter.onBus(msg)
 }
 
-func (r *downstreamRouter) onWorker(msg ipcMsg, workerIdx workerID) {
+func (r *downstreamRouter) onWorker(msg IpcMsg, workerIdx workerID) {
 	// Add the worker's ID to the msg
-	msg.wid = workerIdx
+	msg.Wid = workerIdx
 	r.toBus(msg)
 	r.baseRouter.onWorker(msg, workerIdx)
 }
 
-func (r *downstreamRouter) toBus(msg ipcMsg) {
+func (r *downstreamRouter) toBus(msg IpcMsg) {
 	select {
 	case r.bus.tx <- msg:
 		// Do nothing, message sent
@@ -132,9 +132,9 @@ func (r *downstreamRouter) toBus(msg ipcMsg) {
 	}
 }
 
-func (r *downstreamRouter) toWorker(msg ipcMsg) {
+func (r *downstreamRouter) toWorker(msg IpcMsg) {
 	select {
-	case r.table.slot[msg.wid].com.rx <- msg:
+	case r.table.slot[msg.Wid].com.rx <- msg:
 		// Do nothing, message sent
 	default:
 		// TODO: probably disable this for production? In theory, we might try to route data to
@@ -142,13 +142,13 @@ func (r *downstreamRouter) toWorker(msg ipcMsg) {
 		// channel. When that happens, we'll start filling up their rx buffer. An issue here is
 		// that we cannot discern between a worker who has moved on to a different state and a
 		// worker who is overwhelmed and can't keep up with the data rate.
-		panic(fmt.Sprintf("Downstream router buffer overflow (worker %v)!", msg.wid))
+		panic(fmt.Sprintf("Downstream router buffer overflow (worker %v)!", msg.Wid))
 	}
 }
 
-func (r *downstreamRouter) toAllWorkers(msg ipcMsg) {
+func (r *downstreamRouter) toAllWorkers(msg IpcMsg) {
 	for peerIdx := range r.table.slot {
-		msg.wid = workerID(peerIdx)
+		msg.Wid = workerID(peerIdx)
 		r.toWorker(msg)
 	}
 }
@@ -176,7 +176,7 @@ type producerSerialRouter struct {
 	sync.RWMutex
 }
 
-func newProducerSerialRouter(bus *ipcChan, table *workerTable, cTableSize int) *producerSerialRouter {
+func NewProducerSerialRouter(bus *ipcChan, table *WorkerTable, cTableSize int) *producerSerialRouter {
 	psr := producerSerialRouter{
 		upstreamRouter: upstreamRouter{
 			baseRouter: baseRouter{
@@ -268,24 +268,24 @@ func (r *producerSerialRouter) backRoute(wid workerID) (bool, workerID) {
 	return true, consumers[0]
 }
 
-func (psr *producerSerialRouter) busHook(r *baseRouter, msg ipcMsg) {
-	switch msg.ipcType {
+func (psr *producerSerialRouter) busHook(r *baseRouter, msg IpcMsg) {
+	switch msg.IpcType {
 	case ChunkIPC:
-		ok, route := psr.route(msg.wid)
+		ok, route := psr.route(msg.Wid)
 		if ok {
 			psr.toWorker(msg, route)
 		}
 	}
 }
 
-func (psr *producerSerialRouter) workerHook(r *baseRouter, msg ipcMsg, workerIdx workerID) {
-	switch msg.ipcType {
+func (psr *producerSerialRouter) workerHook(r *baseRouter, msg IpcMsg, workerIdx workerID) {
+	switch msg.IpcType {
 	case PathAssertionIPC:
-		psr.onPathAssertion(msg.data.(common.PathAssertion), workerIdx)
+		psr.onPathAssertion(msg.Data.(common.PathAssertion), workerIdx)
 	case ChunkIPC:
 		ok, route := psr.backRoute(workerIdx)
 		if ok {
-			msg.wid = route
+			msg.Wid = route
 			psr.toBus(msg)
 		}
 	}
@@ -294,7 +294,7 @@ func (psr *producerSerialRouter) workerHook(r *baseRouter, msg ipcMsg, workerIdx
 // A producerPoolRouter is a tableRouter for managing producer tables which employs the most
 // naive routing strategy available: it maintains a persistent pool of pre-connected producers,
 // routing each consumer through its own producer in a 1:1 mapping. A producerPoolRouter only
-// announces a non-nil path assertion when all of its producer workerFSMs have established stable
+// announces a non-nil path assertion when all of its producer WorkerFSMs have established stable
 // connections. For these reasons, a producerPoolRouter is only useful for managing connections to
 // producers which are under Lantern's control - eg, WebSocket connections to an egress server.
 // Using a producerPoolRouter to manage a producer table with N slots in a client which has M
@@ -305,7 +305,7 @@ type producerPoolRouter struct {
 	sync.RWMutex
 }
 
-func newProducerPoolRouter(bus *ipcChan, table *workerTable) *producerPoolRouter {
+func NewProducerPoolRouter(bus *ipcChan, table *WorkerTable) *producerPoolRouter {
 	ppr := producerPoolRouter{
 		upstreamRouter: upstreamRouter{
 			baseRouter: baseRouter{
@@ -361,35 +361,35 @@ func (r *producerPoolRouter) backRoute(wid workerID) (bool, workerID) {
 	return r.route(wid)
 }
 
-func (ppr *producerPoolRouter) busHook(r *baseRouter, msg ipcMsg) {
-	switch msg.ipcType {
+func (ppr *producerPoolRouter) busHook(r *baseRouter, msg IpcMsg) {
+	switch msg.IpcType {
 	case ConnectivityCheckIPC:
-		ppr.toBus(ipcMsg{ipcType: PathAssertionIPC, data: ppr.globalPathAssertion(), wid: msg.wid})
+		ppr.toBus(IpcMsg{IpcType: PathAssertionIPC, Data: ppr.globalPathAssertion(), Wid: msg.Wid})
 	case ChunkIPC:
 		// TODO: is this necessary?
 		if ppr.globalPathAssertion().Nil() {
 			return
 		}
-		_, route := ppr.route(msg.wid)
+		_, route := ppr.route(msg.Wid)
 		ppr.toWorker(msg, route)
 	}
 }
 
-func (ppr *producerPoolRouter) workerHook(r *baseRouter, msg ipcMsg, workerIdx workerID) {
-	switch msg.ipcType {
+func (ppr *producerPoolRouter) workerHook(r *baseRouter, msg IpcMsg, workerIdx workerID) {
+	switch msg.IpcType {
 	case PathAssertionIPC:
-		ppr.onPathAssertion(msg.data.(common.PathAssertion), workerIdx)
+		ppr.onPathAssertion(msg.Data.(common.PathAssertion), workerIdx)
 		pa := ppr.globalPathAssertion()
 		// TODO: currently we send a new path assertion IPC every time we receive a new path
 		// assertion from a worker. In practice this is harmless, since our workers are egress
 		// consumers who are likely to send just a single path assertion per session. But an optimal
 		// implementation would cache the last PA and only send a new IPC when there's a delta.
-		ppr.toBus(ipcMsg{ipcType: PathAssertionIPC, data: pa, wid: BroadcastRoute})
+		ppr.toBus(IpcMsg{IpcType: PathAssertionIPC, Data: pa, Wid: BroadcastRoute})
 	case ChunkIPC:
 		// Backrouting! TODO: the asymmetry in how upstream and downstream routers determine and
 		// assign and interpret the wid is a source of much confusion and must be fixed
 		_, route := ppr.backRoute(workerIdx)
-		msg.wid = route
+		msg.Wid = route
 		ppr.toBus(msg)
 	}
 }
@@ -401,7 +401,7 @@ type consumerRouter struct {
 	downstreamRouter
 }
 
-func newConsumerRouter(bus *ipcChan, table *workerTable) *consumerRouter {
+func NewConsumerRouter(bus *ipcChan, table *WorkerTable) *consumerRouter {
 	cr := consumerRouter{
 		downstreamRouter: downstreamRouter{
 			baseRouter: baseRouter{
@@ -417,9 +417,9 @@ func newConsumerRouter(bus *ipcChan, table *workerTable) *consumerRouter {
 	return &cr
 }
 
-func (cr *consumerRouter) busHook(r *baseRouter, msg ipcMsg) {
+func (cr *consumerRouter) busHook(r *baseRouter, msg IpcMsg) {
 	// TODO: we currently forward all msg types without any filter... maybe it's worth revisiting
-	switch msg.wid {
+	switch msg.Wid {
 	case BroadcastRoute:
 		cr.toAllWorkers(msg)
 	default:
@@ -427,33 +427,37 @@ func (cr *consumerRouter) busHook(r *baseRouter, msg ipcMsg) {
 	}
 }
 
-func (cr *consumerRouter) workerHook(r *baseRouter, msg ipcMsg, workerIdx workerID) {
+func (cr *consumerRouter) workerHook(r *baseRouter, msg IpcMsg, workerIdx workerID) {
 	// Do nothing
 }
 
-// workerTable ts the structure we use to represent the producer and consumer tables
-type workerTable struct {
+// WorkerTable ts the structure we use to represent the producer and consumer tables
+type WorkerTable struct {
 	size int
-	slot []workerFSM
+	slot []WorkerFSM
 }
 
-// Construct a new workerTable; len(list) corresponds to max concurrent connections for this table.
-// By mixing workerFSMs, you can construct a table consisting of connections over different transports.
-func newWorkerTable(list []workerFSM) *workerTable {
-	pt := workerTable{slot: list, size: len(list)}
+// Construct a new WorkerTable; len(list) corresponds to max concurrent connections for this table.
+// By mixing WorkerFSMs, you can construct a table consisting of connections over different transports.
+func NewWorkerTable(list []WorkerFSM) *WorkerTable {
+	pt := WorkerTable{slot: list, size: len(list)}
 	return &pt
 }
 
 // Start all of this table's workers
-func (t workerTable) start() {
+func (t WorkerTable) Start() {
 	for i := range t.slot {
-		t.slot[i].start()
+		t.slot[i].Start()
 	}
 }
 
 // Stop all of this table's workers
-func (t workerTable) stop() {
+func (t WorkerTable) Stop() {
 	for i := range t.slot {
-		t.slot[i].stop()
+		t.slot[i].Stop()
 	}
+}
+
+func (t WorkerTable) Size() int {
+	return t.size
 }

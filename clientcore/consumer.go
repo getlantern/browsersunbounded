@@ -1,9 +1,11 @@
-// producer.go defines standard producer behavior over WebRTC, including the discovery process,
+// consumer.go implements standard consumer behavior over WebRTC, including the discovery process,
 // signaling, connection establishment, connection error detection, and reset. See:
-// https://docs.google.com/spreadsheets/d/1qM1gwPRtTKTFfZZ0e51R7AdS6qkPlKMuJX3D3vmpG_U/edit#gid=471342300
-package main
+// https://docs.google.com/spreadsheets/d/1qM1gwPRtTKTFfZZ0e51R7AdS6qkPlKMuJX3D3vmpG_U/edit#gid=0
+
+package clientcore
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,24 +13,33 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/getlantern/broflake/common"
 	"github.com/pion/webrtc/v3"
 )
 
-func newProducerWebRTC() *workerFSM {
-	return newWorkerFSM([]FSMstate{
+func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
+	return NewWorkerFSM([]FSMstate{
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 0
 			// (no input data)
-			fmt.Printf("Producer state 0, constructing RTCPeerConnection...\n")
+			fmt.Printf("Consumer state 0, constructing RTCPeerConnection...\n")
+
+			// We're resetting this slot, so send a nil path assertion IPC message
+			select {
+			case com.tx <- IpcMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{}}:
+				// Do nothing, message sent
+			default:
+				panic("Consumer buffer overflow!")
+			}
 
 			// TODO: STUN servers will eventually be provided in a more sophisticated way
 			config := webrtc.Configuration{
 				ICEServers: []webrtc.ICEServer{
 					{
-						URLs: []string{stunSrv},
+						URLs: []string{options.StunSrv},
 					},
 				},
 			}
@@ -39,7 +50,11 @@ func newProducerWebRTC() *workerFSM {
 				panic(err)
 			}
 
-			// Producers are the answerers, so we don't create a datachannel
+			// Consumers are the offerers, so we must create a datachannel
+			d, err := peerConnection.CreateDataChannel("data", nil)
+			if err != nil {
+				panic(err)
+			}
 
 			// We want to make sure we capture the connection establishment event whenever it happens,
 			// but we also want to avoid control flow spaghetti (it would very hard to reason about
@@ -51,23 +66,19 @@ func newProducerWebRTC() *workerFSM {
 			// we should monitor the logs to see if connections open too long before we check for them.
 			connectionEstablished := make(chan *webrtc.DataChannel, 1)
 
+			d.OnOpen(func() {
+				fmt.Printf("A datachannel has opened!\n")
+				connectionEstablished <- d
+			})
+
 			// connectionClosed (and the OnClose handler below) is implemented for Firefox, the only
 			// browser which doesn't implement WebRTC's onconnectionstatechange event. We listen for both
 			// onclose and onconnectionstatechange under the assumption that non-Firefox browsers can
 			// benefit from faster connection failure detection by listening for the `failed` event.
 			connectionClosed := make(chan struct{}, 1)
-			peerConnection.OnDataChannel(func(d *webrtc.DataChannel) {
-				fmt.Printf("Created new datachannel...\n")
-
-				d.OnOpen(func() {
-					fmt.Printf("A datachannel has opened!\n")
-					connectionEstablished <- d
-				})
-
-				d.OnClose(func() {
-					fmt.Printf("A datachannel has closed!\n")
-					connectionClosed <- struct{}{}
-				})
+			d.OnClose(func() {
+				fmt.Printf("A datachannel has closed!\n")
+				connectionClosed <- struct{}{}
 			})
 
 			// Ditto, but for connection state changes
@@ -89,89 +100,46 @@ func newProducerWebRTC() *workerFSM {
 			connectionEstablished := input[1].(chan *webrtc.DataChannel)
 			connectionChange := input[2].(chan webrtc.PeerConnectionState)
 			connectionClosed := input[3].(chan struct{})
-			fmt.Printf("Producer state 1...\n")
+			fmt.Printf("Consumer state 1...\n")
 
-			// Do we have a non-nil path assertion, indicating that we have upstream connectivity to share?
-			// We find out by sending an ConnectivityCheckIPC message, which asks the process responsible
-			// for path assertions to send a message reflecting the current state of our path assertion.
-			// If yes, we can proceed right now! If no, just wait for the next non-nil path assertion message...
-			select {
-			case com.tx <- ipcMsg{ipcType: ConnectivityCheckIPC}:
-				// Do nothing, message sent
-			default:
-				panic("Producer buffer overflow!")
-			}
-
-			for {
-				select {
-				// Handle inbound IPC messages, wait for a non-nil path assertion
-				case msg := <-com.rx:
-					if msg.ipcType == PathAssertionIPC && !msg.data.(common.PathAssertion).Nil() {
-						pa := msg.data.(common.PathAssertion)
-						return 2, []interface{}{peerConnection, pa, connectionEstablished, connectionChange, connectionClosed}
-					}
-				// Since we're putting this state into an infinite loop, explicitly handle cancellation
-				case <-ctx.Done():
-					return 0, []interface{}{}
-				}
-			}
-		}),
-		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
-			// State 2
-			// input[0]: *webrtc.PeerConnection
-			// input[1]: common.PathAssertion
-			// input[2]: chan *webrtc.DataChannel
-			// input[3]: chan webrtc.PeerConnectionState
-			// input[4]: chan struct{}
-			peerConnection := input[0].(*webrtc.PeerConnection)
-			pa := input[1].(common.PathAssertion)
-			connectionEstablished := input[2].(chan *webrtc.DataChannel)
-			connectionChange := input[3].(chan webrtc.PeerConnectionState)
-			connectionClosed := input[4].(chan struct{})
-			fmt.Printf("Producer state 2...\n")
-
-			// Construct a genesis message
-			g := common.GenesisMsg{PathAssertion: pa}.ToJSON()
-
-			// Signal the genesis message
+			// Listen for genesis messages
 			// TODO: use a custom http.Client and control our TCP connections
-			res, err := http.PostForm(
-				discoverySrv+signalEndpoint,
-				url.Values{"data": {string(g)}, "send-to": {genesisAddr}, "type": {strconv.Itoa(int(common.SignalMsgGenesis))}},
-			)
+			res, err := http.Get(options.DiscoverySrv + options.Endpoint)
 			if err != nil {
-				fmt.Printf("Couldn't signal genesis message to %v\n", discoverySrv+signalEndpoint)
+				fmt.Printf("Couldn't subscribe to genesis stream at %v\n", options.DiscoverySrv+options.Endpoint)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
 			defer res.Body.Close()
 
-			// Freddie never returns 404s for genesis messages, so we're not catching that case here
+			reader := bufio.NewReader(res.Body)
+			for {
+				rawMsg, err := reader.ReadBytes('\n')
+				if err != nil {
+					// TODO: what does this error mean? Should we be returning to state 1?
+					return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+				}
 
-			// The HTTP request is complete
-			offerBytes, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+				replyTo, _ := common.DecodeSignalMsg(rawMsg)
+				// TODO: We ought to be getting an error back to indicate a malformed message
+				// also TODO: post-MVP, evaluate the genesis message for suitability!
+
+				// We like the genesis message, let's create an offer to signal back in the next step!
+				offer, err := peerConnection.CreateOffer(nil)
+				if err != nil {
+					panic(err)
+				}
+
+				return 2, []interface{}{peerConnection, replyTo, offer, connectionEstablished, connectionChange, connectionClosed}
 			}
 
-			// TODO: Freddie sends back a 0-length body when nobody replied to our message. Is that the
-			// smartest way to handle this case systemwide?
-			if len(offerBytes) == 0 {
-				fmt.Printf("No answer for genesis message!\n")
-				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
-			}
-
-			// Looks like we got some kind of response. It ought to be an offer SDP wrapped in a SignalMsg
-			// TODO: we ought to be getting an error back from DecodeSignalMsg if it's malformed
-			replyTo, offer := common.DecodeSignalMsg(offerBytes)
-
-			// TODO: here we assume we've received a valid offer SDP, we also need to handle invalid case
-			return 3, []interface{}{peerConnection, replyTo, offer, connectionEstablished, connectionChange, connectionClosed}
+			// We listened as long as we could, but we never heard a suitable genesis message
+			return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 		}),
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
-			// State 3
+			// State 2
 			// input[0]: *webrtc.PeerConnection
-			// input[1]: string (replyTo)
-			// input[2]: webrtc.SessionDescription (remote offer)
+			// input[1]: string (reply-to UUID)
+			// input[2]: webrtc.SessionDescription (offer)
 			// input[3]: chan *webrtc.DataChannel
 			// input[4]: chan webrtc.PeerConnectionState
 			// input[5]: chan struct{}
@@ -181,99 +149,137 @@ func newProducerWebRTC() *workerFSM {
 			connectionEstablished := input[3].(chan *webrtc.DataChannel)
 			connectionChange := input[4].(chan webrtc.PeerConnectionState)
 			connectionClosed := input[5].(chan struct{})
-			fmt.Printf("Producer state 3...\n")
+			fmt.Printf("Consumer state 2...\n")
+
+			offerJSON, err := json.Marshal(offer)
+			if err != nil {
+				panic(err)
+			}
+
+			// Signal the offer
+			// TODO: use a custom http.Client and control our TCP connections
+			res, err := http.PostForm(
+				options.DiscoverySrv+options.Endpoint,
+				url.Values{"data": {string(offerJSON)}, "send-to": {replyTo}, "type": {strconv.Itoa(int(common.SignalMsgOffer))}},
+			)
+			if err != nil {
+				fmt.Printf("Couldn't signal offer SDP to %v\n", options.DiscoverySrv+options.Endpoint)
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			}
+			defer res.Body.Close()
+
+			// We didn't win the connection
+			if res.StatusCode == 404 {
+				fmt.Printf("Too late for genesis message %v!\n", replyTo)
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			}
+
+			// The HTTP request is complete
+			answerBytes, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			}
+
+			// TODO: Freddie sends back a 0-length body when nobody replied to our message. Is that the
+			// smartest way to handle this case systemwide?
+			if len(answerBytes) == 0 {
+				fmt.Printf("No response for our offer SDP!\n")
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			}
+
+			// Looks like we got some kind of response. Should be an answer SDP in a SignalMsg
+			// TODO: we ought to be getting an error back from DecodeSignalMsg if it's malformed
+			replyTo, answer := common.DecodeSignalMsg(answerBytes)
+
+			// TODO: here we assume valid answer SDP, but we need to handle the invalid case too
 
 			// Create a channel that's blocked until ICE gathering is complete
 			gatherComplete := webrtc.GatheringCompletePromise(peerConnection)
 
-			// Assign the offer to our connection
-			err := peerConnection.SetRemoteDescription(offer)
-			if err != nil {
-				// TODO: Definitely shouldn't panic here, it just indicates the offer is malformed
-				panic(err)
-			}
-
-			// Generate an answer
-			answer, err := peerConnection.CreateAnswer(nil)
-			if err != nil {
-				panic(err)
-			}
+			candidates := []webrtc.ICECandidate{}
+			peerConnection.OnICECandidate(func(c *webrtc.ICECandidate) {
+				// Interestingly, the null candidate is a nil pointer so we cause a nil ptr dereference
+				// if we try to append it to the list... so let's just not include it?
+				if c != nil {
+					candidates = append(candidates, *c)
+				}
+			})
 
 			// This kicks off ICE candidate gathering
-			err = peerConnection.SetLocalDescription(answer)
+			err = peerConnection.SetLocalDescription(offer)
 			if err != nil {
+				panic(err)
+			}
+
+			// Assign the answer to our connection
+			err = peerConnection.SetRemoteDescription(answer.(webrtc.SessionDescription))
+			if err != nil {
+				// TODO: Definitely shouldn't panic here, it just indicates the offer is malformed
 				panic(err)
 			}
 
 			select {
 			case <-gatherComplete:
 				fmt.Println("Ice gathering complete!")
-			case <-time.After(iceFailTimeout * time.Second):
+			case <-time.After(options.IceFailTimeout):
 				fmt.Printf("Failed to gather ICE candidates!\n")
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}
 			}
 
-			// Our answer SDP with ICE candidates attached
-			finalAnswer := peerConnection.LocalDescription()
+			return 3, []interface{}{peerConnection, replyTo, candidates, connectionEstablished, connectionChange, connectionClosed}
+		}),
+		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
+			// State 3
+			// input[0]: *webrtc.PeerConnection
+			// input[1]: string (replyTo)
+			// input[2]: []webrtc.ICECandidates
+			// input[3]: chan *webrtc.DataChannel
+			// input[4]: chan webrtc.PeerConnectionState
+			// input[5]: chan struct{}
+			peerConnection := input[0].(*webrtc.PeerConnection)
+			replyTo := input[1].(string)
+			candidates := input[2].([]webrtc.ICECandidate)
+			connectionEstablished := input[3].(chan *webrtc.DataChannel)
+			connectionChange := input[4].(chan webrtc.PeerConnectionState)
+			connectionClosed := input[5].(chan struct{})
+			fmt.Printf("Consumer state 3...\n")
 
-			a, err := json.Marshal(finalAnswer)
+			candidatesJSON, err := json.Marshal(candidates)
 			if err != nil {
 				panic(err)
 			}
 
-			// Signal our answer
+			// Signal our ICE candidates
 			// TODO: use a custom http.Client and control our TCP connections
 			res, err := http.PostForm(
-				discoverySrv+signalEndpoint,
-				url.Values{"data": {string(a)}, "send-to": {replyTo}, "type": {strconv.Itoa(int(common.SignalMsgAnswer))}},
+				options.DiscoverySrv+options.Endpoint,
+				url.Values{"data": {string(candidatesJSON)}, "send-to": {replyTo}, "type": {strconv.Itoa(int(common.SignalMsgICE))}},
 			)
 			if err != nil {
-				fmt.Printf("Couldn't signal answer SDP to %v\n", discoverySrv+signalEndpoint)
+				fmt.Printf("Couldn't signal ICE candidates to %v\n", options.DiscoverySrv+options.Endpoint)
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}
 			}
 			defer res.Body.Close()
 
-			// Our signaling partner hung up
-			if res.StatusCode == 404 {
+			switch res.StatusCode {
+			case 404:
 				fmt.Printf("Signaling partner hung up, aborting!\n")
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}
+			case 200:
+				// Signaling is complete, so we can short circuit instead of awaiting the response body
+				return 4, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
 
-			// The HTTP request is complete
-			iceBytes, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				// Borked!
-				peerConnection.Close() // TODO: there's an err we should handle here
-				return 0, []interface{}{}
-			}
-
-			// TODO: Freddie sends back a 0-length body when our signaling partner doesn't reply.
-			// Is that the smartest way to handle this case systemwide?
-			if len(iceBytes) == 0 {
-				fmt.Printf("No ICE candidates from signaling partner!\n")
-				// Borked!
-				peerConnection.Close() // TODO: there's an err we should handle here
-				return 0, []interface{}{}
-			}
-
-			// Looks like we got some kind of response. Should be a slice of ICE candidates in a SignalMsg
-			// TODO: we ought to be getting an error back from DecodeSignalMsg if it's malformed
-			replyTo, candidates := common.DecodeSignalMsg(iceBytes)
-
-			// TODO: here we assume valid candidates, but we need to handle the invalid case too
-			for _, c := range candidates.([]webrtc.ICECandidate) {
-				// TODO: webrtc.AddICECandidate accepts ICECandidateInit types, which are apparently
-				// just serialized ICECandidates?
-				peerConnection.AddICECandidate(c.ToJSON())
-			}
-
-			return 4, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			// This code path should never be reachable
+			// Borked!
+			peerConnection.Close() // TODO: there's an err we should handle here
+			return 0, []interface{}{}
 		}),
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 4
@@ -285,13 +291,13 @@ func newProducerWebRTC() *workerFSM {
 			connectionEstablished := input[1].(chan *webrtc.DataChannel)
 			connectionChange := input[2].(chan webrtc.PeerConnectionState)
 			connectionClosed := input[3].(chan struct{})
-			fmt.Printf("Producer state 4, signaling complete!\n")
+			fmt.Printf("Consumer state 4, signaling complete!\n")
 
 			select {
 			case d := <-connectionEstablished:
 				fmt.Printf("A WebRTC connection has been established!\n")
 				return 5, []interface{}{peerConnection, d, connectionChange, connectionClosed}
-			case <-time.After(natFailTimeout * time.Second):
+			case <-time.After(options.NatFailTimeout):
 				fmt.Printf("NAT failure, aborting!\n")
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
@@ -308,24 +314,25 @@ func newProducerWebRTC() *workerFSM {
 			d := input[1].(*webrtc.DataChannel)
 			connectionChange := input[2].(chan webrtc.PeerConnectionState)
 			connectionClosed := input[3].(chan struct{})
-			fmt.Printf("Producer state 5...\n")
 
-			// Announce the new connectivity situation for this slot
-			// TODO: actually acquire the location
+			// Send a path assertion IPC message representing the connectivity now provided by this slot
+			// TODO: post-MVP we shouldn't be hardcoding (*, 1) here...
+			allowAll := []common.Endpoint{{Host: "*", Distance: 1}}
+
 			select {
-			case com.tx <- ipcMsg{ipcType: ConsumerInfoIPC, data: common.ConsumerInfo{Location: "DEBUG"}}:
+			case com.tx <- IpcMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{Allow: allowAll}}:
 				// Do nothing, message sent
 			default:
-				panic("Producer buffer overflow")
+				panic("Consumer buffer overflow!")
 			}
 
 			// Inbound from datachannel:
 			d.OnMessage(func(msg webrtc.DataChannelMessage) {
 				select {
-				case com.tx <- ipcMsg{ipcType: ChunkIPC, data: msg.Data}:
+				case com.tx <- IpcMsg{IpcType: ChunkIPC, Data: msg.Data}:
 					// Do nothing, message sent
 				default:
-					panic("Producer buffer overflow!")
+					panic("Consumer buffer overflow!")
 				}
 			})
 
@@ -342,32 +349,23 @@ func newProducerWebRTC() *workerFSM {
 				case _ = <-connectionClosed:
 					fmt.Printf("Firefox connection failure, resetting!\n")
 					break proxyloop
-				// Handle messages from the router
+					// Handle messages from the router
 				case msg := <-com.rx:
-					switch msg.ipcType {
+					switch msg.IpcType {
 					case ChunkIPC:
-						if err := d.Send(msg.data.([]byte)); err != nil {
+						if err := d.Send(msg.Data.([]byte)); err != nil {
 							fmt.Printf("Error sending to datachannel, resetting!\n")
 							break proxyloop
 						}
 					}
-				// Since we're putting this state into an infinite loop, explicitly handle cancellation
+					// Since we're putting this state into an infinite loop, explicitly handle cancellation
 				case <-ctx.Done():
 					break proxyloop
 				}
 			}
 
 			peerConnection.Close() // TODO: there's an err we should handle here
-
-			// We've reset this slot, so announce the nil connectivity situation
-			select {
-			case com.tx <- ipcMsg{ipcType: ConsumerInfoIPC, data: common.ConsumerInfo{}}:
-				// Do nothing, message sent
-			default:
-				panic("Producer buffer overflow")
-			}
-
 			return 0, []interface{}{}
 		}),
-	})
+	}, wg)
 }

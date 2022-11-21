@@ -1,5 +1,4 @@
 //go:build wasm
-// +build wasm
 
 // ui_wasm_impl.go implements the UI interface (see ui.go) for wasm build targets
 package main
