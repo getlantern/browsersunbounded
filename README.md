@@ -6,24 +6,24 @@
 * [Quickstart for devs](#arrow_forward-quickstart-for-devs)
 * [UI quickstart for devs](#nail_careart-ui-quickstart-for-devs)
 
-### :skull: Warning
+# :skull: Warning
 This is prototype-grade software!
 
-### :question: What is Broflake?
-Broflake is a system for distributed peer-to-peer proxying. The Broflake system includes a 
-browser-based client which enables volunteers to instantly provide proxying services just by 
-accessing a web page. However, Broflake is not just a web application! The Broflake system 
-introduces software libraries and protocol concepts designed to enable role-agnostic multi-hop p2p 
+# :question: What is Broflake?
+Broflake is a system for distributed peer-to-peer proxying. The Broflake system includes a
+browser-based client which enables volunteers to instantly provide proxying services just by
+accessing a web page. However, Broflake is not just a web application! The Broflake system
+introduces software libraries and protocol concepts designed to enable role-agnostic multi-hop p2p
 proxying across the entire Lantern network.
 
 Put another way, Broflake is a common language which enables Lantern users to describe, exchange,
 and share the resource of internet access across network boundaries and runtime environments.
 
 
-### :floppy_disk: System components
+# :floppy_disk: System components
 ![system](https://user-images.githubusercontent.com/21117002/176231832-1c558546-8933-4e25-b8df-f60edb4ed6d5.png)
 
-Broflake is a suite of several software applications. We have deployed some tricks to make 
+Broflake is a suite of several software applications. We have deployed some tricks to make
 Broflake's codebase as small as possible, and so the mapping between applications and modules isn't
 perfectly straightforward.
 
@@ -36,24 +36,24 @@ perfectly straightforward.
 |ui     |embeddable web user interface                                                  |
 
 
-### :arrow_forward: Quickstart for devs
-Just a heads up: these instructions were designed for the prototype as of November 5, 2022. If 
+# :arrow_forward: Quickstart for devs
+Just a heads up: these instructions were designed for the prototype as of November 5, 2022. If
 something's not working and it's been a while since 11/5, you might want to check with nelson.
 
 1. Clone this repo.
 
 2. You need access to a STUN server that's not on your LAN and which you are sure will not rate
-limit you. (While developing Broflake, your computer will generate more STUN requests more quickly 
-than most public STUN servers seem comfortable with). nelson has written a zero-dependency 
-[STUN server](https://github.com/noahlevenson/ministun) that you can get running with 10 lines of JavaScript.  
+limit you. (While developing Broflake, your computer will generate more STUN requests more quickly
+than most public STUN servers seem comfortable with). nelson has written a zero-dependency
+[STUN server](https://github.com/noahlevenson/ministun) that you can get running with 10 lines of JavaScript.
 
 3. You need to configure Broflake to use your STUN server. Currently, this requires you to modify
-Broflake's source code. We're going to fix that. For now, though, open `client/go/client.go`, grep 
+Broflake's source code. We're going to fix that. For now, though, open `client/go/client.go`, grep
 `stunSrv`, and swap in your server's address, making sure to include the port and preserve the
 leading "stun:".
 
-4. Configure **Mozilla Firefox** to use a local HTTP proxy. In settings, search "proxy". Select 
-*Manual proxy configuration*. Enter address `127.0.0.1`, port `1080`, and check the box labeled 
+4. Configure **Mozilla Firefox** to use a local HTTP proxy. In settings, search "proxy". Select
+*Manual proxy configuration*. Enter address `127.0.0.1`, port `1080`, and check the box labeled
 *Also use this proxy for HTTPS*.
 
 5. Build the native binary desktop client: `cd client && ./build.sh desktop`
@@ -69,9 +69,9 @@ leading "stun:".
 10. Start the egress server: `cd egress && go run egress.go`
 
 11. Start the desktop client: `cd client/dist/bin && ./desktop`
+  - See "Desktop Client Usage" section for run options
 
-12. To start the wasm client in "headless" mode (no [embed ui](#nail_careart-ui-quickstart-for-devs)): Start **Google Chrome**. Navigate to `localhost:9000`. The web widget loads, accesses Freddie, 
-finds your desktop client, signals, and establishes several WebRTC connections. Pop open the console
+12. To start the wasm client in "headless" mode (no [embed ui](#nail_careart-ui-quickstart-for-devs)): Start **Google Chrome**. Navigate to `localhost:9000`. The web widget loads, accesses Freddie, finds your desktop client, signals, and establishes several WebRTC connections. Pop open the console
 and you'll see all the things going on. Alternatively, to start the wasm client wrapped in the embed ui, follow the [UI quickstart](#nail_careart-ui-quickstart-for-devs).
 
 13. Start **Mozilla Firefox**. Use the browser as you normally would, visiting all your favorite
@@ -108,3 +108,20 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 7. To deploy to Github pages: `yarn deploy`
 
 8. Coming soon to a repo near you: `yarn test`
+
+# Desktop Client Usage
+
+Build the desktop client with `cd client && ./build.sh desktop`.
+
+Run it with `cd client/dist/bin && ./desktop` and the following environment variables:
+
+- `ENABLE_DOMAIN_FRONTING`
+  - Values: `true` or `false`
+  - Determines whether to domain-front requests to Freddie
+  - True by default
+
+# Gotchas
+
+## Flashlight and Fronted dependency inside `./client`
+
+Flashlight is only required in this project to enable domain-fronting. Broflake's `./client` code will be included **inside** flashlight at one point, and when that happens, we can remove this dependency. Same goes for "getlantern/fronted"

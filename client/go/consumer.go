@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"net/url"
 	"strconv"
 	"time"
@@ -103,7 +102,7 @@ func newConsumerWebRTC() *workerFSM {
 
 			// Listen for genesis messages
 			// TODO: use a custom http.Client and control our TCP connections
-			res, err := http.Get(discoverySrv + consumerEndpoint)
+			res, err := defaultHTTPClient.Get(discoverySrv + consumerEndpoint)
 			if err != nil {
 				fmt.Printf("Couldn't subscribe to genesis stream at %v\n", discoverySrv+consumerEndpoint)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
@@ -157,7 +156,7 @@ func newConsumerWebRTC() *workerFSM {
 
 			// Signal the offer
 			// TODO: use a custom http.Client and control our TCP connections
-			res, err := http.PostForm(
+			res, err := defaultHTTPClient.PostForm(
 				discoverySrv+consumerEndpoint,
 				url.Values{"data": {string(offerJSON)}, "send-to": {replyTo}, "type": {strconv.Itoa(int(common.SignalMsgOffer))}},
 			)
@@ -252,7 +251,7 @@ func newConsumerWebRTC() *workerFSM {
 
 			// Signal our ICE candidates
 			// TODO: use a custom http.Client and control our TCP connections
-			res, err := http.PostForm(
+			res, err := defaultHTTPClient.PostForm(
 				discoverySrv+consumerEndpoint,
 				url.Values{"data": {string(candidatesJSON)}, "send-to": {replyTo}, "type": {strconv.Itoa(int(common.SignalMsgICE))}},
 			)
