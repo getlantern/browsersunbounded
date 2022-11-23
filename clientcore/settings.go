@@ -9,8 +9,8 @@ type WebRTCOptions struct {
 	Endpoint       string
 	StunSrv        string
 	GenesisAddr    string
-	NatFailTimeout time.Duration
-	IceFailTimeout time.Duration
+	NATFailTimeout time.Duration
+	ICEFailTimeout time.Duration
 }
 
 type EgressOptions struct {

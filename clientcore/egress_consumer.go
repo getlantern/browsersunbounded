@@ -14,7 +14,7 @@ import (
 )
 
 func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *WorkerFSM {
-	return NewWorkerFSM([]FSMstate{
+	return NewWorkerFSM(wg, []FSMstate{
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 0
 			// (no input data)
@@ -22,7 +22,7 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 
 			// We're resetting this slot, so send a nil path assertion IPC message
 			select {
-			case com.tx <- IpcMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{}}:
+			case com.tx <- IPCMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{}}:
 				// Do nothing, message sent
 			default:
 				panic("Egress consumer buffer overflow!")
@@ -63,7 +63,7 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 			// TODO: post-MVP we shouldn't be hardcoding (*, 1) here...
 			allowAll := []common.Endpoint{{Host: "*", Distance: 1}}
 			select {
-			case com.tx <- IpcMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{Allow: allowAll}}:
+			case com.tx <- IPCMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{Allow: allowAll}}:
 				// Do nothing, message sent
 			default:
 				panic("Egress consumer buffer overflow!")
@@ -81,7 +81,7 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 
 					// Wrap the chunk and send it on to the router
 					select {
-					case com.tx <- IpcMsg{IpcType: ChunkIPC, Data: b}:
+					case com.tx <- IPCMsg{IpcType: ChunkIPC, Data: b}:
 						// Do nothing, message sent
 					default:
 						panic("Egress consumer buffer overflow!")
@@ -124,5 +124,5 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 			// TODO: We shouldn't reach this code path, right?
 			return 0, []interface{}{}
 		}),
-	}, wg)
+	})
 }

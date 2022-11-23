@@ -24,7 +24,7 @@ type UserStreamSource interface {
 }
 
 func NewProducerUserStream(source UserStreamSource, wg *sync.WaitGroup) *WorkerFSM {
-	return NewWorkerFSM([]FSMstate{
+	return NewWorkerFSM(wg, []FSMstate{
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 0
 			// (no input data)
@@ -91,13 +91,13 @@ func NewProducerUserStream(source UserStreamSource, wg *sync.WaitGroup) *WorkerF
 			// this code path should be unreachable.
 			return 0, []interface{}{}
 		}),
-	}, wg)
+	})
 }
 
 type userConn struct {
 	net.Conn
 	readPipe      *io.PipeReader
-	writeChan     chan IpcMsg
+	writeChan     chan IPCMsg
 	readDeadline  time.Time
 	writeDeadline time.Time
 	cancelRead    func()
@@ -192,7 +192,7 @@ func (c *userConn) Write(b []byte) (n int, err error) {
 	defer c.cancelWrite()
 
 	select {
-	case c.writeChan <- IpcMsg{IpcType: ChunkIPC, Data: bb}:
+	case c.writeChan <- IPCMsg{IpcType: ChunkIPC, Data: bb}:
 		return len(bb), err
 	case <-c.writeCtx.Done():
 		panic("Producer user stream buffer overflow!")

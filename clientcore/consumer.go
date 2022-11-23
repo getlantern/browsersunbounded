@@ -21,7 +21,7 @@ import (
 )
 
 func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
-	return NewWorkerFSM([]FSMstate{
+	return NewWorkerFSM(wg, []FSMstate{
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 0
 			// (no input data)
@@ -29,7 +29,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 
 			// We're resetting this slot, so send a nil path assertion IPC message
 			select {
-			case com.tx <- IpcMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{}}:
+			case com.tx <- IPCMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{}}:
 				// Do nothing, message sent
 			default:
 				panic("Consumer buffer overflow!")
@@ -221,7 +221,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			select {
 			case <-gatherComplete:
 				fmt.Println("Ice gathering complete!")
-			case <-time.After(options.IceFailTimeout):
+			case <-time.After(options.ICEFailTimeout):
 				fmt.Printf("Failed to gather ICE candidates!\n")
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
@@ -297,7 +297,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			case d := <-connectionEstablished:
 				fmt.Printf("A WebRTC connection has been established!\n")
 				return 5, []interface{}{peerConnection, d, connectionChange, connectionClosed}
-			case <-time.After(options.NatFailTimeout):
+			case <-time.After(options.NATFailTimeout):
 				fmt.Printf("NAT failure, aborting!\n")
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
@@ -320,7 +320,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			allowAll := []common.Endpoint{{Host: "*", Distance: 1}}
 
 			select {
-			case com.tx <- IpcMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{Allow: allowAll}}:
+			case com.tx <- IPCMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{Allow: allowAll}}:
 				// Do nothing, message sent
 			default:
 				panic("Consumer buffer overflow!")
@@ -329,7 +329,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// Inbound from datachannel:
 			d.OnMessage(func(msg webrtc.DataChannelMessage) {
 				select {
-				case com.tx <- IpcMsg{IpcType: ChunkIPC, Data: msg.Data}:
+				case com.tx <- IPCMsg{IpcType: ChunkIPC, Data: msg.Data}:
 					// Do nothing, message sent
 				default:
 					panic("Consumer buffer overflow!")
@@ -367,5 +367,5 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			peerConnection.Close() // TODO: there's an err we should handle here
 			return 0, []interface{}{}
 		}),
-	}, wg)
+	})
 }

@@ -27,7 +27,7 @@ type UI interface {
 	OnConsumerConnectionChange(state int, workerIdx int, loc string)
 }
 
-func downstreamUIHandler(ui UIImpl) func(msg clientcore.IpcMsg) {
+func downstreamUIHandler(ui UIImpl) func(msg clientcore.IPCMsg) {
 	var bytesPerSec int64
 	var tick uint
 	tickMs := time.Duration(1000 / uiRefreshHz)
@@ -43,7 +43,7 @@ func downstreamUIHandler(ui UIImpl) func(msg clientcore.IpcMsg) {
 		}
 	}()
 
-	return func(msg clientcore.IpcMsg) {
+	return func(msg clientcore.IPCMsg) {
 		switch msg.IpcType {
 		case clientcore.ChunkIPC:
 			size := len(msg.Data.([]byte))
@@ -53,8 +53,8 @@ func downstreamUIHandler(ui UIImpl) func(msg clientcore.IpcMsg) {
 	}
 }
 
-func upstreamUIHandler(ui UIImpl) func(msg clientcore.IpcMsg) {
-	return func(msg clientcore.IpcMsg) {
+func upstreamUIHandler(ui UIImpl) func(msg clientcore.IPCMsg) {
+	return func(msg clientcore.IPCMsg) {
 		switch msg.IpcType {
 		case clientcore.ConsumerInfoIPC:
 			ci := msg.Data.(common.ConsumerInfo)

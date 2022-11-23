@@ -18,8 +18,8 @@ var (
 		Endpoint:       "/v1/signal",
 		StunSrv:        "stun:freefood.is:3478", // "stun:stun.l.google.com:19302"
 		GenesisAddr:    "genesis",
-		NatFailTimeout: 5 * time.Second,
-		IceFailTimeout: 5 * time.Second,
+		NATFailTimeout: 5 * time.Second,
+		ICEFailTimeout: 5 * time.Second,
 	}
 
 	egressOptions = &clientcore.EgressOptions{

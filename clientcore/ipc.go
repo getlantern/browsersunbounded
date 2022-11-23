@@ -21,26 +21,26 @@ const (
 type msgType int
 type workerID int
 
-type IpcMsg struct {
+type IPCMsg struct {
 	IpcType msgType
 	Data    interface{}
 	Wid     workerID
 }
 
 type ipcChan struct {
-	tx chan IpcMsg
-	rx chan IpcMsg
+	tx chan IPCMsg
+	rx chan IPCMsg
 }
 
 func newIpcChan(bufferSz int) *ipcChan {
-	return &ipcChan{tx: make(chan IpcMsg, bufferSz), rx: make(chan IpcMsg, bufferSz)}
+	return &ipcChan{tx: make(chan IPCMsg, bufferSz), rx: make(chan IPCMsg, bufferSz)}
 }
 
 type ipcObserver struct {
 	Downstream *ipcChan
 	Upstream   *ipcChan
-	onTx       func(IpcMsg)
-	onRx       func(IpcMsg)
+	onTx       func(IPCMsg)
+	onRx       func(IPCMsg)
 }
 
 func (o *ipcObserver) Start() {
@@ -71,13 +71,13 @@ func (o *ipcObserver) Start() {
 	}()
 }
 
-func NewIpcObserver(bufferSz int, onTx, onRx func(IpcMsg)) *ipcObserver {
+func NewIpcObserver(bufferSz int, onTx, onRx func(IPCMsg)) *ipcObserver {
 	if onTx == nil {
-		onTx = func(IpcMsg) {}
+		onTx = func(IPCMsg) {}
 	}
 
 	if onRx == nil {
-		onRx = func(IpcMsg) {}
+		onRx = func(IPCMsg) {}
 	}
 
 	return &ipcObserver{

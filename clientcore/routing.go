@@ -15,23 +15,23 @@ import (
 type TableRouter interface {
 	Init()
 
-	onBus(msg IpcMsg)
+	onBus(msg IPCMsg)
 
-	onWorker(msg IpcMsg, workerIdx workerID)
+	onWorker(msg IPCMsg, workerIdx workerID)
 }
 
 // A baseRouter implements basic router functionality
 type baseRouter struct {
 	bus        *ipcChan
 	table      *WorkerTable
-	busHook    func(r *baseRouter, msg IpcMsg)
-	workerHook func(r *baseRouter, msg IpcMsg, workerIdx workerID)
+	busHook    func(r *baseRouter, msg IPCMsg)
+	workerHook func(r *baseRouter, msg IPCMsg, workerIdx workerID)
 }
 
 func (r *baseRouter) Init(
-	listen chan IpcMsg,
-	onBus func(msg IpcMsg),
-	onWorker func(msg IpcMsg,
+	listen chan IPCMsg,
+	onBus func(msg IPCMsg),
+	onWorker func(msg IPCMsg,
 		workerIdx workerID),
 ) {
 	for i := range r.table.slot {
@@ -50,11 +50,11 @@ func (r *baseRouter) Init(
 	}()
 }
 
-func (r *baseRouter) onBus(msg IpcMsg) {
+func (r *baseRouter) onBus(msg IPCMsg) {
 	r.busHook(r, msg)
 }
 
-func (r *baseRouter) onWorker(msg IpcMsg, workerIdx workerID) {
+func (r *baseRouter) onWorker(msg IPCMsg, workerIdx workerID) {
 	r.workerHook(r, msg, workerIdx)
 }
 
@@ -67,20 +67,20 @@ func (r *upstreamRouter) Init() {
 	r.baseRouter.Init(r.bus.tx, r.onBus, r.onWorker)
 }
 
-func (r *upstreamRouter) onBus(msg IpcMsg) {
+func (r *upstreamRouter) onBus(msg IPCMsg) {
 	r.baseRouter.onBus(msg)
 }
 
-func (r *upstreamRouter) onWorker(msg IpcMsg, workerIdx workerID) {
+func (r *upstreamRouter) onWorker(msg IPCMsg, workerIdx workerID) {
 	// TODO: a brittle assumption here: upstreamRouter.workerHook will call backRoute and add the
-	// wid to the IpcMsg, and it will also forward all appropriate messages to the bus. This is
-	// the opposite of downstreamRouter.onWorker, which adds the wid to the IpcMsg and forwards all
+	// wid to the IPCMsg, and it will also forward all appropriate messages to the bus. This is
+	// the opposite of downstreamRouter.onWorker, which adds the wid to the IPCMsg and forwards all
 	// msgs to the bus. The funkiness here is part of the larger issue concerning the two different
 	// ways in which we use the wid field and the asymmetry in how wids are assigned.
 	r.baseRouter.onWorker(msg, workerIdx)
 }
 
-func (r *upstreamRouter) toBus(msg IpcMsg) {
+func (r *upstreamRouter) toBus(msg IPCMsg) {
 	select {
 	case r.bus.rx <- msg:
 		// Do nothing, message sent
@@ -89,7 +89,7 @@ func (r *upstreamRouter) toBus(msg IpcMsg) {
 	}
 }
 
-func (r *upstreamRouter) toWorker(msg IpcMsg, peerIdx workerID) {
+func (r *upstreamRouter) toWorker(msg IPCMsg, peerIdx workerID) {
 	select {
 	case r.table.slot[peerIdx].com.rx <- msg:
 		// Do nothing, message sent
@@ -112,18 +112,18 @@ func (r *downstreamRouter) Init() {
 	r.baseRouter.Init(r.bus.rx, r.onBus, r.onWorker)
 }
 
-func (r *downstreamRouter) onBus(msg IpcMsg) {
+func (r *downstreamRouter) onBus(msg IPCMsg) {
 	r.baseRouter.onBus(msg)
 }
 
-func (r *downstreamRouter) onWorker(msg IpcMsg, workerIdx workerID) {
+func (r *downstreamRouter) onWorker(msg IPCMsg, workerIdx workerID) {
 	// Add the worker's ID to the msg
 	msg.Wid = workerIdx
 	r.toBus(msg)
 	r.baseRouter.onWorker(msg, workerIdx)
 }
 
-func (r *downstreamRouter) toBus(msg IpcMsg) {
+func (r *downstreamRouter) toBus(msg IPCMsg) {
 	select {
 	case r.bus.tx <- msg:
 		// Do nothing, message sent
@@ -132,7 +132,7 @@ func (r *downstreamRouter) toBus(msg IpcMsg) {
 	}
 }
 
-func (r *downstreamRouter) toWorker(msg IpcMsg) {
+func (r *downstreamRouter) toWorker(msg IPCMsg) {
 	select {
 	case r.table.slot[msg.Wid].com.rx <- msg:
 		// Do nothing, message sent
@@ -146,7 +146,7 @@ func (r *downstreamRouter) toWorker(msg IpcMsg) {
 	}
 }
 
-func (r *downstreamRouter) toAllWorkers(msg IpcMsg) {
+func (r *downstreamRouter) toAllWorkers(msg IPCMsg) {
 	for peerIdx := range r.table.slot {
 		msg.Wid = workerID(peerIdx)
 		r.toWorker(msg)
@@ -268,7 +268,7 @@ func (r *producerSerialRouter) backRoute(wid workerID) (bool, workerID) {
 	return true, consumers[0]
 }
 
-func (psr *producerSerialRouter) busHook(r *baseRouter, msg IpcMsg) {
+func (psr *producerSerialRouter) busHook(r *baseRouter, msg IPCMsg) {
 	switch msg.IpcType {
 	case ChunkIPC:
 		ok, route := psr.route(msg.Wid)
@@ -278,7 +278,7 @@ func (psr *producerSerialRouter) busHook(r *baseRouter, msg IpcMsg) {
 	}
 }
 
-func (psr *producerSerialRouter) workerHook(r *baseRouter, msg IpcMsg, workerIdx workerID) {
+func (psr *producerSerialRouter) workerHook(r *baseRouter, msg IPCMsg, workerIdx workerID) {
 	switch msg.IpcType {
 	case PathAssertionIPC:
 		psr.onPathAssertion(msg.Data.(common.PathAssertion), workerIdx)
@@ -361,10 +361,10 @@ func (r *producerPoolRouter) backRoute(wid workerID) (bool, workerID) {
 	return r.route(wid)
 }
 
-func (ppr *producerPoolRouter) busHook(r *baseRouter, msg IpcMsg) {
+func (ppr *producerPoolRouter) busHook(r *baseRouter, msg IPCMsg) {
 	switch msg.IpcType {
 	case ConnectivityCheckIPC:
-		ppr.toBus(IpcMsg{IpcType: PathAssertionIPC, Data: ppr.globalPathAssertion(), Wid: msg.Wid})
+		ppr.toBus(IPCMsg{IpcType: PathAssertionIPC, Data: ppr.globalPathAssertion(), Wid: msg.Wid})
 	case ChunkIPC:
 		// TODO: is this necessary?
 		if ppr.globalPathAssertion().Nil() {
@@ -375,7 +375,7 @@ func (ppr *producerPoolRouter) busHook(r *baseRouter, msg IpcMsg) {
 	}
 }
 
-func (ppr *producerPoolRouter) workerHook(r *baseRouter, msg IpcMsg, workerIdx workerID) {
+func (ppr *producerPoolRouter) workerHook(r *baseRouter, msg IPCMsg, workerIdx workerID) {
 	switch msg.IpcType {
 	case PathAssertionIPC:
 		ppr.onPathAssertion(msg.Data.(common.PathAssertion), workerIdx)
@@ -384,7 +384,7 @@ func (ppr *producerPoolRouter) workerHook(r *baseRouter, msg IpcMsg, workerIdx w
 		// assertion from a worker. In practice this is harmless, since our workers are egress
 		// consumers who are likely to send just a single path assertion per session. But an optimal
 		// implementation would cache the last PA and only send a new IPC when there's a delta.
-		ppr.toBus(IpcMsg{IpcType: PathAssertionIPC, Data: pa, Wid: BroadcastRoute})
+		ppr.toBus(IPCMsg{IpcType: PathAssertionIPC, Data: pa, Wid: BroadcastRoute})
 	case ChunkIPC:
 		// Backrouting! TODO: the asymmetry in how upstream and downstream routers determine and
 		// assign and interpret the wid is a source of much confusion and must be fixed
@@ -417,7 +417,7 @@ func NewConsumerRouter(bus *ipcChan, table *WorkerTable) *consumerRouter {
 	return &cr
 }
 
-func (cr *consumerRouter) busHook(r *baseRouter, msg IpcMsg) {
+func (cr *consumerRouter) busHook(r *baseRouter, msg IPCMsg) {
 	// TODO: we currently forward all msg types without any filter... maybe it's worth revisiting
 	switch msg.Wid {
 	case BroadcastRoute:
@@ -427,7 +427,7 @@ func (cr *consumerRouter) busHook(r *baseRouter, msg IpcMsg) {
 	}
 }
 
-func (cr *consumerRouter) workerHook(r *baseRouter, msg IpcMsg, workerIdx workerID) {
+func (cr *consumerRouter) workerHook(r *baseRouter, msg IPCMsg, workerIdx workerID) {
 	// Do nothing
 }
 

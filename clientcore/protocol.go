@@ -25,7 +25,7 @@ type WorkerFSM struct {
 }
 
 // Construct a new WorkerFSM
-func NewWorkerFSM(states []FSMstate, wg *sync.WaitGroup) *WorkerFSM {
+func NewWorkerFSM(wg *sync.WaitGroup, states []FSMstate) *WorkerFSM {
 	fsm := WorkerFSM{
 		com:   newIpcChan(workerBufferSz),
 		state: states,
