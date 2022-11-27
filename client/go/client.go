@@ -6,28 +6,36 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"time"
+
+	"github.com/getlantern/broflake/clientcore"
 )
 
 // TODO: some of these are more appropriately scoped at the workerFSM (or some other) level?
-const (
-	discoverySrv         = "http://localhost:8000"
-	signalEndpoint       = "/v1/signal"
-	consumerEndpoint     = "/v1/signal"
-	stunSrv              = "stun:157.230.209.241:3478" // "stun:stun.l.google.com:19302"
-	cTableSize           = 5
-	pTableSize           = 5
-	genesisAddr          = "genesis"
-	natFailTimeout       = 5
-	iceFailTimeout       = 5
-	egressSrv            = "ws://localhost:8080"
-	egressEndpoint       = "/ws"
-	egressConnectTimeout = 5
-	busBufferSz          = 2048
-	uiRefreshHz          = 4
+var (
+	webrtcOptions = &clientcore.WebRTCOptions{
+		DiscoverySrv:   "http://localhost:8000",
+		Endpoint:       "/v1/signal",
+		StunSrv:        "stun:157.230.209.241:3478", // "stun:stun.l.google.com:19302"
+		GenesisAddr:    "genesis",
+		NATFailTimeout: 5 * time.Second,
+		ICEFailTimeout: 5 * time.Second,
+	}
+
+	egressOptions = &clientcore.EgressOptions{
+		Addr:           "ws://localhost:8080",
+		Endpoint:       "/ws",
+		ConnectTimeout: 5 * time.Second,
+	}
+
+	clientType = "desktop"
 )
 
-var (
-	clientType = "desktop"
+const (
+	cTableSize  = 5
+	pTableSize  = 5
+	busBufferSz = 2048
+	uiRefreshHz = 4
 )
 
 // Two client types are supported: 'desktop' and 'widget'. Informally, widget is a "free" peer and
@@ -37,11 +45,11 @@ var (
 // both widget and desktop can be compiled to native binary AND wasm.
 
 var ui = UIImpl{}
-var bus = newIpcObserver(busBufferSz, upstreamUIHandler(ui), downstreamUIHandler(ui))
-var cTable *workerTable
-var cRouter tableRouter
-var pTable *workerTable
-var pRouter tableRouter
+var bus = clientcore.NewIpcObserver(busBufferSz, upstreamUIHandler(ui), downstreamUIHandler(ui))
+var cTable *clientcore.WorkerTable
+var cRouter clientcore.TableRouter
+var pTable *clientcore.WorkerTable
+var pRouter clientcore.TableRouter
 var wgReady sync.WaitGroup
 
 func main() {
@@ -49,54 +57,57 @@ func main() {
 	case "desktop":
 		// Desktop peers don't share connectivity for the MVP, so the consumer table only gets one
 		// workerFSM for the local user stream associated with their HTTP proxy
-		cTable = newWorkerTable([]workerFSM{*newProducerUserStream("127.0.0.1:1080")})
-		cRouter = newConsumerRouter(bus.downstream, cTable)
+		cTable = clientcore.NewWorkerTable(
+			[]clientcore.WorkerFSM{
+				*clientcore.NewProducerUserStream(
+					NewLocalProxySource("127.0.0.1:1080"), &wgReady),
+			})
+		cRouter = clientcore.NewConsumerRouter(bus.Downstream, cTable)
 
 		// Desktop peers consume connectivity over WebRTC
-		var pfsms []workerFSM
+		var pfsms []clientcore.WorkerFSM
 		for i := 0; i < pTableSize; i++ {
-			pfsms = append(pfsms, *newConsumerWebRTC())
+			pfsms = append(pfsms, *clientcore.NewConsumerWebRTC(webrtcOptions, &wgReady))
 		}
-		pTable = newWorkerTable(pfsms)
-		pRouter = newProducerSerialRouter(bus.upstream, pTable, cTable.size)
+		pTable = clientcore.NewWorkerTable(pfsms)
+		pRouter = clientcore.NewProducerSerialRouter(bus.Upstream, pTable, cTable.Size())
 	case "widget":
 		// Widget peers share connectivity over WebRTC
-		var cfsms []workerFSM
+		var cfsms []clientcore.WorkerFSM
 		for i := 0; i < cTableSize; i++ {
-			cfsms = append(cfsms, *newProducerWebRTC())
+			cfsms = append(cfsms, *clientcore.NewProducerWebRTC(webrtcOptions, &wgReady))
 		}
-		cTable = newWorkerTable(cfsms)
-		cRouter = newConsumerRouter(bus.downstream, cTable)
+		cTable = clientcore.NewWorkerTable(cfsms)
+		cRouter = clientcore.NewConsumerRouter(bus.Downstream, cTable)
 
 		// Widget peers consume connectivity from an egress server over WebSocket
-		var pfsms []workerFSM
+		var pfsms []clientcore.WorkerFSM
 		for i := 0; i < pTableSize; i++ {
-			pfsms = append(pfsms, *newEgressConsumerWebSocket())
+			pfsms = append(pfsms, *clientcore.NewEgressConsumerWebSocket(egressOptions, &wgReady))
 		}
-		pTable = newWorkerTable(pfsms)
-		pRouter = newProducerPoolRouter(bus.upstream, pTable)
+		pTable = clientcore.NewWorkerTable(pfsms)
+		pRouter = clientcore.NewProducerPoolRouter(bus.Upstream, pTable)
 	default:
 		fmt.Printf("Invalid clientType '%v'\n", clientType)
 		os.Exit(1)
 	}
 
-	bus.start()
-	cRouter.init()
-	pRouter.init()
+	bus.Start()
+	cRouter.Init()
+	pRouter.Init()
 	ui.OnReady()
 	ui.OnStartup()
 	select {}
 }
 
 func start() {
-	wgReady.Add(cTable.size + pTable.size)
-	cTable.start()
-	pTable.start()
+	cTable.Start()
+	pTable.Start()
 }
 
 func stop() {
-	cTable.stop()
-	pTable.stop()
+	cTable.Stop()
+	pTable.Stop()
 
 	go func() {
 		wgReady.Wait()
