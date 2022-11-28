@@ -44,9 +44,9 @@ const (
 
 var ui = clientcore.UIImpl{}
 var bus = clientcore.NewIpcObserver(
-  busBufferSz, 
-  clientcore.UpstreamUIHandler(ui), 
-  clientcore.DownstreamUIHandler(ui),
+	busBufferSz,
+	clientcore.UpstreamUIHandler(ui),
+	clientcore.DownstreamUIHandler(ui),
 )
 var cTable *clientcore.WorkerTable
 var cRouter clientcore.TableRouter
@@ -93,9 +93,9 @@ func main() {
 		fmt.Printf("Invalid clientType '%v'\n", clientType)
 		os.Exit(1)
 	}
-  
-  broflake := clientcore.NewBroflake(cTable, pTable, &ui, &wgReady)
-  ui.Init(broflake)
+
+	broflake := clientcore.NewBroflake(cTable, pTable, &ui, &wgReady)
+	ui.Init(broflake)
 	bus.Start()
 	cRouter.Init()
 	pRouter.Init()
