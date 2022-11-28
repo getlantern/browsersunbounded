@@ -4,7 +4,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"runtime"
 	"sync"
 	"time"
 
@@ -35,7 +34,6 @@ const (
 	cTableSize  = 5
 	pTableSize  = 5
 	busBufferSz = 2048
-	uiRefreshHz = 4
 )
 
 // Two client types are supported: 'desktop' and 'widget'. Informally, widget is a "free" peer and
@@ -44,8 +42,12 @@ const (
 // manage their worker tables. The notion of client type is decoupled from build target -- that is,
 // both widget and desktop can be compiled to native binary AND wasm.
 
-var ui = UIImpl{}
-var bus = clientcore.NewIpcObserver(busBufferSz, upstreamUIHandler(ui), downstreamUIHandler(ui))
+var ui = clientcore.UIImpl{}
+var bus = clientcore.NewIpcObserver(
+  busBufferSz, 
+  clientcore.UpstreamUIHandler(ui), 
+  clientcore.DownstreamUIHandler(ui),
+)
 var cTable *clientcore.WorkerTable
 var cRouter clientcore.TableRouter
 var pTable *clientcore.WorkerTable
@@ -91,30 +93,13 @@ func main() {
 		fmt.Printf("Invalid clientType '%v'\n", clientType)
 		os.Exit(1)
 	}
-
+  
+  broflake := clientcore.NewBroflake(cTable, pTable, &ui, &wgReady)
+  ui.Init(broflake)
 	bus.Start()
 	cRouter.Init()
 	pRouter.Init()
 	ui.OnReady()
 	ui.OnStartup()
 	select {}
-}
-
-func start() {
-	cTable.Start()
-	pTable.Start()
-}
-
-func stop() {
-	cTable.Stop()
-	pTable.Stop()
-
-	go func() {
-		wgReady.Wait()
-		ui.OnReady()
-	}()
-}
-
-func debug() {
-	fmt.Printf("NumGoroutine: %v\n", runtime.NumGoroutine())
 }
