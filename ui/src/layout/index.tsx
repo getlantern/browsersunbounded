@@ -3,12 +3,14 @@ import {AppWidthProvider} from '../context'
 import useElementSize from '../hooks/useElementSize'
 import {BREAKPOINT, GOOGLE_FONT_LINKS} from '../constants'
 import {useLayoutEffect, useRef} from 'react'
+import {Layouts} from '../index'
 
 interface Props {
 	children: (JSX.Element | false)[] | JSX.Element | false
+	layout: Layouts
 }
 
-const Layout = ({children}: Props) => {
+const Layout = ({children, layout}: Props) => {
 	const [ref, { width }] = useElementSize()
 	const fontLoaded = useRef(false)
 

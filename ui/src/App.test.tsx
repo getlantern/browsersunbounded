@@ -1,6 +1,7 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import React from 'react'
+import {render, screen} from '@testing-library/react'
+import App from './App'
+import {Layouts} from './index'
 
 test('renders', () => {
   render(
@@ -8,10 +9,9 @@ test('renders', () => {
       settings={{
         features: {
           globe: true,
-          stats: true,
-          about: true,
-          toast: true
-        }
+          toast: true,
+        },
+        layout: Layouts.BANNER
       }}
     />
   );

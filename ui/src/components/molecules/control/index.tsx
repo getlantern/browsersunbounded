@@ -13,6 +13,20 @@ interface Props {
 const Control = ({isSharing, onShare}: Props) => {
 	const ready = useEmitterState(readyEmitter)
 	return (
+		<>
+			<Text
+				style={{minWidth: 150}}
+			>
+				Connection sharing is {isSharing ? 'on' : 'off'}
+			</Text>
+			<Switch
+				onToggle={onShare}
+				checked={isSharing}
+				disabled={!ready}
+			/>
+		</>
+	)
+	return (
 		<Row
 			borderTop
 			borderBottom

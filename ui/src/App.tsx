@@ -9,6 +9,9 @@ import Control from './components/molecules/control'
 import Footer from './components/molecules/footer'
 import Toast from './components/molecules/toast'
 import {wasmInterface} from './utils/wasmInterface'
+import Banner from './components/organisms/banner'
+import {COLORS} from './constants'
+import Row from './components/atoms/row'
 
 export interface AppState {
   isSharing: boolean
@@ -31,17 +34,14 @@ const App = ({settings}: Props) => {
   const {isSharing} = state
 
   return (
-    <Layout>
+    <Layout
+      layout={settings.layout}
+    >
       { settings.features.toast && <Toast isSharing={isSharing} /> }
-      <Col>
-        <Control
-          isSharing={isSharing}
-          onShare={onShare}
-        />
-        { settings.features.stats && <Stats isSharing={isSharing} /> }
-        { settings.features.about && <About /> }
-        <Footer />
-      </Col>
+      {/*<Banner*/}
+      {/*  isSharing={isSharing}*/}
+      {/*  onShare={onShare}*/}
+      {/*/>*/}
       {
         settings.features.globe && (
           <Col>
@@ -49,6 +49,21 @@ const App = ({settings}: Props) => {
           </Col>
         )
       }
+      <Col>
+        <Row
+          borderTop
+          borderBottom
+          backgroundColor={COLORS.white}
+        >
+          <Control
+            isSharing={isSharing}
+            onShare={onShare}
+          />
+        </Row>
+        <Stats isSharing={isSharing} />
+        <About />
+        <Footer />
+      </Col>
     </Layout>
   );
 }

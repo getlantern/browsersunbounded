@@ -6,6 +6,7 @@ export const COLORS = {
 	green: '#00A83E',
 	veryLightGrey: '#F8FAFB',
 	lightGrey: '#EBEBEB',
+	idkGrey: '#EDEFEF',
 	grey: '#707070',
 	brand: 'rgba(0, 122, 124, 1)',
 	transparent: 'transparent'

@@ -3,7 +3,11 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
-const p2pEmbeds = document.querySelectorAll("lantern-p2p-proxy") as NodeListOf<HTMLElement>;
+const p2pEmbeds = document.querySelectorAll("broflake") as NodeListOf<HTMLElement>;
+
+export enum Layouts {
+  'BANNER'= 'banner'
+}
 
 export interface Dataset {
   features: string
@@ -12,19 +16,17 @@ export interface Dataset {
 export interface Settings {
   features: {
     globe: boolean
-    stats: boolean
-    about: boolean
     toast: boolean
   }
+  layout: Layouts
 }
 
 const defaultSettings: Settings = {
   features: {
     globe: true,
-    stats: true,
-    about: true,
-    toast: true
-  }
+    toast: true,
+  },
+  layout: Layouts.BANNER
 }
 
 p2pEmbeds.forEach((embed) => {
@@ -34,8 +36,13 @@ p2pEmbeds.forEach((embed) => {
   const settings = {...defaultSettings}
   const dataset = embed.dataset as unknown as Dataset
   Object.keys(defaultSettings).forEach(key => {
-    // @ts-ignore
-    settings[key] = JSON.parse(dataset[key]) //@todo try catch
+    try {
+      // @ts-ignore
+      settings[key] = JSON.parse(dataset[key])
+    } catch {
+      // @ts-ignore
+      settings[key] = dataset[key]
+    }
   })
   root.render(
     <React.StrictMode>

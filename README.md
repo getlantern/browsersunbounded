@@ -81,10 +81,10 @@ webRTC -> web widget executing in Chrome -> WebSocket -> egress server -> remote
 
 ### :nail_care::art: UI quickstart for devs
 
-The UI is bootstrapped with [Create React App](https://github.com/facebook/create-react-app). Then "re-wired" to build one single js bundle using [rewire](https://www.npmjs.com/package/rewire). The React app will bind to a custom `lantern-p2p-proxy` DOM el and render based on settings passed to the `data-features` attribute via stringified JSON:
+The UI is bootstrapped with [Create React App](https://github.com/facebook/create-react-app). Then "re-wired" to build one single js bundle using [rewire](https://www.npmjs.com/package/rewire). The React app will bind to a custom `broflake` DOM el and render based on settings passed to the `data-features` attribute via stringified JSON:
 
 ```html
-<lantern-p2p-proxy data-features='{ "globe": true, "stats": true, "about": true, "toast": true }'></lantern-p2p-proxy>
+<broflake data-layout="banner" data-features='{ "globe": true, "toast": true }' style='width: 100%;'></broflake>
 <script defer="defer" src="https://devblog.getlantern.org/broflake/static/js/main.js"></script>
 ```
 
