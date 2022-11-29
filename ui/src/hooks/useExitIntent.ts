@@ -29,7 +29,7 @@ const useExitIntent = (callback: () => void) => {
 		if (!isMobileDevice) return
 
 		newPos.current = window.scrollY
-		if ( lastPos.current !== null ) delta.current = newPos.current - lastPos.current
+		if (lastPos.current !== null) delta.current = newPos.current - lastPos.current
 
 		lastPos.current = newPos.current
 

@@ -1,7 +1,7 @@
 import React from 'react'
 import {render, screen} from '@testing-library/react'
 import App from './App'
-import {Layouts} from './index'
+import {Layouts, Themes} from './index'
 
 test('renders', () => {
   render(
@@ -11,7 +11,8 @@ test('renders', () => {
           globe: true,
           toast: true,
         },
-        layout: Layouts.BANNER
+        layout: Layouts.BANNER,
+        theme: Themes.DARK
       }}
     />
   );

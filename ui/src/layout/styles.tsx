@@ -1,13 +1,10 @@
 import styled from 'styled-components'
-import {COLORS, MAX_WIDTH} from '../constants'
+import {COLORS} from '../constants'
+import {Themes} from '../index'
 
-const Main = styled.main`
+const Main = styled.div`
   display: flex;
-  gap: 48px;
-  max-width: ${MAX_WIDTH}px;
-  width: 100%;
-	flex-direction: ${(props: {mobile: boolean}) => props.mobile ? 'column' : 'row'};
-  padding: 24px 10px;
+	width: 100%;
 `
 
 const AppWrapper = styled.section`
@@ -15,9 +12,12 @@ const AppWrapper = styled.section`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #000000;
   width: 100%;
-	background-color: ${COLORS.veryLightGrey};
+	background-color: ${({theme}) => theme === Themes.DARK ? COLORS.grey5 : COLORS.grey1};
+	box-sizing: content-box;
+	* {
+    box-sizing: content-box;
+  }
 `
 
 export {Main, AppWrapper}

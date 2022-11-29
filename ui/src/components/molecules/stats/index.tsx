@@ -1,12 +1,28 @@
 import {Text} from '../../atoms/typography'
 import Row from '../../atoms/row'
 import {useStats} from '../../../hooks/useStats'
+import React from 'react'
+
+export const Connections = () => {
+	const {connections} = useStats({sampleMs: 500})
+	const currentConnections = connections.filter(c => c.state === 1).length
+	return (
+		<>
+			<Text>People you are helping connect:</Text>
+			<Text
+				style={{minWidth: 10}}
+			>
+				{currentConnections}
+			</Text>
+		</>
+	)
+}
 
 
-const Stats = ({isSharing}: {isSharing: boolean}) => {
+const Stats = () => {
 	const {connections, lifetimeConnections, throughput, chunks} = useStats({sampleMs: 500})
 	const currentConnections = connections.filter(c => c.state === 1).length
-	const totalChunks = chunks.map(c => c.size).reduce((p,c) => p + c, 0)
+	const totalChunks = chunks.map(c => c.size).reduce((p, c) => p + c, 0)
 	return (
 		<>
 			<Row

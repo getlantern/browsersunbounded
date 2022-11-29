@@ -1,11 +1,5 @@
 import {useEffect, useState} from 'react'
-import {
-	Connection,
-	Chunk,
-	wasmInterface,
-	connectionsEmitter,
-	lifetimeConnectionsEmitter
-} from '../utils/wasmInterface'
+import {Chunk, Connection, connectionsEmitter, lifetimeConnectionsEmitter, wasmInterface} from '../utils/wasmInterface'
 import {useEmitterState} from './useStateEmitter'
 
 interface Stats {
@@ -20,7 +14,7 @@ interface StatsIntervalState {
 	chunks: Chunk[]
 }
 
-export const useStats = ({sampleMs = 500}: {sampleMs?: number}): Stats => {
+export const useStats = ({sampleMs = 500}: { sampleMs?: number }): Stats => {
 	const connections = useEmitterState(connectionsEmitter)
 	const lifetimeConnections = useEmitterState(lifetimeConnectionsEmitter)
 	const [stats, setStats] = useState<StatsIntervalState>({

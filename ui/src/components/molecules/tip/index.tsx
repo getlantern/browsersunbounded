@@ -2,14 +2,16 @@ import {Container} from './styles'
 import useMousePosition from '../../../hooks/useMousePosition'
 import {RefObject, useEffect, useState} from 'react'
 import useElementSize from '../../../hooks/useElementSize'
+
 interface Props {
 	text: string | null
 	show: boolean
 	container: RefObject<Document>
 }
+
 const Tip = ({text, show, container}: Props) => {
 	const [_text, _setText] = useState(text)
-	const [ref, { width }] = useElementSize()
+	const [ref, {width}] = useElementSize()
 	const currentPos = useMousePosition(container)
 	const [pos, setPos] = useState(currentPos)
 

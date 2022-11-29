@@ -21,8 +21,8 @@ export interface Point {
 
 const createArcs = (connections: Connection[]) => (
 	connections.map(connection => {
-		const { workerIdx, loc } = connection
-		const { country, count, coords } = loc
+		const {workerIdx, loc} = connection
+		const {country, count, coords} = loc
 		return ({
 			startLng: mockLoc[0], // @todo user user loc
 			startLat: mockLoc[1], // @todo user user loc
@@ -59,7 +59,7 @@ export const useGeo = () => {
 		const newConnections = connections.filter(c => !arcs.some(a => a.workerIdx === c.workerIdx) && c.state === 1)
 		const removedConnections = connections.filter(c => arcs.some(a => a.workerIdx === c.workerIdx) && c.state === -1)
 		setArcs([...removeArcs(arcs, removedConnections), ...createArcs(newConnections)])
-	},[arcs])
+	}, [arcs])
 
 	useEffect(() => {
 		if (prevConnections === connections) return // only update on changes
@@ -70,7 +70,7 @@ export const useGeo = () => {
 		return arcs.map(arc => {
 			return ({
 				lng: arc.endLng,
-				lat: arc.endLat,
+				lat: arc.endLat
 			})
 		})
 	}, [arcs])

@@ -9,6 +9,11 @@ export enum Layouts {
   'BANNER'= 'banner'
 }
 
+export enum Themes {
+  'DARK' = 'dark',
+  'LIGHT' = 'light'
+}
+
 export interface Dataset {
   features: string
 }
@@ -19,6 +24,7 @@ export interface Settings {
     toast: boolean
   }
   layout: Layouts
+  theme: Themes
 }
 
 const defaultSettings: Settings = {
@@ -26,7 +32,8 @@ const defaultSettings: Settings = {
     globe: true,
     toast: true,
   },
-  layout: Layouts.BANNER
+  layout: Layouts.BANNER,
+  theme: Themes.LIGHT
 }
 
 p2pEmbeds.forEach((embed) => {

@@ -2,7 +2,7 @@ export const mockRandomInt = (min: number, max: number) => {
 	return Math.floor(Math.random() * (max - min + 1) + min)
 }
 
-export const mockLoc = [-74.0060,40.7128]
+export const mockLoc = [-74.0060, 40.7128]
 
 export const mockGeo = [
 	{

@@ -1,10 +1,11 @@
 import styled from 'styled-components'
+import {COLORS} from '../../../constants'
 
 const Container = styled.div`
-  background: #000000;
+  background: ${COLORS.grey5};
   border-radius: 4px;
   filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.16));
-  color: white;
+  color: ${COLORS.grey1};
   display: inline-flex;
   justify-content: center;
   align-items: center;

@@ -3,6 +3,7 @@ import {Dispatch, SetStateAction, useLayoutEffect, useState} from 'react'
 export class StateEmitter<T> {
 	state: T
 	listeners: Dispatch<SetStateAction<T>>[]
+
 	constructor(state: T) {
 		this.listeners = []
 		this.state = state

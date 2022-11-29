@@ -1,16 +1,17 @@
 import styled from 'styled-components'
 import {COLORS} from '../../../constants'
+import {Themes} from '../../../index'
 
 const Container = styled.div`
-	display: flex;
+  display: flex;
   align-items: center;
 `
 
 const Label = styled.label`
   position: relative;
   display: inline-block;
-  width: 44px;
-  height: 26px;
+  width: 40px;
+  height: 24px;
 `
 
 const Input = styled.input`
@@ -18,10 +19,13 @@ const Input = styled.input`
   width: 0;
   height: 0;
 `
+
 interface Props {
 	disabled: boolean
 	checked: boolean
+	theme: Themes
 }
+
 const Slider = styled.span`
   position: absolute;
   cursor: ${({disabled}: Props) => disabled ? 'not-allowed' : 'pointer'};
@@ -29,21 +33,25 @@ const Slider = styled.span`
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: ${({checked}: Props) => checked ? COLORS.green : COLORS.grey};
+  background-color: ${({
+                         checked,
+                         theme
+                       }: Props) => checked ? COLORS.green : theme === Themes.DARK ? COLORS.grey : COLORS.grey};
   transition: 0.4s;
   border-radius: 34px;
-	&:before {
+
+  &:before {
     position: absolute;
     content: "";
-    height: 18px;
-    width: 18px;
-    left: 4px;
-    bottom: 4px;
+    height: 17px;
+    width: 17px;
+    left: 3.5px;
+    bottom: 3.5px;
     background-color: ${COLORS.white};
     border-radius: 50%;
     transition: transform 250ms;
-    transform: translateX(${({checked}: Props) => checked ? '18px' : 0});
-	}
+    transform: translateX(${({checked}: Props) => checked ? '16px' : 0});
+  }
 `
 
 

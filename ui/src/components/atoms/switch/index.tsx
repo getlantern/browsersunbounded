@@ -1,5 +1,6 @@
-import React, { ChangeEvent } from "react";
-import {Label, Input, Slider, Container} from './styles'
+import React, {ChangeEvent, useContext} from 'react'
+import {Container, Input, Label, Slider} from './styles'
+import {AppContext} from '../../../context'
 
 interface Props {
 	onToggle: (e: boolean) => void
@@ -8,11 +9,13 @@ interface Props {
 }
 
 const Switch = ({onToggle, checked, disabled}: Props) => {
+	const {theme} = useContext(AppContext)
+
 	return (
 		<Container>
 			<Label>
 				<Input
-					type="checkbox"
+					type={'checkbox'}
 					onChange={(e: ChangeEvent<HTMLInputElement>) =>
 						onToggle(e.currentTarget.checked)
 					}
@@ -23,10 +26,11 @@ const Switch = ({onToggle, checked, disabled}: Props) => {
 				<Slider
 					checked={checked}
 					disabled={disabled}
+					theme={theme}
 				/>
 			</Label>
 		</Container>
-	);
-};
+	)
+}
 
-export default Switch;
+export default Switch

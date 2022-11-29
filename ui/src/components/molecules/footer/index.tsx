@@ -1,48 +1,53 @@
 import {Text} from '../../atoms/typography'
-import {Github, Lantern, Twitter} from '../../atoms/icons'
-import {Container, Divider} from './styles'
+import {Heart, Lantern, Twitter} from '../../atoms/icons'
+import {Container, Divider, DonateLink} from './styles'
 import {useContext} from 'react'
-import {AppWidth} from '../../../context'
-import {BREAKPOINT} from '../../../constants'
+import {AppContext} from '../../../context'
+import {BREAKPOINT, COLORS} from '../../../constants'
+import {Themes} from '../../../index'
 
-const SPACER = 24;
+const SPACER = 24
 
-const Footer = () => {
-	const {width} = useContext(AppWidth)
+interface Props {
+	social: boolean
+}
+
+const Footer = ({social}: Props) => {
+	const {width, theme} = useContext(AppContext)
+	const color = theme === Themes.DARK ? COLORS.grey1 : COLORS.grey5
 
 	return (
 		<Container
 			justify={width < BREAKPOINT ? 'center' : 'flex-start'}
 		>
-			<a
-				href={'https://twitter.com/getlantern'}
-				target={'_blank'}
-				rel={'noreferrer'}
-			>
-				<Twitter />
-			</a>
-			<a
-				href={'https://github.com/getlantern'}
-				target={'_blank'}
-				rel={'noreferrer'}
-				style={{marginLeft: SPACER, marginRight: SPACER}}
-			>
-				<Github />
-			</a>
-			<Divider />
-			<a
+			{
+				social && (
+					<>
+						<a
+							href={'https://twitter.com/getlantern'}
+							target={'_blank'}
+							rel={'noreferrer'}
+						>
+							<Twitter/>
+						</a>
+						<Divider
+							style={{marginRight: SPACER, marginLeft: SPACER}}
+							theme={theme}
+						/>
+					</>
+
+				)
+			}
+			<DonateLink
 				href={'https://lantern.io'}
 				target={'_blank'}
 				rel={'noreferrer'}
-				style={{marginLeft: SPACER}}
+				style={{color}}
 			>
-				<Lantern />
-			</a>
-			<Text
-				style={{marginLeft: SPACER}}
-			>
-				Built with ❤️ by <a href={'https://lantern.io'} target={'_blank'} rel={'noreferrer'}>Lantern</a>
-			</Text>
+				<Heart/>
+				<Text>Donate to Lantern</Text>
+				<Lantern/>
+			</DonateLink>
 		</Container>
 	)
 }

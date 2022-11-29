@@ -1,6 +1,7 @@
 import {createContext} from 'react'
 
-export const AppWidth = createContext({
+export const AppContext = createContext({
 	width: 0,
+	theme: 'light'
 })
-export const AppWidthProvider = AppWidth.Provider
+export const AppContextProvider = AppContext.Provider

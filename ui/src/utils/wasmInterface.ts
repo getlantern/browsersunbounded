@@ -27,6 +27,7 @@ export interface Throughput {
 export const connectionsEmitter = new StateEmitter<Connection[]>([])
 export const lifetimeConnectionsEmitter = new StateEmitter<number>(0)
 export const readyEmitter = new StateEmitter<boolean>(false)
+export const sharingEmitter = new StateEmitter<boolean>(false)
 
 class WasmInterface {
 	go: typeof go
@@ -36,12 +37,13 @@ class WasmInterface {
 	chunkMap: {[key: number]: Chunk}
 	connectionMap: {[key: number]: Connection}
 	throughput: Throughput
-	ready: boolean
 	// smoothed and agg data
 	movingAverageThroughput: number
 	lifetimeConnections: number
 	chunks: Chunk[]
 	connections: Connection[]
+	// states
+	ready: boolean
 
 	constructor() {
 		this.ready = false
@@ -71,13 +73,17 @@ class WasmInterface {
 
 	start = () => {
 		if (!this.ready) console.warn('Wasm client is not in ready state, aborting start')
-		else this.wasmClient.start()
+		else {
+			this.wasmClient.start()
+			sharingEmitter.update(true)
+		}
 	}
 
 	stop = () => {
 		this.ready = false
 		readyEmitter.update(this.ready)
 		this.wasmClient.stop()
+		sharingEmitter.update(false)
 	}
 
 	idxMapToArr = (map: {[key: number]: any}) => {

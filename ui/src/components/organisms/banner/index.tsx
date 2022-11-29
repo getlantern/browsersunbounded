@@ -1,36 +1,112 @@
-import {Container, Item} from './styles'
-import {Expand, Logo} from '../../atoms/icons'
+import {Body, BodyWrapper, Container, Header, HeaderWrapper, Item} from './styles'
+import {Logo} from '../../atoms/icons'
 import Control from '../../molecules/control'
-import React from 'react'
-import {useStats} from '../../../hooks/useStats'
-import {Text} from '../../atoms/typography'
+import React, {useContext, useState} from 'react'
+import {Settings, Themes} from '../../../index'
+import Col from '../../atoms/col'
+import Globe from '../../molecules/globe'
+import Row from '../../atoms/row'
+import {BREAKPOINT, COLORS} from '../../../constants'
+import Stats, {Connections} from '../../molecules/stats'
+import About from '../../molecules/about'
+import Footer from '../../molecules/footer'
+import {AppContext} from '../../../context'
+import {useLatch} from '../../../hooks/useLatch'
+import ExpandCollapse from '../../atoms/expandCollapse'
 
 interface Props {
-	isSharing: boolean
-	onShare: (s: boolean) => void
+	settings: Settings
 }
 
-const Banner = ({isSharing, onShare}: Props) => {
-	const {connections} = useStats({sampleMs: 500})
-	const currentConnections = connections.filter(c => c.state === 1).length
+const Banner = ({settings}: Props) => {
+	const {width} = useContext(AppContext)
+	const [expanded, setExpanded] = useState(false)
+	const interacted = useLatch(expanded)
+	const onToggle = (share: boolean) => !interacted && share ? setExpanded(share) : null
 	return (
-		<Container>
-			<Logo />
-			<Item>
-				<Control
-					isSharing={isSharing}
-					onShare={onShare}
-				/>
-			</Item>
-			<Item>
-				<Text>People you are helping connect:</Text>
-				<Text
-					style={{minWidth: 10}}
-				>
-					{currentConnections}
-				</Text>
-			</Item>
-			<Expand />
+		<Container
+			theme={settings.theme}
+		>
+			<HeaderWrapper>
+				<Header>
+					<Logo/>
+					{
+						!expanded && width > 650 && (
+							<Item
+								style={{backgroundColor: settings.theme === Themes.LIGHT ? COLORS.white : COLORS.transparent}}
+								theme={settings.theme}
+							>
+								<Control
+									onToggle={onToggle}
+								/>
+							</Item>
+						)
+					}
+					{
+						!expanded && width > 900 && (
+							<Item
+								theme={settings.theme}
+							>
+								<Connections/>
+							</Item>
+						)
+					}
+					{
+						!expanded && width > 1150 && (
+							<Footer
+								social={false}
+							/>
+						)
+					}
+					<ExpandCollapse
+						expanded={expanded}
+						setExpanded={setExpanded}
+					/>
+				</Header>
+				{
+					!expanded && width <= 650 && (
+						<Item
+							style={{backgroundColor: settings.theme === Themes.LIGHT ? COLORS.white : COLORS.transparent}}
+							theme={settings.theme}
+						>
+							<Control
+								onToggle={onToggle}
+							/>
+						</Item>
+					)
+				}
+			</HeaderWrapper>
+			{
+				expanded && (
+					<BodyWrapper>
+						<Body
+							mobile={width < BREAKPOINT}
+						>
+							{
+								settings.features.globe && (
+									<Col>
+										<Globe/>
+									</Col>
+								)
+							}
+							<Col>
+								<Row
+									borderTop
+									borderBottom
+									backgroundColor={settings.theme === Themes.DARK ? COLORS.transparent : COLORS.white}
+								>
+									<Control/>
+								</Row>
+								<Stats/>
+								<About/>
+								<Footer
+									social={true}
+								/>
+							</Col>
+						</Body>
+					</BodyWrapper>
+				)
+			}
 		</Container>
 	)
 }

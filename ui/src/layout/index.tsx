@@ -1,16 +1,17 @@
 import {AppWrapper, Main} from './styles'
-import {AppWidthProvider} from '../context'
+import {AppContextProvider} from '../context'
 import useElementSize from '../hooks/useElementSize'
-import {BREAKPOINT, GOOGLE_FONT_LINKS} from '../constants'
+import {GOOGLE_FONT_LINKS} from '../constants'
 import {useLayoutEffect, useRef} from 'react'
-import {Layouts} from '../index'
+import {Layouts, Themes} from '../index'
 
 interface Props {
 	children: (JSX.Element | false)[] | JSX.Element | false
 	layout: Layouts
+	theme: Themes
 }
 
-const Layout = ({children, layout}: Props) => {
+const Layout = ({children, layout, theme}: Props) => {
 	const [ref, { width }] = useElementSize()
 	const fontLoaded = useRef(false)
 
@@ -31,16 +32,17 @@ const Layout = ({children, layout}: Props) => {
 	}, [fontLoaded])
 
 	return (
-		<AppWidthProvider value={{width}}>
-			<AppWrapper>
+		<AppContextProvider value={{width, theme}}>
+			<AppWrapper
+				theme={theme}
+			>
 				<Main
 					ref={ref}
-					mobile={width < BREAKPOINT}
 				>
 					{children}
 				</Main>
 			</AppWrapper>
-		</AppWidthProvider>
+		</AppContextProvider>
 	)
 }
 

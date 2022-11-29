@@ -6,9 +6,10 @@
     <title>p2p web proxy</title>
   </head>
   <body
-    style="background-color: #F8FAFB; min-height: 100vh; display: flex; justify-content: center; align-items: center;"
+    style="background-color: #F8FAFB; min-height: 100vh; display: flex; margin: 0px; flex-direction: column;"
   >
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    <broflake style='width: 100%;' data-layout="banner" data-features='{ "globe": true, "toast": true }'></broflake>
+    <broflake data-layout="banner" data-theme="dark" data-features='{"globe": true, "toast": true}' style='width: calc(100% - 20px); padding: 10px;'></broflake>
+    <broflake data-layout="banner" data-theme="light" data-features='{"globe": true, "toast": true}' style='width: calc(100% - 20px); padding: 10px;'></broflake>
   </body>
 </html>

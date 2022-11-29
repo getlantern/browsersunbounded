@@ -5,19 +5,23 @@
 	size and better performance.
 
 	Also see the patches dir for changes to the shader program that are not exposed through the react-globe api.
-***/
+ ***/
 import GlobeComponent from 'react-globe.gl' // @todo lazy load
 import {Container} from './styles'
 import {useContext, useEffect, useRef, useState} from 'react'
-import {AppWidth} from '../../../context'
-import {BREAKPOINT, COLORS, UV_MAP_PATH} from '../../../constants'
+import {AppContext} from '../../../context'
+import {BREAKPOINT, COLORS, UV_MAP_PATH_DARK, UV_MAP_PATH_LIGHT} from '../../../constants'
 import Shadow from './shadow'
 import Tip from '../tip'
 import {useGeo} from '../../../hooks/useGeo'
 import {mockLoc} from '../../../mocks/mockData'
+import {Themes} from '../../../index'
+import {useEmitterState} from '../../../hooks/useStateEmitter'
+import {sharingEmitter} from '../../../utils/wasmInterface'
 
-const Globe = ({isSharing}: {isSharing: boolean}) => {
-	const {width} = useContext(AppWidth)
+const Globe = () => {
+	const sharing = useEmitterState(sharingEmitter)
+	const {width, theme} = useContext(AppContext)
 	const size = width < BREAKPOINT ? 300 : 400
 	const isSetup = useRef(false)
 	const [arc, setArc] = useState(null)
@@ -26,14 +30,14 @@ const Globe = ({isSharing}: {isSharing: boolean}) => {
 	const {arcs, points} = useGeo()
 
 	useEffect(() => {
-		if (isSharing) {
+		if (sharing) {
 			globe.current.pointOfView({
 				lat: 20, // equator
 				lng: mockLoc[0], // @todo use user loc
-				altitude: 2.5,
+				altitude: 2.5
 			}, 1000)
 		}
-	}, [arcs, isSharing])
+	}, [arcs, sharing])
 
 	useEffect(() => {
 		const controls = globe.current.controls()
@@ -89,8 +93,9 @@ const Globe = ({isSharing}: {isSharing: boolean}) => {
 					showAtmosphere={true}
 					atmosphereColor={COLORS.brand}
 					atmosphereAltitude={.25}
-					backgroundColor={COLORS.veryLightGrey}
-					globeImageUrl={UV_MAP_PATH}
+					backgroundColor={'rgba(0,0,0,0)'}
+					backgroundImageUrl={null}
+					globeImageUrl={theme === Themes.DARK ? UV_MAP_PATH_DARK : UV_MAP_PATH_LIGHT}
 					arcsData={arcs}
 					arcColor={['rgba(0, 188, 212, 0.75)', 'rgba(255, 193, 7, 0.75)']}
 					arcDashLength={1}
@@ -106,13 +111,8 @@ const Globe = ({isSharing}: {isSharing: boolean}) => {
 					pointRadius={1.5}
 					pointAltitude={0}
 					pointsTransitionDuration={500}
-					// ringsData={points}
-					// ringColor={() => COLORS.green}
-					// ringMaxRadius={5}
-					// ringPropagationSpeed={2}
-					// ringRepeatPeriod={500}
 				/>
-				<Shadow />
+				<Shadow/>
 			</Container>
 			<Tip
 				text={!!arc && `${arc.count} People from ${arc.country}`}
