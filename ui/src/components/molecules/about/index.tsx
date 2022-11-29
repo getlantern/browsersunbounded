@@ -10,7 +10,7 @@ const About = () => {
 	const brand = theme === Themes.DARK ? COLORS.altBrand : COLORS.brand
 	return(
 		<Text
-			style={{color}}
+			style={{color, margin: 0}}
 		>
 			Sharing your connection enables people living with censorship to access the open internet using <a style={{color: brand}} href={'https://lantern.io'} target={'_blank'} rel={'noreferrer'}>Lantern</a>.  Thank you for your support.
 		</Text>

@@ -27,7 +27,11 @@ const Banner = ({settings}: Props) => {
 		<Container
 			theme={settings.theme}
 		>
-			<HeaderWrapper>
+			<HeaderWrapper
+				style={{
+					padding: width > BREAKPOINT ? '8px 32px' : '8px 16px'
+				}}
+			>
 				<Header>
 					<Logo/>
 					{
@@ -78,7 +82,11 @@ const Banner = ({settings}: Props) => {
 			</HeaderWrapper>
 			{
 				expanded && (
-					<BodyWrapper>
+					<BodyWrapper
+						style={{
+							padding: width > BREAKPOINT ? '24px 32px' : '24px 16px'
+						}}
+					>
 						<Body
 							mobile={width < BREAKPOINT}
 						>
@@ -98,10 +106,18 @@ const Banner = ({settings}: Props) => {
 									<Control/>
 								</Row>
 								<Stats/>
-								<About/>
-								<Footer
-									social={true}
-								/>
+								<div
+									style={{margin: '24px 0'}}
+								>
+									<About/>
+								</div>
+								<div
+									style={{paddingLeft: 8, paddingRight: 8}}
+								>
+									<Footer
+										social={true}
+									/>
+								</div>
 							</Col>
 						</Body>
 					</BodyWrapper>

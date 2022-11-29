@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import {BREAKPOINT_QUERY, COLORS, MAX_WIDTH} from '../../../constants'
+import {COLORS, MAX_WIDTH} from '../../../constants'
 import {Themes} from '../../../index'
 
 export const Container = styled.div`
@@ -12,11 +12,7 @@ export const Container = styled.div`
 export const HeaderWrapper = styled.div`
 	display: flex;
 	flex-direction: column;
-  padding: 8px 16px;
 	gap: 8px;
-  ${BREAKPOINT_QUERY} {
-    padding: 8px 32px;
-  }
 `
 
 export const Header = styled.div`
@@ -32,10 +28,6 @@ export const Header = styled.div`
 `
 
 export const BodyWrapper = styled.div`
-  padding: 24px 16px;
-  ${BREAKPOINT_QUERY} {
-    padding: 24px 32px;
-  }
   display: flex;
 	justify-content: center;
 	align-items: center;

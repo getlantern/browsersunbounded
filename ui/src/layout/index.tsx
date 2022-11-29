@@ -3,14 +3,15 @@ import {AppContextProvider} from '../context'
 import useElementSize from '../hooks/useElementSize'
 import {GOOGLE_FONT_LINKS} from '../constants'
 import {useLayoutEffect, useRef} from 'react'
-import {Themes} from '../index'
+import {Layouts, Themes} from '../index'
 
 interface Props {
 	children: (JSX.Element | false)[] | JSX.Element | false
 	theme: Themes
+	layout: Layouts
 }
 
-const Layout = ({children, theme}: Props) => {
+const Layout = ({children, theme, layout}: Props) => {
 	const [ref, { width}] = useElementSize()
 	const fontLoaded = useRef(false)
 
@@ -33,13 +34,11 @@ const Layout = ({children, theme}: Props) => {
 	return (
 		<AppContextProvider value={{width, theme}}>
 			<AppWrapper
+				layout={layout}
 				theme={theme}
+				ref={ref}
 			>
-				<Main
-					ref={ref}
-				>
-					{children}
-				</Main>
+				{children}
 			</AppWrapper>
 		</AppContextProvider>
 	)

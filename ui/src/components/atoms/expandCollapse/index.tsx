@@ -1,11 +1,13 @@
-import {Collapse, Expand} from '../icons'
+import {Arrow, Collapse, Expand} from '../icons'
 import React, {Dispatch, SetStateAction} from 'react'
 import styled from 'styled-components'
+import {Text} from '../typography'
 
 const StyledButton = styled.button`
 	border: none;
 	display: flex;
 	justify-content: flex-end;
+	gap: 8px;
 	align-items: center;
 	background-color: transparent;
 	cursor: pointer;
@@ -25,6 +27,26 @@ const ExpandCollapse = ({expanded, setExpanded}: Props) => {
 			{
 				expanded ? <Collapse /> : <Expand />
 			}
+		</StyledButton>
+	)
+}
+
+export const ExpandCollapsePanel = ({expanded, setExpanded}: Props) => {
+	return (
+		<StyledButton
+			onClick={() => setExpanded(!expanded)}
+		>
+			<Text
+				style={{
+					textDecoration: 'underline',
+					fontSize: 12
+				}}
+			>
+				{`Show ${expanded ? 'less' : 'more'} stats`}
+			</Text>
+			<Arrow
+				up={expanded}
+			/>
 		</StyledButton>
 	)
 }

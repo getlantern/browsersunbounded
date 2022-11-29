@@ -5,7 +5,8 @@ import App from './App';
 const broflakes = document.querySelectorAll("broflake") as NodeListOf<HTMLElement>;
 
 export enum Layouts {
-  'BANNER'= 'banner'
+  'BANNER'= 'banner',
+  'PANEL'= 'panel'
 }
 
 export enum Themes {

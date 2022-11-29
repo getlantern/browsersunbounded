@@ -1,5 +1,4 @@
 export const BREAKPOINT = 800
-export const BREAKPOINT_QUERY = `@media (min-width: ${BREAKPOINT}px)`
 export const MAX_WIDTH = 1000
 export const COLORS = {
 	black: '#000000',

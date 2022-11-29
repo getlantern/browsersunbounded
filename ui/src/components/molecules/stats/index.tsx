@@ -1,7 +1,9 @@
 import {Text} from '../../atoms/typography'
 import Row from '../../atoms/row'
 import {useStats} from '../../../hooks/useStats'
-import React from 'react'
+import React, {useContext} from 'react'
+import {AppContext} from '../../../context'
+import {BREAKPOINT} from '../../../constants'
 
 export const Connections = () => {
 	const {connections} = useStats({sampleMs: 500})
@@ -20,6 +22,7 @@ export const Connections = () => {
 
 
 const Stats = () => {
+	const {width} = useContext(AppContext)
 	const {connections, lifetimeConnections, throughput, chunks} = useStats({sampleMs: 500})
 	const currentConnections = connections.filter(c => c.state === 1).length
 	const totalChunks = chunks.map(c => c.size).reduce((p, c) => p + c, 0)
@@ -28,7 +31,7 @@ const Stats = () => {
 			<Row
 				borderBottom
 			>
-				<Text>People you are helping connect to the open Internet</Text>
+				<Text>{'People you are helping connect' + (width > BREAKPOINT ? ' to the open Internet:' : ':')}</Text>
 				<Text>{currentConnections}</Text>
 			</Row>
 			<Row
