@@ -1,9 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
 
-const p2pEmbeds = document.querySelectorAll("broflake") as NodeListOf<HTMLElement>;
+const broflakes = document.querySelectorAll("broflake") as NodeListOf<HTMLElement>;
 
 export enum Layouts {
   'BANNER'= 'banner'
@@ -36,7 +35,7 @@ const defaultSettings: Settings = {
   theme: Themes.LIGHT
 }
 
-p2pEmbeds.forEach((embed) => {
+broflakes.forEach((embed) => {
   const root = ReactDOM.createRoot(
     embed
   );
@@ -59,8 +58,3 @@ p2pEmbeds.forEach((embed) => {
     </React.StrictMode>
   );
 });
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
