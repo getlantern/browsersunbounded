@@ -1,10 +1,9 @@
 {
   "files": {
-    "main.js": "/broflake/static/js/main.bc40c687.js",
-    "static/js/27.a6d5f116.chunk.js": "/broflake/static/js/27.a6d5f116.chunk.js",
+    "main.js": "/broflake/static/js/main.js",
     "index.html": "/broflake/index.html"
   },
   "entrypoints": [
-    "static/js/main.bc40c687.js"
+    "static/js/main.js"
   ]
 }
