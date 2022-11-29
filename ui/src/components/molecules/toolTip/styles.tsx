@@ -1,18 +1,18 @@
 import styled from 'styled-components'
-import {COLORS} from '../../../constants'
+import {COLORS, SHADOWS} from '../../../constants'
 
 const Container = styled.div`
-  background: ${COLORS.grey5};
-  border-radius: 4px;
-  filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.16));
+  background: ${COLORS.grey6};
+  border-radius: 100px;
+  box-shadow: ${SHADOWS.dark};
   color: ${COLORS.grey1};
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  padding: 10px;
+  padding: 10px 18px;
   transition: opacity 250ms ease-out;
   opacity: ${(props: {show: boolean}) => props.show ? 1 : 0};
-	pointer-events: none;
+  pointer-events: ${(props: {show: boolean}) => props.show ? 'auto' : 'none'};
 `
 
 export {Container}

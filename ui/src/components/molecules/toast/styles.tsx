@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import {COLORS} from '../../../constants'
+import {COLORS, SHADOWS} from '../../../constants'
 import {Themes} from '../../../index'
 
 const Container = styled.div`
@@ -10,7 +10,7 @@ const Container = styled.div`
   z-index: 1000;
   background: ${({theme}: { theme: Themes }) => theme === Themes.DARK ? COLORS.grey5 : COLORS.grey1};
   border: 1px solid ${({theme}: { theme: Themes }) => theme === Themes.DARK ? COLORS.grey5 : COLORS.grey2};
-  box-shadow: 0 4px 32px rgba(0, 97, 99, 0.1);
+  box-shadow: ${({theme}: {theme: Themes}) => theme === Themes.DARK ? SHADOWS.dark : SHADOWS.light};
   border-radius: 32px;
   padding: 12px;
   display: flex;

@@ -15,7 +15,6 @@ interface Props {
 const App = ({settings}: Props) => {
   return (
     <Layout
-      layout={settings.layout}
       theme={settings.theme}
     >
       { settings.features.toast && <Toast /> }

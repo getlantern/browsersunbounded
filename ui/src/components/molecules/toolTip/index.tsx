@@ -9,7 +9,7 @@ interface Props {
 	container: RefObject<Document>
 }
 
-const Tip = ({text, show, container}: Props) => {
+const ToolTip = ({text, show, container}: Props) => {
 	const [_text, _setText] = useState(text)
 	const [ref, {width}] = useElementSize()
 	const currentPos = useMousePosition(container)
@@ -40,4 +40,4 @@ const Tip = ({text, show, container}: Props) => {
 	)
 }
 
-export default Tip
+export default ToolTip

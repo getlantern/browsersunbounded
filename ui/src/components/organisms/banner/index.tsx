@@ -33,7 +33,7 @@ const Banner = ({settings}: Props) => {
 					{
 						!expanded && width > 650 && (
 							<Item
-								style={{backgroundColor: settings.theme === Themes.LIGHT ? COLORS.white : COLORS.transparent}}
+								style={{backgroundColor: settings.theme === Themes.LIGHT ? COLORS.white : COLORS.grey6}}
 								theme={settings.theme}
 							>
 								<Control
@@ -66,7 +66,7 @@ const Banner = ({settings}: Props) => {
 				{
 					!expanded && width <= 650 && (
 						<Item
-							style={{backgroundColor: settings.theme === Themes.LIGHT ? COLORS.white : COLORS.transparent}}
+							style={{backgroundColor: settings.theme === Themes.LIGHT ? COLORS.white : COLORS.grey6}}
 							theme={settings.theme}
 						>
 							<Control
@@ -93,7 +93,7 @@ const Banner = ({settings}: Props) => {
 								<Row
 									borderTop
 									borderBottom
-									backgroundColor={settings.theme === Themes.DARK ? COLORS.transparent : COLORS.white}
+									backgroundColor={settings.theme === Themes.DARK ? COLORS.grey6 : COLORS.white}
 								>
 									<Control/>
 								</Row>

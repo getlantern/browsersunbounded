@@ -12,7 +12,7 @@ import {useContext, useEffect, useRef, useState} from 'react'
 import {AppContext} from '../../../context'
 import {BREAKPOINT, COLORS, UV_MAP_PATH_DARK, UV_MAP_PATH_LIGHT} from '../../../constants'
 import Shadow from './shadow'
-import Tip from '../tip'
+import ToolTip from '../toolTip'
 import {useGeo} from '../../../hooks/useGeo'
 import {mockLoc} from '../../../mocks/mockData'
 import {Themes} from '../../../index'
@@ -114,7 +114,7 @@ const Globe = () => {
 				/>
 				<Shadow/>
 			</Container>
-			<Tip
+			<ToolTip
 				text={!!arc && `${arc.count} People from ${arc.country}`}
 				show={!!arc}
 				container={container}
