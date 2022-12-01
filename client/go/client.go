@@ -51,6 +51,7 @@ var cRouter clientcore.TableRouter
 var pTable *clientcore.WorkerTable
 var pRouter clientcore.TableRouter
 var wgReady sync.WaitGroup
+var hasStarted bool
 
 func main() {
 	switch clientType {
@@ -101,11 +102,23 @@ func main() {
 }
 
 func start() {
+	if hasStarted {
+		fmt.Println("Client has already started. Not starting again.")
+		return
+	}
+
 	cTable.Start()
 	pTable.Start()
+
+	hasStarted = true
 }
 
 func stop() {
+	if !hasStarted {
+		fmt.Println("Client has not started. Not stopping.")
+		return
+	}
+
 	cTable.Stop()
 	pTable.Stop()
 
@@ -113,6 +126,8 @@ func stop() {
 		wgReady.Wait()
 		ui.OnReady()
 	}()
+
+	hasStarted = false
 }
 
 func debug() {
