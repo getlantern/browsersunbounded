@@ -65,7 +65,17 @@ func (l proxyListener) Addr() net.Addr {
 func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 	// TODO: InsecureSkipVerify=true just disables origin checking, we need to instead add origin
 	// patterns as strings using AcceptOptions.OriginPattern
-	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})
+	// TODO: disabling compression is a workaround for a WebKit bug:
+	// https://github.com/getlantern/broflake/issues/45
+	c, err := websocket.Accept(
+		w,
+		r,
+		&websocket.AcceptOptions{
+			InsecureSkipVerify: true,
+			CompressionMode:    websocket.CompressionDisabled,
+		},
+	)
+
 	if err != nil {
 		// TODO: this is the idiom for our WebSocket library, but we should log the err better
 		fmt.Println(err)
