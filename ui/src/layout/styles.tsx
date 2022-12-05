@@ -2,11 +2,6 @@ import styled from 'styled-components'
 import {COLORS} from '../constants'
 import {Layouts, Themes} from '../index'
 
-const Main = styled.div`
-  display: flex;
-	width: 100%;
-`
-
 const AppWrapper = styled.section`
   font-family: 'Urbanist', sans-serif;
   display: flex;
@@ -21,4 +16,4 @@ const AppWrapper = styled.section`
   }
 `
 
-export {Main, AppWrapper}
+export {AppWrapper}

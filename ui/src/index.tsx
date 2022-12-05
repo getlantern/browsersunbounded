@@ -22,6 +22,8 @@ export interface Settings {
   features: {
     globe: boolean
     toast: boolean
+    'mobile-bg': boolean
+    'desktop-bg': boolean
   }
   layout: Layouts
   theme: Themes
@@ -31,6 +33,8 @@ const defaultSettings: Settings = {
   features: {
     globe: true,
     toast: true,
+    'mobile-bg': true,
+    'desktop-bg': true
   },
   layout: Layouts.BANNER,
   theme: Themes.LIGHT
@@ -45,10 +49,10 @@ broflakes.forEach((embed) => {
   Object.keys(defaultSettings).forEach(key => {
     try {
       // @ts-ignore
-      settings[key] = JSON.parse(dataset[key])
+      settings[key] = {...settings[key], ...JSON.parse(dataset[key])}
     } catch {
       // @ts-ignore
-      settings[key] = dataset[key]
+      settings[key] = dataset[key] || settings[key]
     }
   })
   root.render(

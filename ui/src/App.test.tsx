@@ -10,6 +10,8 @@ test('renders', () => {
         features: {
           globe: true,
           toast: true,
+          'mobile-bg': true,
+          'desktop-bg': true
         },
         layout: Layouts.BANNER,
         theme: Themes.DARK

@@ -1,4 +1,4 @@
-import {AppWrapper, Main} from './styles'
+import {AppWrapper} from './styles'
 import {AppContextProvider} from '../context'
 import useElementSize from '../hooks/useElementSize'
 import {GOOGLE_FONT_LINKS} from '../constants'

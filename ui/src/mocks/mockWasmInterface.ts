@@ -34,10 +34,10 @@ export class MockWasmInterface {
 	}
 
 	initialize = async () => {
-		// nada
 		this.ready = true
 		readyEmitter.update(this.ready)
 	}
+
 	start = () => {
 		sharingEmitter.update(true)
 		this.interval = setInterval(() => {
