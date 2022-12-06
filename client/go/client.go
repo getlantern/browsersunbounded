@@ -55,6 +55,12 @@ var pRouter clientcore.TableRouter
 var wgReady sync.WaitGroup
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "1080"
+	}
+	addr := fmt.Sprintf("127.0.0.1:%v", port)
+
 	switch clientType {
 	case "desktop":
 		// Desktop peers don't share connectivity for the MVP, so the consumer table only gets one
@@ -62,7 +68,7 @@ func main() {
 		cTable = clientcore.NewWorkerTable(
 			[]clientcore.WorkerFSM{
 				*clientcore.NewProducerUserStream(
-					NewLocalProxySource("127.0.0.1:1080"), &wgReady),
+					NewLocalProxySource(addr), &wgReady),
 			})
 		cRouter = clientcore.NewConsumerRouter(bus.Downstream, cTable)
 
