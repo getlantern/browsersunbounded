@@ -15,7 +15,7 @@ var (
 	webrtcOptions = &clientcore.WebRTCOptions{
 		DiscoverySrv:   "http://localhost:8000",
 		Endpoint:       "/v1/signal",
-		StunSrv:        "stun:157.230.209.241:3478", // "stun:stun.l.google.com:19302"
+		StunSrvs:       []string{"stun:157.230.209.241:3478"}, // "stun:stun.l.google.com:19302"
 		GenesisAddr:    "genesis",
 		NATFailTimeout: 5 * time.Second,
 		ICEFailTimeout: 5 * time.Second,
