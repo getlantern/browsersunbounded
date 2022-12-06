@@ -44,12 +44,7 @@ func (t *userTable) Send(userID string, msg string) bool {
 	defer t.Unlock()
 	userChan, ok := t.Data[userID]
 	if ok {
-		select {
-		case userChan <- msg:
-			// Do nothing, message sent
-		default:
-			panic("userChan buffer overflow!")
-		}
+		userChan <- msg
 	}
 	return ok
 }
@@ -58,12 +53,7 @@ func (t *userTable) SendAll(msg string) {
 	t.Lock()
 	defer t.Unlock()
 	for _, userChan := range t.Data {
-		select {
-		case userChan <- msg:
-			// Do nothing, message sent
-		default:
-			panic("userChan buffer overflow!")
-		}
+		userChan <- msg
 	}
 }
 

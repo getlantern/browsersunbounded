@@ -28,12 +28,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			fmt.Printf("Consumer state 0, constructing RTCPeerConnection...\n")
 
 			// We're resetting this slot, so send a nil path assertion IPC message
-			select {
-			case com.tx <- IPCMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{}}:
-				// Do nothing, message sent
-			default:
-				panic("Consumer buffer overflow!")
-			}
+			com.tx <- IPCMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{}}
 
 			// TODO: STUN servers will eventually be provided in a more sophisticated way
 			config := webrtc.Configuration{
@@ -318,22 +313,11 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// Send a path assertion IPC message representing the connectivity now provided by this slot
 			// TODO: post-MVP we shouldn't be hardcoding (*, 1) here...
 			allowAll := []common.Endpoint{{Host: "*", Distance: 1}}
-
-			select {
-			case com.tx <- IPCMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{Allow: allowAll}}:
-				// Do nothing, message sent
-			default:
-				panic("Consumer buffer overflow!")
-			}
+			com.tx <- IPCMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{Allow: allowAll}}
 
 			// Inbound from datachannel:
 			d.OnMessage(func(msg webrtc.DataChannelMessage) {
-				select {
-				case com.tx <- IPCMsg{IpcType: ChunkIPC, Data: msg.Data}:
-					// Do nothing, message sent
-				default:
-					panic("Consumer buffer overflow!")
-				}
+				com.tx <- IPCMsg{IpcType: ChunkIPC, Data: msg.Data}
 			})
 
 		proxyloop:

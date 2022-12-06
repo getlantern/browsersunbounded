@@ -48,12 +48,7 @@ func (o *ipcObserver) Start() {
 		for {
 			msg := <-o.Downstream.tx
 			o.onTx(msg)
-			select {
-			case o.Upstream.tx <- msg:
-				// Do nothing, message sent
-			default:
-				panic("Observer buffer overflow!")
-			}
+			o.Upstream.tx <- msg
 		}
 	}()
 
@@ -61,12 +56,7 @@ func (o *ipcObserver) Start() {
 		for {
 			msg := <-o.Upstream.rx
 			o.onRx(msg)
-			select {
-			case o.Downstream.rx <- msg:
-				// Do nothing, message sent
-			default:
-				panic("Observer buffer overflow!")
-			}
+			o.Downstream.rx <- msg
 		}
 	}()
 }
