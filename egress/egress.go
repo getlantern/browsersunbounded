@@ -110,13 +110,7 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 				fmt.Printf("Stream error: %v\n", err)
 				return
 			}
-
-			select {
-			case l.connections <- stream:
-				// Do nothing, message sent
-			default:
-				panic("proxyListener.connections buffer overflow!")
-			}
+			l.connections <- stream
 		}
 	}()
 }

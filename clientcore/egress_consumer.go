@@ -21,12 +21,7 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 			fmt.Printf("Egress consumer state 0, opening WebSocket connection...\n")
 
 			// We're resetting this slot, so send a nil path assertion IPC message
-			select {
-			case com.tx <- IPCMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{}}:
-				// Do nothing, message sent
-			default:
-				panic("Egress consumer buffer overflow!")
-			}
+			com.tx <- IPCMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{}}
 
 			// TODO: interesting quirk here: if the table router which manages this WorkerFSM implements
 			// non-multiplexed just-in-time strategy wherein it creates a new websocket connection for
@@ -62,12 +57,7 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 			// Send a path assertion IPC message representing the connectivity now provided by this slot
 			// TODO: post-MVP we shouldn't be hardcoding (*, 1) here...
 			allowAll := []common.Endpoint{{Host: "*", Distance: 1}}
-			select {
-			case com.tx <- IPCMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{Allow: allowAll}}:
-				// Do nothing, message sent
-			default:
-				panic("Egress consumer buffer overflow!")
-			}
+			com.tx <- IPCMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{Allow: allowAll}}
 
 			// WebSocket read loop:
 			readStatus := make(chan error)
@@ -80,12 +70,7 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 					}
 
 					// Wrap the chunk and send it on to the router
-					select {
-					case com.tx <- IPCMsg{IpcType: ChunkIPC, Data: b}:
-						// Do nothing, message sent
-					default:
-						panic("Egress consumer buffer overflow!")
-					}
+					com.tx <- IPCMsg{IpcType: ChunkIPC, Data: b}
 				}
 			}(ctx)
 

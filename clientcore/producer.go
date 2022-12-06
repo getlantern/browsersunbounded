@@ -96,12 +96,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// We find out by sending an ConnectivityCheckIPC message, which asks the process responsible
 			// for path assertions to send a message reflecting the current state of our path assertion.
 			// If yes, we can proceed right now! If no, just wait for the next non-nil path assertion message...
-			select {
-			case com.tx <- IPCMsg{IpcType: ConnectivityCheckIPC}:
-				// Do nothing, message sent
-			default:
-				panic("Producer buffer overflow!")
-			}
+			com.tx <- IPCMsg{IpcType: ConnectivityCheckIPC}
 
 			for {
 				select {
@@ -313,21 +308,11 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 
 			// Announce the new connectivity situation for this slot
 			// TODO: actually acquire the location
-			select {
-			case com.tx <- IPCMsg{IpcType: ConsumerInfoIPC, Data: common.ConsumerInfo{Location: "DEBUG"}}:
-				// Do nothing, message sent
-			default:
-				panic("Producer buffer overflow")
-			}
+			com.tx <- IPCMsg{IpcType: ConsumerInfoIPC, Data: common.ConsumerInfo{Location: "DEBUG"}}
 
 			// Inbound from datachannel:
 			d.OnMessage(func(msg webrtc.DataChannelMessage) {
-				select {
-				case com.tx <- IPCMsg{IpcType: ChunkIPC, Data: msg.Data}:
-					// Do nothing, message sent
-				default:
-					panic("Producer buffer overflow!")
-				}
+				com.tx <- IPCMsg{IpcType: ChunkIPC, Data: msg.Data}
 			})
 
 		proxyloop:
@@ -361,13 +346,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			peerConnection.Close() // TODO: there's an err we should handle here
 
 			// We've reset this slot, so announce the nil connectivity situation
-			select {
-			case com.tx <- IPCMsg{IpcType: ConsumerInfoIPC, Data: common.ConsumerInfo{}}:
-				// Do nothing, message sent
-			default:
-				panic("Producer buffer overflow")
-			}
-
+			com.tx <- IPCMsg{IpcType: ConsumerInfoIPC, Data: common.ConsumerInfo{}}
 			return 0, []interface{}{}
 		}),
 	})

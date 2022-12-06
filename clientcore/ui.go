@@ -9,13 +9,13 @@ import (
 )
 
 const (
-  uiRefreshHz = 4
+	uiRefreshHz = 4
 )
 
 type UI interface {
-	Init(bf *Broflake) 
+	Init(bf *Broflake)
 
-  Start()
+	Start()
 
 	Stop()
 

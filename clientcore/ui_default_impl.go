@@ -5,11 +5,11 @@ package clientcore
 
 type UIImpl struct {
 	UI
-  Broflake *Broflake
+	Broflake *Broflake
 }
 
 func (ui *UIImpl) Init(bf *Broflake) {
-  ui.Broflake = bf
+	ui.Broflake = bf
 }
 
 func (ui UIImpl) Start() {
