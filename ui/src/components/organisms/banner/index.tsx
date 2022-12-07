@@ -91,7 +91,7 @@ const Banner = ({settings}: Props) => {
 							mobile={width < BREAKPOINT}
 						>
 							{
-								settings.features.globe && (
+								settings.globe && (
 									<Col>
 										<Globe/>
 									</Col>

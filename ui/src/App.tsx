@@ -1,22 +1,23 @@
 import React, {useEffect} from 'react'
-import {Layouts, Settings} from './index'
+import {Layouts, settingsEmitter} from './index'
 import Layout from './layout'
 import Toast from './components/molecules/toast'
 import Banner from './components/organisms/banner'
 import Panel from './components/organisms/panel'
-import usePageVisibilty from './hooks/usePageVisibilty'
+import usePageVisibility from './hooks/usePageVisibility'
 import {useEmitterState} from './hooks/useStateEmitter'
 import {sharingEmitter, wasmInterface} from './utils/wasmInterface'
 import {isMobile} from './utils/isMobile'
 
 interface Props {
-  settings: Settings
+  appId: number
 }
 
-const App = ({settings}: Props) => {
-  const isVisible = usePageVisibilty()
+const App = ({appId}: Props) => {
+  const isVisible = usePageVisibility()
   const sharing = useEmitterState(sharingEmitter)
-  const [mobileBg, desktopBg] = [settings.features['mobile-bg'], settings.features['desktop-bg']]
+  const settings = useEmitterState(settingsEmitter)[appId]
+  const [mobileBg, desktopBg] = [settings.mobileBg, settings.desktopBg]
 
   useEffect(() => {
     // If settings for running in bg are disabled, we will stop the wasm when page is not visible
@@ -42,7 +43,7 @@ const App = ({settings}: Props) => {
       theme={settings.theme}
       layout={settings.layout}
     >
-      { settings.features.toast && <Toast /> }
+      { settings.toast && <Toast /> }
       { settings.layout === Layouts.BANNER && (
         <Banner
           settings={settings}

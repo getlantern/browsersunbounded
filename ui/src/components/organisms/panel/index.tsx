@@ -39,7 +39,7 @@ const Panel = ({settings}: Props) => {
 					<Logo/>
 					<About/>
 					{
-						settings.features.globe && expanded && (
+						settings.globe && expanded && (
 							<Col>
 								<Globe/>
 							</Col>
