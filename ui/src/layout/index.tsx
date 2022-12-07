@@ -2,7 +2,7 @@ import {AppWrapper} from './styles'
 import {AppContextProvider} from '../context'
 import useElementSize from '../hooks/useElementSize'
 import {GOOGLE_FONT_LINKS} from '../constants'
-import {useLayoutEffect, useRef} from 'react'
+import {useEffect, useLayoutEffect, useRef} from 'react'
 import {Layouts, Themes} from '../index'
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
 }
 
 const Layout = ({children, theme, layout}: Props) => {
-	const [ref, { width}] = useElementSize()
+	const [ref, { width}, handleSize] = useElementSize()
 	const fontLoaded = useRef(false)
 
 	useLayoutEffect(() => {
@@ -30,6 +30,12 @@ const Layout = ({children, theme, layout}: Props) => {
 		GOOGLE_FONT_LINKS.forEach(addLink)
 		fontLoaded.current = true
 	}, [fontLoaded])
+
+	useEffect(() => {
+		// recalculate size on layout dynamic changes
+		handleSize()
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [layout])
 
 	return (
 		<AppContextProvider value={{width, theme}}>

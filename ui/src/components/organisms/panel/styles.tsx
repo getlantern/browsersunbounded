@@ -6,8 +6,6 @@ export const Container = styled.div`
   border-radius: 32px;
   border: 1px solid ${({theme}: { theme: Themes }) => theme === Themes.DARK ? COLORS.white : COLORS.grey2};
   width: 100%;
-	flex-shrink: 0;
-	flex-direction: column;
 `
 
 export const BodyWrapper = styled.div`

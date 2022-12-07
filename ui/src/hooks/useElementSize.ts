@@ -9,6 +9,7 @@ interface Size {
 function useElementSize<T extends HTMLElement = HTMLDivElement>(): [
 	(node: T | null) => void,
 	Size,
+	() => void
 ] {
 	const [ref, setRef] = useState<T | null>(null)
 	const [size, setSize] = useState<Size>({
@@ -30,7 +31,7 @@ function useElementSize<T extends HTMLElement = HTMLDivElement>(): [
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [ref?.offsetHeight, ref?.offsetWidth])
 
-	return [setRef, size]
+	return [setRef, size, handleSize]
 }
 
 export default useElementSize

@@ -8,12 +8,14 @@ import usePageVisibility from './hooks/usePageVisibility'
 import {useEmitterState} from './hooks/useStateEmitter'
 import {sharingEmitter, wasmInterface} from './utils/wasmInterface'
 import {isMobile} from './utils/isMobile'
+import Editor from './components/organisms/editor'
 
 interface Props {
   appId: number
+  embed: HTMLElement
 }
 
-const App = ({appId}: Props) => {
+const App = ({appId, embed}: Props) => {
   const isVisible = usePageVisibility()
   const sharing = useEmitterState(sharingEmitter)
   const settings = useEmitterState(settingsEmitter)[appId]
@@ -39,22 +41,26 @@ const App = ({appId}: Props) => {
   }, [isVisible, sharing, mobileBg, desktopBg])
 
   return (
-    <Layout
-      theme={settings.theme}
-      layout={settings.layout}
-    >
-      { settings.toast && <Toast /> }
-      { settings.layout === Layouts.BANNER && (
-        <Banner
-          settings={settings}
-        />
-      )}
-      { settings.layout === Layouts.PANEL && (
-        <Panel
-          settings={settings}
-        />
-      )}
-    </Layout>
+    <>
+      { settings.editor && <Editor settings={settings} embed={embed} /> }
+      <Layout
+        theme={settings.theme}
+        layout={settings.layout}
+      >
+        { settings.toast && <Toast /> }
+        { settings.layout === Layouts.BANNER && (
+          <Banner
+            settings={settings}
+          />
+        )}
+        { settings.layout === Layouts.PANEL && (
+          <Panel
+            settings={settings}
+          />
+        )}
+      </Layout>
+    </>
+
   );
 }
 

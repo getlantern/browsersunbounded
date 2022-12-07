@@ -22,15 +22,17 @@ export interface Settings {
 	desktopBg: boolean
 	layout: Layouts
 	theme: Themes
+	editor: boolean
 }
 
-const defaultSettings: Settings = {
+export const defaultSettings: Settings = {
 	mobileBg: true,
 	desktopBg: true,
 	toast: true,
 	globe: true,
 	layout: Layouts.BANNER,
-	theme: Themes.LIGHT
+	theme: Themes.LIGHT,
+	editor: false
 }
 
 export const settingsEmitter = new StateEmitter<{[key: number]: Settings}>({})
@@ -75,6 +77,7 @@ broflakes.forEach((embed, i) => {
 		<React.StrictMode>
 			<App
 				appId={i}
+				embed={embed}
 			/>
 		</React.StrictMode>
 	)
