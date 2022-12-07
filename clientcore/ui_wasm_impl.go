@@ -9,13 +9,13 @@ import (
 
 type UIImpl struct {
 	UI
-  Broflake *Broflake
+	Broflake *Broflake
 }
 
 func (ui *UIImpl) Init(bf *Broflake) {
-  ui.Broflake = bf
-  
-  js.Global().Get("wasmClient").Set(
+	ui.Broflake = bf
+
+	js.Global().Get("wasmClient").Set(
 		"start",
 		js.FuncOf(func(this js.Value, args []js.Value) interface{} { ui.Start(); return nil }),
 	)

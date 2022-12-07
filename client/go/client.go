@@ -33,7 +33,7 @@ var (
 const (
 	cTableSize  = 5
 	pTableSize  = 5
-	busBufferSz = 2048
+	busBufferSz = 16
 )
 
 // Two client types are supported: 'desktop' and 'widget'. Informally, widget is a "free" peer and

@@ -84,7 +84,7 @@ webRTC -> web widget executing in Chrome -> WebSocket -> egress server -> remote
 The UI is bootstrapped with [Create React App](https://github.com/facebook/create-react-app). Then "re-wired" to build one single js bundle using [rewire](https://www.npmjs.com/package/rewire). The React app will bind to a custom `broflake` DOM el and render based on settings passed to the `data-features` attribute via stringified JSON:
 
 ```html
-<broflake data-layout="banner" data-theme="dark" data-features='{"globe": true, "toast": true, "mobile-bg": false, "desktop-bg": true}' style='width: calc(100% - 20px); padding: 10px;'></broflake>
+<broflake data-layout="banner" data-theme="dark" data-globe="true" data-toast="true" data-mobile-bg="false" style='width: calc(100% - 20px); padding: 10px;'></broflake>
 <script defer="defer" src="https://devblog.getlantern.org/broflake/static/js/main.js"></script>
 ```
 

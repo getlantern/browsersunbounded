@@ -16,10 +16,11 @@ const Container = styled.div`
     cursor: pointer;
   }
 
-  > svg {
+  > span.shadow {
     position: absolute;
     bottom: 0;
-    width: 100%;
+    width: ${({size}: {size: number}) => size}px;
+	  height: 30px;
   }
 `
 

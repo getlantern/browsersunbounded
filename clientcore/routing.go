@@ -2,7 +2,6 @@
 package clientcore
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/getlantern/broflake/common"
@@ -81,26 +80,11 @@ func (r *upstreamRouter) onWorker(msg IPCMsg, workerIdx workerID) {
 }
 
 func (r *upstreamRouter) toBus(msg IPCMsg) {
-	select {
-	case r.bus.rx <- msg:
-		// Do nothing, message sent
-	default:
-		panic("Bus buffer overflow!")
-	}
+	r.bus.rx <- msg
 }
 
 func (r *upstreamRouter) toWorker(msg IPCMsg, peerIdx workerID) {
-	select {
-	case r.table.slot[peerIdx].com.rx <- msg:
-		// Do nothing, message sent
-	default:
-		// TODO: probably disable this for production? In theory, we might try to route data to
-		// a worker who has entered a different state and is no longer listening to their rx
-		// channel. When that happens, we'll start filling up their rx buffer. An issue here is
-		// that we cannot discern between a worker who has moved on to a different state and a
-		// worker who is overwhelmed and can't keep up with the data rate.
-		panic(fmt.Sprintf("Upstream router buffer overflow (worker %v)!", peerIdx))
-	}
+	r.table.slot[peerIdx].com.rx <- msg
 }
 
 // A downstreamRouter parameterizes a baseRouter to send on tx and receive on rx
@@ -124,26 +108,11 @@ func (r *downstreamRouter) onWorker(msg IPCMsg, workerIdx workerID) {
 }
 
 func (r *downstreamRouter) toBus(msg IPCMsg) {
-	select {
-	case r.bus.tx <- msg:
-		// Do nothing, message sent
-	default:
-		panic("Bus buffer overflow!")
-	}
+	r.bus.tx <- msg
 }
 
 func (r *downstreamRouter) toWorker(msg IPCMsg) {
-	select {
-	case r.table.slot[msg.Wid].com.rx <- msg:
-		// Do nothing, message sent
-	default:
-		// TODO: probably disable this for production? In theory, we might try to route data to
-		// a worker who has entered a different state and is no longer listening to their rx
-		// channel. When that happens, we'll start filling up their rx buffer. An issue here is
-		// that we cannot discern between a worker who has moved on to a different state and a
-		// worker who is overwhelmed and can't keep up with the data rate.
-		panic(fmt.Sprintf("Downstream router buffer overflow (worker %v)!", msg.Wid))
-	}
+	r.table.slot[msg.Wid].com.rx <- msg
 }
 
 func (r *downstreamRouter) toAllWorkers(msg IPCMsg) {

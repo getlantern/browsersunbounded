@@ -1,21 +1,11 @@
 import React from 'react'
 import {render, screen} from '@testing-library/react'
 import App from './App'
-import {Layouts, Themes} from './index'
 
 test('renders', () => {
   render(
     <App
-      settings={{
-        features: {
-          globe: true,
-          toast: true,
-          'mobile-bg': true,
-          'desktop-bg': true
-        },
-        layout: Layouts.BANNER,
-        theme: Themes.DARK
-      }}
+      appId={0}
     />
   );
   const x = screen.getByText(/globe/i);
