@@ -82,6 +82,7 @@ const Globe = () => {
 		<>
 			<Container
 				ref={container}
+				size={size}
 			>
 				<GlobeComponent
 					ref={globe}

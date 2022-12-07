@@ -1,23 +1,25 @@
 import {useContext} from 'react'
 import {AppContext} from '../../../context'
 import {Themes} from '../../../index'
+import styled from 'styled-components'
 
+// mixBlendMode is not supported on svgs in webkit so using css to create shadow instead
+const StyledShadow = styled.span`
+  background: ${({theme}: {theme: Themes}) => theme === Themes.DARK ? 
+			'radial-gradient(49.66% 42.81% at 52.18% 56.64%, rgba(0, 0, 0, 0.5) 0%, rgba(1, 45, 45, 0.5) 30.21%, rgba(255, 255, 255, 0.5) 100%)'
+      :
+			'radial-gradient(49.66% 42.81% at 52.18% 56.64%, rgba(227, 227, 227, 0.5) 0%, rgba(234, 234, 234, 0.5) 24%, rgba(255, 255, 255, 0.5) 100%)'	  
+	};
+  background-blend-mode: multiply;
+  mix-blend-mode: multiply;
+`
 const Shadow = () => {
 	const {theme} = useContext(AppContext)
 	return (
-		<svg width="447" height="39" viewBox="0 0 447 39" fill="none" xmlns="http://www.w3.org/2000/svg">
-			<path style={{mixBlendMode: 'multiply'}}
-			      d="M223.496 42.4448C346.93 42.4448 446.992 33.1212 446.992 21.62C446.992 10.1188 346.93 0.795288 223.496 0.795288C100.063 0.795288 0 10.1188 0 21.62C0 33.1212 100.063 42.4448 223.496 42.4448Z"
-			      fill="url(#paint0_radial_11_811)" fillOpacity="0.5"/>
-			<defs>
-				<radialGradient id="paint0_radial_11_811" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
-				                gradientTransform="translate(233.262 24.3863) rotate(-0.532735) scale(221.968 17.83)">
-					<stop stopColor="#E3E3E3"/>
-					<stop offset="0.24" stopColor={theme === Themes.DARK ? '#012D2D' : '#EAEAEA'}/>
-					<stop offset="1" stopColor="white"/>
-				</radialGradient>
-			</defs>
-		</svg>
+		<StyledShadow
+			theme={theme}
+			className={'shadow'}
+		/>
 	)
 }
 
