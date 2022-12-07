@@ -29,7 +29,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			config := webrtc.Configuration{
 				ICEServers: []webrtc.ICEServer{
 					{
-						URLs: []string{options.StunSrv},
+						URLs: options.StunSrvs,
 					},
 				},
 			}

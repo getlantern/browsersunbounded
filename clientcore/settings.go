@@ -7,7 +7,7 @@ import (
 type WebRTCOptions struct {
 	DiscoverySrv   string
 	Endpoint       string
-	StunSrv        string
+	StunSrvs       []string
 	GenesisAddr    string
 	NATFailTimeout time.Duration
 	ICEFailTimeout time.Duration
