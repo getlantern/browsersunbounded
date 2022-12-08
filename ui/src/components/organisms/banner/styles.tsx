@@ -3,7 +3,8 @@ import {COLORS, MAX_WIDTH} from '../../../constants'
 import {Themes} from '../../../index'
 
 export const Container = styled.div`
-  border: 1px solid ${({theme}: { theme: Themes }) => theme === Themes.DARK ? COLORS.white : COLORS.grey2};
+  box-sizing: border-box;
+  border: 1px solid ${({theme}: { theme: Themes }) => theme === Themes.DARK ? COLORS.grey6 : COLORS.grey2};
   width: 100%;
 	flex-shrink: 0;
 	flex-direction: column;

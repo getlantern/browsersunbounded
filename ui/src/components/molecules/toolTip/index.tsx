@@ -1,7 +1,6 @@
 import {Container} from './styles'
 import useMousePosition from '../../../hooks/useMousePosition'
 import {RefObject, useEffect, useState} from 'react'
-import useElementSize from '../../../hooks/useElementSize'
 
 interface Props {
 	text: string | null
@@ -11,7 +10,6 @@ interface Props {
 
 const ToolTip = ({text, show, container}: Props) => {
 	const [_text, _setText] = useState(text)
-	const [ref, {width}] = useElementSize()
 	const currentPos = useMousePosition(container)
 	const [pos, setPos] = useState(currentPos)
 
@@ -26,11 +24,10 @@ const ToolTip = ({text, show, container}: Props) => {
 
 	return (
 		<Container
-			ref={ref}
 			style={{
 				position: 'absolute',
-				top: pos.y + 15,
-				left: pos.x - (width / 2)
+				top: pos.y - 10,
+				left: pos.x - 10
 			}}
 			show={show}
 			aria-hidden={!show}

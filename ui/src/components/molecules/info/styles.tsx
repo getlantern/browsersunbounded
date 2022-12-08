@@ -16,7 +16,7 @@ export const Wrapper = styled.div`
 	box-shadow: ${({theme}: {theme: Themes}) => theme === Themes.DARK ? SHADOWS.dark : SHADOWS.light};
   padding: 8px 24px;
 	background-color: ${({theme}: {theme: Themes}) => theme === Themes.DARK ? COLORS.grey6 : COLORS.grey1};
-	border-radius: 100px;
+	border-radius: 30px;
 	max-width: 600px;
   font-family: 'Urbanist', sans-serif;
 	margin: 11px;

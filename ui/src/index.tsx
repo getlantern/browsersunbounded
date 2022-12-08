@@ -23,6 +23,7 @@ export interface Settings {
 	layout: Layouts
 	theme: Themes
 	editor: boolean
+	donate: boolean
 }
 
 export const defaultSettings: Settings = {
@@ -32,7 +33,8 @@ export const defaultSettings: Settings = {
 	globe: true,
 	layout: Layouts.BANNER,
 	theme: Themes.LIGHT,
-	editor: false
+	editor: false,
+	donate: true
 }
 
 export const settingsEmitter = new StateEmitter<{[key: number]: Settings}>({})

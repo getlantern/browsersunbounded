@@ -10,9 +10,10 @@ import {isMobile} from '../../../utils/isMobile'
 
 interface Props {
 	onToggle?: (s: boolean) => void
+	info?: boolean
 }
 
-const Control = ({onToggle}: Props) => {
+const Control = ({onToggle, info = false}: Props) => {
 	const ready = useEmitterState(readyEmitter)
 	const sharing = useEmitterState(sharingEmitter)
 	const connectionType = useConnectionType(sharing) // subscribe to connection type for users in sharing state
@@ -36,7 +37,7 @@ const Control = ({onToggle}: Props) => {
 				>
 					Connection sharing is {sharing ? 'ON' : 'OFF'}
 				</Text>
-				<Info />
+				{ info && <Info /> }
 			</TextInfo>
 			<Switch
 				onToggle={_onToggle}

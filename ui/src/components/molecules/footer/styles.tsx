@@ -16,9 +16,9 @@ const Divider = styled.div`
   height: 20px;
 `
 
-const DonateLink = styled.a`
+const LanternLink = styled.a`
   align-items: center;
   gap: 10px;
 `
 
-export {Container, Divider, DonateLink}
+export {Container, Divider, LanternLink}

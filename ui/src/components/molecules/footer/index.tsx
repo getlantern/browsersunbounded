@@ -1,6 +1,6 @@
 import {Text} from '../../atoms/typography'
 import {Heart, Lantern, Twitter} from '../../atoms/icons'
-import {Container, Divider, DonateLink} from './styles'
+import {Container, Divider, LanternLink} from './styles'
 import {useContext} from 'react'
 import {AppContext} from '../../../context'
 import {BREAKPOINT, COLORS} from '../../../constants'
@@ -10,9 +10,10 @@ const SPACER = 24
 
 interface Props {
 	social: boolean
+	donate: boolean
 }
 
-const Footer = ({social}: Props) => {
+const Footer = ({social, donate}: Props) => {
 	const {width, theme} = useContext(AppContext)
 	const color = theme === Themes.DARK ? COLORS.grey1 : COLORS.grey5
 
@@ -38,16 +39,17 @@ const Footer = ({social}: Props) => {
 
 				)
 			}
-			<DonateLink
-				href={'https://lantern.io'}
+			<LanternLink
+				href={'https://lantern.io/' + (donate ? 'donate' : '')}
 				target={'_blank'}
 				rel={'noreferrer'}
 				style={{color}}
 			>
+				{!donate && <Text>Made with</Text>}
 				<Heart/>
-				<Text>Donate to Lantern</Text>
+				<Text>{donate ? 'Donate to Lantern' : 'by'}</Text>
 				<Lantern/>
-			</DonateLink>
+			</LanternLink>
 		</Container>
 	)
 }

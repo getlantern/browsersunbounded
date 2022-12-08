@@ -11,6 +11,7 @@ const AppWrapper = styled.section`
 	background-color: ${({theme}: {theme: Themes}) => theme === Themes.DARK ? COLORS.grey5 : COLORS.grey1};
 	box-sizing: content-box;
 	position: relative;
+	margin: 0 auto;
 	* {
     box-sizing: unset;
   }

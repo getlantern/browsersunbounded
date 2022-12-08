@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react'
 
-const factor = 1024
+const factor = 1000 // 1024 for binary prefixes, 1000 for SI prefixes
 const sizes = ['bytes', 'kb', 'mb', 'gb', 'tb', 'pb', 'eb', 'zb', 'yb']
 // get size index from bytes
 export const getIndex = (bytes: number) => bytes === 0 ? 0 : Math.floor(Math.log(bytes) / Math.log(factor))

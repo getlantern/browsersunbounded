@@ -74,6 +74,7 @@ const Panel = ({settings}: Props) => {
 						>
 							<Footer
 								social={false}
+								donate={settings.donate}
 							/>
 						</div>
 						<ExpandWrapper

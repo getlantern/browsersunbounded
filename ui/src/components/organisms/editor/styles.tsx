@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 
 export const StyledEditor = styled.div`
-  margin-bottom: 24px;
+  margin: 10px;
   font-family: 'Urbanist', sans-serif;
   display: flex;
   flex-wrap: wrap;
