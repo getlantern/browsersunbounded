@@ -12,13 +12,17 @@ const StyledShadow = styled.span`
 	};
   background-blend-mode: multiply;
   mix-blend-mode: multiply;
+	transition: scale 50ms ease-out;
 `
-const Shadow = () => {
+const Shadow = ({scale}: {scale: number }) => {
 	const {theme} = useContext(AppContext)
 	return (
 		<StyledShadow
 			theme={theme}
 			className={'shadow'}
+			style={{
+				transform: `scale(${scale})`,
+			}}
 		/>
 	)
 }

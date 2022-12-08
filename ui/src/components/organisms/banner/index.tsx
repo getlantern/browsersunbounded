@@ -42,6 +42,7 @@ const Banner = ({settings}: Props) => {
 							>
 								<Control
 									onToggle={onToggle}
+									info
 								/>
 							</Item>
 						)
@@ -59,6 +60,7 @@ const Banner = ({settings}: Props) => {
 						!expanded && width > 1150 && (
 							<Footer
 								social={false}
+								donate={settings.donate}
 							/>
 						)
 					}
@@ -74,6 +76,7 @@ const Banner = ({settings}: Props) => {
 							theme={settings.theme}
 						>
 							<Control
+								info
 								onToggle={onToggle}
 							/>
 						</Item>
@@ -116,6 +119,7 @@ const Banner = ({settings}: Props) => {
 								>
 									<Footer
 										social={true}
+										donate={settings.donate}
 									/>
 								</div>
 							</Col>

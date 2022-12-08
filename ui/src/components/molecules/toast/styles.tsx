@@ -17,7 +17,6 @@ const Container = styled.div`
   justify-content: center;
   align-items: center;
   gap: 12px;
-  pointer-events: none;
 
   svg {
     flex-shrink: 0;

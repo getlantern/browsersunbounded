@@ -28,6 +28,7 @@ const Globe = () => {
 	const globe = useRef()
 	const container = useRef()
 	const {arcs, points} = useGeo()
+	const [altitude, setAltitude] = useState(14)
 
 	useEffect(() => {
 		if (sharing) {
@@ -51,6 +52,8 @@ const Globe = () => {
 		const camera = globe.current.camera()
 		const scene = globe.current.scene()
 		controls.autoRotate = true
+		controls.maxDistance = 1500
+		controls.minDistance = 300
 		controls.autoRotateSpeed = 1
 		const directionalLight = scene.children.find(obj3d => obj3d.type === 'DirectionalLight')
 		if (directionalLight) directionalLight.intensity = .25
@@ -79,49 +82,52 @@ const Globe = () => {
 	// }, [])
 
 	return (
-		<>
-			<Container
-				ref={container}
-				size={size}
-			>
-				<GlobeComponent
-					ref={globe}
-					onGlobeReady={setUp}
-					width={size}
-					height={size}
-					enablePointerInteraction={true}
-					waitForGlobeReady={true}
-					showAtmosphere={true}
-					atmosphereColor={COLORS.brand}
-					atmosphereAltitude={.25}
-					backgroundColor={'rgba(0,0,0,0)'}
-					backgroundImageUrl={null}
-					globeImageUrl={theme === Themes.DARK ? UV_MAP_PATH_DARK : UV_MAP_PATH_LIGHT}
-					arcsData={arcs}
-					arcColor={['rgba(0, 188, 212, 0.75)', 'rgba(255, 193, 7, 0.75)']}
-					arcDashLength={1}
-					arcDashGap={0.5}
-					arcDashInitialGap={1}
-					arcDashAnimateTime={500}
-					arcsTransitionDuration={0}
-					arcStroke={2.5}
-					arcAltitudeAutoScale={0.3}
-					onArcHover={setArc}
-					pointsData={points}
-					pointColor={() => COLORS.green}
-					pointRadius={1.5}
-					pointAltitude={0}
-					pointsTransitionDuration={500}
-				/>
-				<Shadow/>
-			</Container>
+		<Container
+			ref={container}
+			size={size}
+		>
+			<Shadow
+				scale={1/(altitude/2)} // altitude is 2-14
+			/>
+			<GlobeComponent
+				ref={globe}
+				onGlobeReady={setUp}
+				width={size}
+				height={size}
+				enablePointerInteraction={true}
+				waitForGlobeReady={true}
+				showAtmosphere={true}
+				atmosphereColor={COLORS.brand}
+				atmosphereAltitude={.25}
+				backgroundColor={'rgba(0,0,0,0)'}
+				backgroundImageUrl={null}
+				globeImageUrl={theme === Themes.DARK ? UV_MAP_PATH_DARK : UV_MAP_PATH_LIGHT}
+				arcsData={arcs}
+				arcColor={['rgba(0, 188, 212, 0.75)', 'rgba(255, 193, 7, 0.75)']}
+				arcDashLength={1}
+				arcDashGap={0.5}
+				arcDashInitialGap={1}
+				arcDashAnimateTime={500}
+				arcsTransitionDuration={0}
+				arcStroke={2.5}
+				arcAltitudeAutoScale={0.3}
+				onArcHover={setArc}
+				pointsData={points}
+				pointColor={() => COLORS.green}
+				pointRadius={1.5}
+				pointAltitude={0}
+				pointsTransitionDuration={500}
+				onZoom={zoom => {
+					let smooth = Math.round(zoom.altitude * 10) / 10
+					if (smooth !== altitude) setAltitude(smooth)
+				}}
+			/>
 			<ToolTip
 				text={!!arc && `${arc.count} People from ${arc.country}`}
 				show={!!arc}
 				container={container}
 			/>
-		</>
-
+		</Container>
 	)
 }
 

@@ -3,8 +3,9 @@ import {Themes} from '../../../index'
 import {COLORS, MAX_WIDTH} from '../../../constants'
 
 export const Container = styled.div`
+  box-sizing: border-box;
   border-radius: 32px;
-  border: 1px solid ${({theme}: { theme: Themes }) => theme === Themes.DARK ? COLORS.white : COLORS.grey2};
+  border: 1px solid ${({theme}: { theme: Themes }) => theme === Themes.DARK ? COLORS.grey6 : COLORS.grey2};
   width: 100%;
 `
 

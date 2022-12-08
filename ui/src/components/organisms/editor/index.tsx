@@ -120,6 +120,17 @@ const Editor = ({settings, embed}: Props) => {
 				<div>
 					<input
 						type="checkbox"
+						id="donate"
+						name="donate"
+						checked={state.donate}
+						onChange={e => setState({...state, donate: e.target.checked})}
+					/>
+					<label htmlFor="donate">Donate</label>
+				</div>
+
+				<div>
+					<input
+						type="checkbox"
 						id="editor"
 						name="editor"
 						checked={state.editor}
