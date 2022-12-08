@@ -42,11 +42,11 @@ export class MockWasmInterface {
 		sharingEmitter.update(true)
 		this.interval = setInterval(() => {
 			const active = this.connections.filter(c => c.state === 1)
-			this.throughput = {bytesPerSec: mockRandomInt(0, 10000) * active.length}
+			this.throughput = {bytesPerSec: mockRandomInt(0, 1000000) * active.length}
 			this.movingAverageThroughput = (this.movingAverageThroughput + this.throughput.bytesPerSec) / 2
 			this.chunks = [...Array(5)].map((_, i) => (
 				{
-					size: this.chunks[i]?.size ? this.chunks[i]?.size + mockRandomInt(0, 10000) * active.length : mockRandomInt(0, 10000),
+					size: this.chunks[i]?.size ? this.chunks[i]?.size + mockRandomInt(0, 1000000) * active.length : mockRandomInt(0, 10000),
 					workerIdx: i
 				}
 			))
