@@ -37,6 +37,9 @@ const Toast = () => {
 				top: show ? 0 : -10
 			}}
 			theme={theme}
+			onTouchStart={() => setShow(false)}
+			onMouseDown={() => setShow(false)}
+			onClick={() => setShow(false)}
 		>
 			<Bell/>
 			<Text
