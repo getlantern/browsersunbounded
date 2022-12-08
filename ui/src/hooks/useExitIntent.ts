@@ -1,4 +1,4 @@
-import {useRef} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import useEventListener from './useEventListener'
 
 const DELAY = 50
@@ -11,10 +11,19 @@ const useExitIntent = (callback: () => void) => {
 	const newPos = useRef<number | null>(null)
 	const delta = useRef<number | null>(null)
 	const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const [didCall, setDidCall] = useState(false)
+
+	useEffect(() => {
+		setDidCall(false) // reset on callback changes
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [callback])
 
 	// desktop mouse leave top exit intent
 	const desktopExitIntentCb = (event: MouseEvent) => {
-		if (event.offsetY < 1) callback()
+		if (!didCall && event.offsetY < 1) {
+			callback()
+			setDidCall(true)
+		}
 	}
 	useEventListener('mouseleave', desktopExitIntentCb, body)
 
@@ -36,7 +45,10 @@ const useExitIntent = (callback: () => void) => {
 		if (timer.current) clearTimeout(timer.current)
 		timer.current = setTimeout(resetMobileFlags, DELAY)
 
-		if (!!delta.current && delta.current < THRESHOLD) callback()
+		if (!didCall && !!delta.current && delta.current < THRESHOLD) {
+			callback()
+			setDidCall(true)
+		}
 	}
 	useEventListener('scroll', mobileExitIntentCb)
 }

@@ -8,7 +8,7 @@ import {AppContext} from '../../../context'
 import {Themes} from '../../../index'
 import {COLORS} from '../../../constants'
 
-const Toast = () => {
+const Toast = ({exit}: {exit: boolean}) => {
 	const sharing = useEmitterState(sharingEmitter)
 	const {theme} = useContext(AppContext)
 	const [show, setShow] = useState(sharing)
@@ -27,7 +27,7 @@ const Toast = () => {
 		toggleShow()
 	}, [sharing, toggleShow])
 
-	useExitIntent(toggleShow)
+	useExitIntent(exit ? toggleShow : () => null)
 
 	return (
 		<Container

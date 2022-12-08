@@ -87,12 +87,12 @@ const Editor = ({settings, embed}: Props) => {
 				<div>
 					<input
 						type="checkbox"
-						id="toast"
-						name="toast"
-						checked={state.toast}
-						onChange={e => setState({...state, toast: e.target.checked})}
+						id="exit"
+						name="exit"
+						checked={state.exit}
+						onChange={e => setState({...state, exit: e.target.checked})}
 					/>
-					<label htmlFor="toast">Toast</label>
+					<label htmlFor="exit">Exit notification</label>
 				</div>
 
 				<div>
