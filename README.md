@@ -1,5 +1,5 @@
 # broflake
-![protocols](https://user-images.githubusercontent.com/21117002/206537362-e314f672-63b9-4fa1-a9c5-af35e3adc33d.png)
+![protocols](https://user-images.githubusercontent.com/21117002/206543701-16630510-7588-4776-832c-1f32f125388e.png)
 
 # :compass: Table of contents
 * [What is Broflake?](#question-what-is-broflake)
