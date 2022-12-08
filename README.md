@@ -1,4 +1,5 @@
 # broflake
+![protocols](https://user-images.githubusercontent.com/21117002/206537362-e314f672-63b9-4fa1-a9c5-af35e3adc33d.png)
 
 # :compass: Table of contents
 * [What is Broflake?](#question-what-is-broflake)
@@ -22,8 +23,6 @@ and share the resource of internet access across network boundaries and runtime 
 
 ### :floppy_disk: System components
 ![system](https://user-images.githubusercontent.com/21117002/176231832-1c558546-8933-4e25-b8df-f60edb4ed6d5.png)
-
-![protocols](https://user-images.githubusercontent.com/21117002/206537362-e314f672-63b9-4fa1-a9c5-af35e3adc33d.png)
 
 Broflake is a suite of several software applications. We have deployed some tricks to make 
 Broflake's codebase as small as possible, and so the mapping between applications and modules isn't
