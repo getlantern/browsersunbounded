@@ -3,8 +3,6 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import {StateEmitter} from './hooks/useStateEmitter'
 
-const broflakes = document.querySelectorAll('broflake') as NodeListOf<HTMLElement>
-
 export enum Layouts {
 	'BANNER' = 'banner',
 	'PANEL' = 'panel'
@@ -37,50 +35,67 @@ export const defaultSettings: Settings = {
 	donate: true
 }
 
-export const settingsEmitter = new StateEmitter<{[key: number]: Settings}>({})
+export const settingsEmitter = new StateEmitter<{ [key: number]: Settings }>({})
 
 const hydrateSettings = (i: number, dataset: Settings) => {
-  const settings = {...defaultSettings}
-  Object.keys(settings).forEach(key => {
+	const settings = {...defaultSettings}
+	Object.keys(settings).forEach(key => {
 		try {
 			// @ts-ignore
-      settings[key] = JSON.parse(dataset[key])
+			settings[key] = JSON.parse(dataset[key])
 		} catch {
 			// @ts-ignore
 			settings[key] = dataset[key] || settings[key]
 		}
 	})
-  settingsEmitter.update({...settingsEmitter.state, [i]: settings})
+	settingsEmitter.update({...settingsEmitter.state, [i]: settings})
 }
 
-broflakes.forEach((embed, i) => {
-	const root = ReactDOM.createRoot(
-		embed
-	)
+const init = (embeds: NodeListOf<HTMLElement>) => {
+	embeds.forEach((embed, i) => {
+		const root = ReactDOM.createRoot(
+			embed
+		)
 
-  const dataset = embed.dataset as unknown as Settings
-	hydrateSettings(i, dataset)
+		const dataset = embed.dataset as unknown as Settings
+		hydrateSettings(i, dataset)
 
-	const observer = new MutationObserver((mutations) => {
-		mutations.forEach((mutation) => {
-			if (mutation.attributeName && mutation.attributeName.includes('data-')) {
-				// @ts-ignore
-        const dataset = mutation.target.dataset as unknown as Settings
-				hydrateSettings(i, dataset)
-      }
+		const observer = new MutationObserver((mutations) => {
+			mutations.forEach((mutation) => {
+				if (mutation.attributeName && mutation.attributeName.includes('data-')) {
+					// @ts-ignore
+					const dataset = mutation.target.dataset as unknown as Settings
+					hydrateSettings(i, dataset)
+				}
+			})
 		})
-	})
 
-	observer.observe(embed, {
-		attributes: true, childList: false, characterData: false
-	})
+		observer.observe(embed, {
+			attributes: true, childList: false, characterData: false
+		})
 
-  root.render(
-		<React.StrictMode>
-			<App
-				appId={i}
-				embed={embed}
-			/>
-		</React.StrictMode>
-	)
+		root.render(
+			<React.StrictMode>
+				<App
+					appId={i}
+					embed={embed}
+				/>
+			</React.StrictMode>
+		)
+	})
+}
+
+const observer = new MutationObserver((mutations, mutationInstance) => {
+	const embeds = document.querySelectorAll('broflake') as NodeListOf<HTMLElement>
+	if (embeds.length) {
+		init(embeds)
+		mutationInstance.disconnect()
+	}
 })
+
+
+observer.observe(document, {
+	childList: true,
+	subtree: true
+})
+
