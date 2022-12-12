@@ -85,17 +85,25 @@ const init = (embeds: NodeListOf<HTMLElement>) => {
 	})
 }
 
-const observer = new MutationObserver((mutations, mutationInstance) => {
-	const embeds = document.querySelectorAll('broflake') as NodeListOf<HTMLElement>
-	if (embeds.length) {
-		init(embeds)
-		mutationInstance.disconnect()
-	}
-})
+const getEmbeds = () => document.querySelectorAll('broflake') as NodeListOf<HTMLElement>
+
+// try to load embeds immediately
+const embeds = getEmbeds()
+if (embeds.length) init(embeds)
+else {
+	// if embeds are not loaded yet, wait for them to load
+	const observer = new MutationObserver((mutations, mutationInstance) => {
+		const embeds = getEmbeds()
+		if (embeds.length) {
+			init(embeds)
+			mutationInstance.disconnect()
+		}
+	})
 
 
-observer.observe(document, {
-	childList: true,
-	subtree: true
-})
+	observer.observe(document, {
+		childList: true,
+		subtree: true
+	})
+}
 
