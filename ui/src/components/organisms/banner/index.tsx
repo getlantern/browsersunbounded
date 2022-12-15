@@ -1,7 +1,7 @@
 import {Body, BodyWrapper, Container, Header, HeaderWrapper, Item} from './styles'
 import {Logo} from '../../atoms/icons'
 import Control from '../../molecules/control'
-import React, {useContext, useState, lazy, Suspense} from 'react'
+import React, {useContext, useState, lazy, Suspense, useEffect} from 'react'
 import {Settings, Themes} from '../../../index'
 import Col from '../../atoms/col'
 import GlobeSuspense from '../../molecules/globe/suspense'
@@ -22,9 +22,10 @@ interface Props {
 
 const Banner = ({settings}: Props) => {
 	const {width} = useContext(AppContext)
-	const [expanded, setExpanded] = useState(false)
+	const [expanded, setExpanded] = useState(!settings.collapse)
 	const interacted = useLatch(expanded)
 	const onToggle = (share: boolean) => !interacted && share ? setExpanded(share) : null
+	useEffect(() => setExpanded(!settings.collapse), [settings.collapse]) // hydrate on settings change
 	return (
 		<Container
 			theme={settings.theme}
@@ -66,10 +67,14 @@ const Banner = ({settings}: Props) => {
 							/>
 						)
 					}
-					<ExpandCollapse
-						expanded={expanded}
-						setExpanded={setExpanded}
-					/>
+					{
+						settings.collapse && (
+							<ExpandCollapse
+								expanded={expanded}
+								setExpanded={setExpanded}
+							/>
+						)
+					}
 				</Header>
 				{
 					!expanded && width <= 650 && (

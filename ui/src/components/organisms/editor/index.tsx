@@ -138,6 +138,17 @@ const Editor = ({settings, embed}: Props) => {
 					/>
 					<label htmlFor="editor">Editor</label>
 				</div>
+
+				<div>
+					<input
+						type="checkbox"
+						id="collapse"
+						name="collapse"
+						checked={state.collapse}
+						onChange={e => setState({...state, collapse: e.target.checked})}
+					/>
+					<label htmlFor="collapse">Collapse</label>
+				</div>
 			</fieldset>
 		</StyledEditor>
 	)

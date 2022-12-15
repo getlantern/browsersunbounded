@@ -22,6 +22,7 @@ export interface Settings {
 	theme: Themes
 	editor: boolean
 	donate: boolean
+	collapse: boolean
 }
 
 export const defaultSettings: Settings = {
@@ -32,7 +33,8 @@ export const defaultSettings: Settings = {
 	layout: Layouts.BANNER,
 	theme: Themes.LIGHT,
 	editor: false,
-	donate: true
+	donate: true,
+	collapse: true
 }
 
 export const settingsEmitter = new StateEmitter<{ [key: number]: Settings }>({})
