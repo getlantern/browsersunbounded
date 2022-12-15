@@ -1,9 +1,9 @@
 {
   "files": {
-    "main.js": "https://getlantern.github.io/broflake/static/js/main.js",
-    "static/js/502.e4922028.chunk.js": "https://getlantern.github.io/broflake/static/js/502.e4922028.chunk.js",
-    "static/js/131.71ccd01a.chunk.js": "https://getlantern.github.io/broflake/static/js/131.71ccd01a.chunk.js",
-    "index.html": "https://getlantern.github.io/broflake/index.html"
+    "main.js": "https://devblog.getlantern.org/broflake/static/js/main.js",
+    "static/js/502.e4922028.chunk.js": "https://devblog.getlantern.org/broflake/static/js/502.e4922028.chunk.js",
+    "static/js/131.71ccd01a.chunk.js": "https://devblog.getlantern.org/broflake/static/js/131.71ccd01a.chunk.js",
+    "index.html": "https://devblog.getlantern.org/broflake/index.html"
   },
   "entrypoints": [
     "static/js/main.js"
