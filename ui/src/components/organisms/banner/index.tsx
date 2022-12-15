@@ -1,10 +1,10 @@
 import {Body, BodyWrapper, Container, Header, HeaderWrapper, Item} from './styles'
 import {Logo} from '../../atoms/icons'
 import Control from '../../molecules/control'
-import React, {useContext, useState} from 'react'
+import React, {useContext, useState, lazy, Suspense} from 'react'
 import {Settings, Themes} from '../../../index'
 import Col from '../../atoms/col'
-import Globe from '../../molecules/globe'
+import GlobeSuspense from '../../molecules/globe/suspense'
 import Row from '../../atoms/row'
 import {BREAKPOINT, COLORS} from '../../../constants'
 import Stats, {Connections} from '../../molecules/stats'
@@ -13,6 +13,8 @@ import Footer from '../../molecules/footer'
 import {AppContext} from '../../../context'
 import {useLatch} from '../../../hooks/useLatch'
 import ExpandCollapse from '../../atoms/expandCollapse'
+
+const Globe = lazy(() => import('../../molecules/globe'))
 
 interface Props {
 	settings: Settings
@@ -96,7 +98,9 @@ const Banner = ({settings}: Props) => {
 							{
 								settings.globe && (
 									<Col>
-										<Globe/>
+										<Suspense fallback={<GlobeSuspense />}>
+											<Globe/>
+										</Suspense>
 									</Col>
 								)
 							}

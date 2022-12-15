@@ -1,10 +1,10 @@
 import {Container, Body, BodyWrapper, ExpandWrapper} from './styles'
-import React, {useContext, useState} from 'react'
+import React, {useContext, useState, lazy, Suspense} from 'react'
 import {AppContext} from '../../../context'
 import {Settings, Themes} from '../../../index'
 import {BREAKPOINT, COLORS} from '../../../constants'
 import Col from '../../atoms/col'
-import Globe from '../../molecules/globe'
+import GlobeSuspense from '../../molecules/globe/suspense'
 import Row from '../../atoms/row'
 import Control from '../../molecules/control'
 import Stats, {Connections} from '../../molecules/stats'
@@ -13,6 +13,8 @@ import Footer from '../../molecules/footer'
 import {Logo} from '../../atoms/icons'
 import {ExpandCollapsePanel} from '../../atoms/expandCollapse'
 import {useLatch} from '../../../hooks/useLatch'
+
+const Globe = lazy(() => import('../../molecules/globe'))
 
 interface Props {
 	settings: Settings
@@ -41,7 +43,9 @@ const Panel = ({settings}: Props) => {
 					{
 						settings.globe && expanded && (
 							<Col>
-								<Globe/>
+								<Suspense fallback={<GlobeSuspense />}>
+									<Globe/>
+								</Suspense>
 							</Col>
 						)
 					}
