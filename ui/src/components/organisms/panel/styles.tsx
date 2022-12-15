@@ -19,7 +19,6 @@ export const BodyWrapper = styled.div`
 export const Body = styled.div`
   display: flex;
   width: 100%;
-  gap: 24px;
   max-width: ${MAX_WIDTH}px;
   flex-direction: ${(props: {mobile: boolean}) => props.mobile ? 'column' : 'row'};
   align-items: center;

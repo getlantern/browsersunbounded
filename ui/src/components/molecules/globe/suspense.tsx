@@ -12,7 +12,7 @@ const Loading = styled.div`
 	.loader {
     width: 32px;
     height: 32px;
-    --c: radial-gradient(${({theme}: {theme: string}) => theme === Themes.LIGHT ? 'farthest-side,#012D2D 90%,#0000' : 'farthest-side,#F8FAFB 90%,#0000'});
+    --c: radial-gradient(${({theme}: {theme: string}) => theme === Themes.LIGHT ? 'farthest-side,#EDEFEF 90%,#0000' : 'farthest-side,#000000 90%,#0000'});
     background:
             var(--c) 0    0,
             var(--c) 100% 0,

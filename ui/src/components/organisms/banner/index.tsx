@@ -94,7 +94,7 @@ const Banner = ({settings}: Props) => {
 				expanded && (
 					<BodyWrapper
 						style={{
-							padding: width > BREAKPOINT ? '24px 32px' : '24px 16px'
+							padding: width > BREAKPOINT ? '24px 32px' : settings.globe ? '0 16px 24px' : '24px 16px'
 						}}
 					>
 						<Body

@@ -22,7 +22,7 @@ import {sharingEmitter} from '../../../utils/wasmInterface'
 const Globe = () => {
 	const sharing = useEmitterState(sharingEmitter)
 	const {width, theme} = useContext(AppContext)
-	const size = width < BREAKPOINT ? 300 : 400
+	const size = width < BREAKPOINT ? 250 : 400
 	const isSetup = useRef(false)
 	const [arc, setArc] = useState(null)
 	const globe = useRef()

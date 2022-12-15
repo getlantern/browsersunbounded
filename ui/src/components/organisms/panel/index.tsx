@@ -40,16 +40,17 @@ const Panel = ({settings}: Props) => {
 					mobile={width < BREAKPOINT}
 				>
 					<Logo/>
-					<About/>
+					{ !expanded && <About style={{padding: '24px 0'}} /> }
 					{
 						settings.globe && expanded && (
 							<Col>
-								<Suspense fallback={<GlobeSuspense />}>
+								<Suspense fallback={<GlobeSuspense/>}>
 									<Globe/>
 								</Suspense>
 							</Col>
 						)
 					}
+					{ expanded && <About style={{padding: `${settings.globe ? 0 : '24px'} 0 24px`}} /> }
 					<Col>
 						<Row
 							borderTop

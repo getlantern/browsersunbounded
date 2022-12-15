@@ -3,7 +3,8 @@ import styled from 'styled-components'
 const Container = styled.div`
   width: 100%;
   height: 100%;
-  min-height: 300px;
+  min-height: 250px; // sm breakpoint
+  max-height: 350px; // lg breakpoint
   display: flex;
   justify-content: center;
   align-items: center;
@@ -12,7 +13,7 @@ const Container = styled.div`
 
   > div {
     position: absolute;
-    top: -24px;
+    top: ${({size}: {size: number}) => size === 250 ? -10 : -48}px; // ugly offset to match figma
     cursor: pointer;
   }
 
