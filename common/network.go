@@ -1,7 +1,6 @@
 package common
 
 import (
-	"math"
 	"net"
 	"time"
 
@@ -9,8 +8,8 @@ import (
 )
 
 var QUICCfg = quic.Config{
-	MaxIncomingStreams:    int64(math.Pow(2, 16)),
-	MaxIncomingUniStreams: int64(math.Pow(2, 16)),
+	MaxIncomingStreams:    int64(2 << 16),
+	MaxIncomingUniStreams: int64(2 << 16),
 	MaxIdleTimeout:        16 * time.Second,
 	KeepAlivePeriod:       8 * time.Second,
 }
