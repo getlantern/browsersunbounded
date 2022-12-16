@@ -33,7 +33,7 @@ var (
 const (
 	cTableSize  = 5
 	pTableSize  = 5
-	busBufferSz = 16
+	busBufferSz = 4096
 )
 
 var bfconn *clientcore.BroflakeConn
