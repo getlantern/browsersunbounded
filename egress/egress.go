@@ -2,14 +2,21 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	"math/big"
 	"net"
 	"net/http"
 	"sync/atomic"
 	"time"
 
 	"github.com/elazarl/goproxy"
-	"github.com/xtaci/smux"
+	"github.com/getlantern/broflake/common"
+	"github.com/lucas-clemente/quic-go"
 	"nhooyr.io/websocket"
 )
 
@@ -20,37 +27,38 @@ import (
 
 var nClients uint64
 
-type proxyConn struct {
-	net.Conn
+// webSocketPacketConn wraps a websocket.Conn as a net.PacketConn
+type websocketPacketConn struct {
+	net.PacketConn
+	w    *websocket.Conn
+	addr net.Addr
 }
 
-func (c proxyConn) Close() error {
-	atomic.AddUint64(&nClients, ^uint64(0))
-	fmt.Printf("Closed a WebSocket connection! (%v total)\n", atomic.LoadUint64(&nClients))
-	return c.Conn.Close()
+func (q websocketPacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
+	_, b, err := q.w.Read(context.Background())
+	copy(p, b)
+	return len(b), common.DebugAddr("DEBUG NELSON WUZ HERE"), err
 }
 
-type debugAddr string
-
-func (a debugAddr) Network() string {
-	return string(a)
+func (q websocketPacketConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
+	err = q.w.Write(context.Background(), websocket.MessageBinary, p)
+	return len(p), err
 }
 
-func (a debugAddr) String() string {
-	return string(a)
+func (q websocketPacketConn) Close() error {
+	nClientsNow := atomic.AddUint64(&nClients, ^uint64(0))
+	defer fmt.Printf("Closed a WebSocket connection! (%v total)\n", nClientsNow)
+	return q.w.Close(websocket.StatusNormalClosure, "")
 }
 
-func (c proxyConn) LocalAddr() net.Addr {
-	return debugAddr("DEBUG NELSON WUZ HERE")
-}
-
-func (c proxyConn) RemoteAddr() net.Addr {
-	return debugAddr("DEBUG NELSON WUZ HERE")
+func (q websocketPacketConn) LocalAddr() net.Addr {
+	return q.addr
 }
 
 type proxyListener struct {
 	net.Listener
 	connections chan net.Conn
+	tlsConfig   *tls.Config
 }
 
 func (l proxyListener) Accept() (net.Conn, error) {
@@ -59,7 +67,31 @@ func (l proxyListener) Accept() (net.Conn, error) {
 }
 
 func (l proxyListener) Addr() net.Addr {
-	return debugAddr("DEBUG NELSON WUZ HERE")
+	return common.DebugAddr("DEBUG NELSON WUZ HERE")
+}
+
+// TODO: Someone should scrutinize this
+func generateTLSConfig() *tls.Config {
+	key, err := rsa.GenerateKey(rand.Reader, 1024)
+	if err != nil {
+		panic(err)
+	}
+	template := x509.Certificate{SerialNumber: big.NewInt(1)}
+	certDER, err := x509.CreateCertificate(rand.Reader, &template, &template, &key.PublicKey, key)
+	if err != nil {
+		panic(err)
+	}
+	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})
+	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certDER})
+
+	tlsCert, err := tls.X509KeyPair(certPEM, keyPEM)
+	if err != nil {
+		panic(err)
+	}
+	return &tls.Config{
+		Certificates: []tls.Certificate{tlsCert},
+		NextProtos:   []string{"broflake"},
+	}
 }
 
 func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
@@ -82,42 +114,58 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	atomic.AddUint64(&nClients, 1)
-	fmt.Printf("Accepted a new WebSocket connection! (%v total)\n", atomic.LoadUint64(&nClients))
-	wsconn := proxyConn{Conn: websocket.NetConn(context.Background(), c, websocket.MessageBinary)}
+	nClientsNow := atomic.AddUint64(&nClients, 1)
+	fmt.Printf("Accepted a new WebSocket connection! (%v total)\n", nClientsNow)
 
-	// The default value for MaxFrameSize (32K) makes the WebSocket library complain about oversized msgs
-	// TODO: it's not clear that 16K is optimal, we should run some experiments - and we should fetch
-	// these configuration values from the 'common' module to ensure agreement across client and server
-	smuxCfg := smux.DefaultConfig()
-	smuxCfg.KeepAliveDisabled = true
-	smuxCfg.MaxFrameSize = 16384
-	err = smux.VerifyConfig(smuxCfg)
+	wspconn := websocketPacketConn{
+		w:    c,
+		addr: common.DebugAddr(fmt.Sprintf("WebSocket connection #%v", nClientsNow)),
+	}
+
+	listener, err := quic.Listen(wspconn, l.tlsConfig, &common.QUICCfg)
 	if err != nil {
 		panic(err)
 	}
 
-	smuxSess, err := smux.Server(wsconn, smuxCfg)
-
 	go func() {
 		for {
-			stream, err := smuxSess.AcceptStream()
+			conn, err := listener.Accept(context.Background())
 			if err != nil {
-				// TODO: we interpret an error here as catastrophic failure and we close the smux session,
-				// which in turn closes the underlying WebSocket connection. This seems to work the way
-				// we want, providing nice fault recovery characteristics, but we haven't tested it much.
-				smuxSess.Close()
-				fmt.Printf("Stream error: %v\n", err)
+				fmt.Printf("%v QUIC listener error (%v), closing!\n", wspconn.addr, err)
+				listener.Close()
+				defer wspconn.Close()
 				return
 			}
-			l.connections <- stream
+
+			fmt.Printf("%v accepted a new QUIC connection!\n", wspconn.addr)
+
+			go func() {
+				for {
+					stream, err := conn.AcceptStream(context.Background())
+
+					if err != nil {
+						// TODO: we interpret an error here as catastrophic failure and we close the QUIC
+						// connection, leaving the underlying WebSocket connection open for a new connection.
+						errString := fmt.Sprintf("%v stream error (%v), closing QUIC connection!", wspconn.addr, err)
+						fmt.Printf("%v\n", errString)
+						conn.CloseWithError(quic.ApplicationErrorCode(42069), errString)
+						return
+					}
+
+					l.connections <- common.QUICStreamNetConn{Stream: stream}
+				}
+			}()
 		}
 	}()
 }
 
 func main() {
 	// We use this wrapped listener to enable our local HTTP proxy to listen for WebSocket connections
-	l := proxyListener{Listener: &net.TCPListener{}, connections: make(chan net.Conn, 2048)}
+	l := proxyListener{
+		Listener:    &net.TCPListener{},
+		connections: make(chan net.Conn, 2048),
+		tlsConfig:   generateTLSConfig(),
+	}
 
 	// Instantiate our local HTTP CONNECT proxy
 	proxy := goproxy.NewProxyHttpServer()
@@ -156,6 +204,7 @@ func main() {
 		WriteTimeout: 30 * time.Second,
 		Addr:         ":8080",
 	}
+
 	http.HandleFunc("/ws", l.handleWebsocket)
 	fmt.Printf("Egress server listening for WebSocket connections on %v\n\n", srv.Addr)
 	err := srv.ListenAndServe()

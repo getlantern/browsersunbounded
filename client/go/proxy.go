@@ -1,37 +1,37 @@
 package main
 
 import (
+	"context"
+	"crypto/tls"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/elazarl/goproxy"
-	"github.com/getlantern/broflake/clientcore"
+	"github.com/getlantern/broflake/common"
+	"github.com/lucas-clemente/quic-go"
 )
 
-// LocalProxySource is a clientcore.UserStreamSource
-//
-// To avoid the complexity of hooking Flashlight during prototype development,
-// we mock Flashlight-like functionality by incorporating our own HTTP CONNECT proxy. Our assumption:
-// if we can correctly proxy bytestreams originating from our local HTTP proxy now, we'll be able
-// to proxy bytestreams originating from Flashlight later.
-type LocalProxySource struct {
-	addr string
-}
+const (
+	addr = "127.0.0.1:1080"
+)
 
-func (p *LocalProxySource) InitWithDialer(dial clientcore.DialerFn) {
+func runLocalProxy() {
+	// TODO: this is just to prevent a race with client boot processes, it's not worth getting too
+	// fancy with an event-driven solution because the local proxy is all mocked functionality anyway
+	<-time.After(2 * time.Second)
+
+	tlsConf := &tls.Config{
+		InsecureSkipVerify: true,
+		NextProtos:         []string{"broflake"},
+	}
+
 	proxy := goproxy.NewProxyHttpServer()
 	proxy.Verbose = true
 	// This tells goproxy to wrap the dial function in a chained CONNECT request
 	proxy.ConnectDial = proxy.NewConnectDialToProxy("http://i.do.nothing")
-
-	proxy.Tr = &http.Transport{
-		Dial: dial,
-		// goproxy requires this to make things work
-		Proxy: func(req *http.Request) (*url.URL, error) {
-			return url.Parse("http://i.do.nothing")
-		},
-	}
 
 	proxy.OnRequest().DoFunc(
 		func(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
@@ -41,18 +41,48 @@ func (p *LocalProxySource) InitWithDialer(dial clientcore.DialerFn) {
 		},
 	)
 
-	fmt.Printf("Starting HTTP CONNECT proxy on %v...\n", p.addr)
-
 	go func() {
-		err := http.ListenAndServe(p.addr, proxy)
+		fmt.Printf("Starting HTTP CONNECT proxy on %v...\n", addr)
+		err := http.ListenAndServe(addr, proxy)
 		if err != nil {
 			panic(err)
 		}
-		// TODO: if this wasn't just mocked functionality, we'd probably want a channel to
-		// propagate forward into state 1 over which we could listen for the error returned here...
 	}()
-}
 
-func NewLocalProxySource(proxyAddr string) *LocalProxySource {
-	return &LocalProxySource{addr: proxyAddr}
+	for {
+		var conn quic.Connection
+
+		// Keep dialing until we establish a connection with the egress server
+		for {
+			var err error
+			conn, err = quic.Dial(bfconn, common.DebugAddr("NELSON WUZ HERE"), "DEBUG", tlsConf, &common.QUICCfg)
+			if err != nil {
+				fmt.Printf("QUIC dial failed (%v), retrying...\n", err)
+				continue
+			}
+
+			break
+		}
+
+		fmt.Println("QUIC connection established, ready to proxy!")
+
+		// Reconfigure out local HTTP CONNECT proxy to use our new QUIC connection as a transport
+		proxy.Tr = &http.Transport{
+			Dial: func(network string, addr string) (net.Conn, error) {
+				stream, err := conn.OpenStreamSync(context.Background())
+				return common.QUICStreamNetConn{Stream: stream}, err
+			},
+			// goproxy requires this to make things work
+			Proxy: func(req *http.Request) (*url.URL, error) {
+				return url.Parse("http://i.do.nothing")
+			},
+		}
+
+		// The egress server doesn't actually open streams to us, this is just how we detect a half open
+		_, err := conn.AcceptStream(context.Background())
+		if err != nil {
+			fmt.Printf("QUIC connection error (%v), closing!\n", err)
+			conn.CloseWithError(42069, "")
+		}
+	}
 }
