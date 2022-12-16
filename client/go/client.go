@@ -36,12 +36,7 @@ const (
 	busBufferSz = 16
 )
 
-// Two client types are supported: 'desktop' and 'widget'. Informally, widget is a "free" peer and
-// desktop is a "censored" peer. Clients share ~90% common internal architecture; the notable
-// difference which defines client types is the flavor of workerFSMs and tableRouters selected to
-// manage their worker tables. The notion of client type is decoupled from build target -- that is,
-// both widget and desktop can be compiled to native binary AND wasm.
-
+var bfconn *clientcore.BroflakeConn
 var ui = clientcore.UIImpl{}
 var bus = clientcore.NewIpcObserver(
 	busBufferSz,
@@ -54,16 +49,20 @@ var pTable *clientcore.WorkerTable
 var pRouter clientcore.TableRouter
 var wgReady sync.WaitGroup
 
+// Two client types are supported: 'desktop' and 'widget'. Informally, widget is a "free" peer and
+// desktop is a "censored" peer. Clients share ~90% common internal architecture; the notable
+// difference which defines client types is the flavor of workerFSMs and tableRouters selected to
+// manage their worker tables. The notion of client type is decoupled from build target -- that is,
+// both widget and desktop can be compiled to native binary AND wasm.
+
 func main() {
 	switch clientType {
 	case "desktop":
 		// Desktop peers don't share connectivity for the MVP, so the consumer table only gets one
 		// workerFSM for the local user stream associated with their HTTP proxy
-		cTable = clientcore.NewWorkerTable(
-			[]clientcore.WorkerFSM{
-				*clientcore.NewProducerUserStream(
-					NewLocalProxySource("127.0.0.1:1080"), &wgReady),
-			})
+		var producerUserStream *clientcore.WorkerFSM
+		bfconn, producerUserStream = clientcore.NewProducerUserStream(&wgReady)
+		cTable = clientcore.NewWorkerTable([]clientcore.WorkerFSM{*producerUserStream})
 		cRouter = clientcore.NewConsumerRouter(bus.Downstream, cTable)
 
 		// Desktop peers consume connectivity over WebRTC
@@ -101,5 +100,10 @@ func main() {
 	pRouter.Init()
 	ui.OnReady()
 	ui.OnStartup()
+
+	if clientType == "desktop" {
+		runLocalProxy()
+	}
+
 	select {}
 }
