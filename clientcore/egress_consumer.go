@@ -70,7 +70,12 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 					}
 
 					// Wrap the chunk and send it on to the router
-					com.tx <- IPCMsg{IpcType: ChunkIPC, Data: b}
+					select {
+					case com.tx <- IPCMsg{IpcType: ChunkIPC, Data: b}:
+						// Do nothing, msg sent
+					default:
+						// Drop the chunk if we can't keep up with the data rate
+					}
 				}
 			}(ctx)
 

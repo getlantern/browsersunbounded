@@ -41,7 +41,7 @@ func (c BroflakeConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
 	case c.writeChan <- IPCMsg{IpcType: ChunkIPC, Data: b}:
 		// Do nothing, message sent
 	default:
-		// Drop the message if we can't keep up with the data rate
+		// Drop the chunk if we can't keep up with the data rate
 	}
 
 	return len(b), nil

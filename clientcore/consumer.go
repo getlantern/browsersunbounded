@@ -317,7 +317,12 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 
 			// Inbound from datachannel:
 			d.OnMessage(func(msg webrtc.DataChannelMessage) {
-				com.tx <- IPCMsg{IpcType: ChunkIPC, Data: msg.Data}
+				select {
+				case com.tx <- IPCMsg{IpcType: ChunkIPC, Data: msg.Data}:
+					// Do nothing, msg sent
+				default:
+					// Drop the chunk if we can't keep up with the data rate
+				}
 			})
 
 		proxyloop:
