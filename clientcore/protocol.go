@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	workerBufferSz = 16
+	workerBufferSz = 4096
 )
 
 // WorkerFSM implements a Mealy machine: https://en.wikipedia.org/wiki/Mealy_machine
