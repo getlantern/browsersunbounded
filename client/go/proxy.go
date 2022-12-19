@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/elazarl/goproxy"
@@ -17,6 +18,39 @@ import (
 const (
 	addr = "127.0.0.1:1080"
 )
+
+type QUICGoproxyRoundTripper struct {
+	http.Transport
+	conn quic.Connection
+	sync.RWMutex
+}
+
+func (q *QUICGoproxyRoundTripper) setConn(c quic.Connection) {
+	q.Lock()
+	defer q.Unlock()
+	q.conn = c
+}
+
+func (q *QUICGoproxyRoundTripper) Dial(network string, addr string) (net.Conn, error) {
+	q.RLock()
+	defer q.RUnlock()
+	stream, err := q.conn.OpenStreamSync(context.Background())
+	return common.QUICStreamNetConn{Stream: stream}, err
+}
+
+func newQUICGoproxyRoundTripper() *QUICGoproxyRoundTripper {
+	q := QUICGoproxyRoundTripper{
+		Transport: http.Transport{
+			// goproxy requires this to make things work
+			Proxy: func(req *http.Request) (*url.URL, error) {
+				return url.Parse("http://i.do.nothing")
+			},
+		},
+	}
+
+	q.Transport.Dial = q.Dial
+	return &q
+}
 
 func runLocalProxy() {
 	// TODO: this is just to prevent a race with client boot processes, it's not worth getting too
@@ -32,6 +66,8 @@ func runLocalProxy() {
 	proxy.Verbose = true
 	// This tells goproxy to wrap the dial function in a chained CONNECT request
 	proxy.ConnectDial = proxy.NewConnectDialToProxy("http://i.do.nothing")
+	rt := newQUICGoproxyRoundTripper()
+	proxy.Tr = &rt.Transport
 
 	proxy.OnRequest().DoFunc(
 		func(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
@@ -66,17 +102,8 @@ func runLocalProxy() {
 
 		fmt.Println("QUIC connection established, ready to proxy!")
 
-		// Reconfigure out local HTTP CONNECT proxy to use our new QUIC connection as a transport
-		proxy.Tr = &http.Transport{
-			Dial: func(network string, addr string) (net.Conn, error) {
-				stream, err := conn.OpenStreamSync(context.Background())
-				return common.QUICStreamNetConn{Stream: stream}, err
-			},
-			// goproxy requires this to make things work
-			Proxy: func(req *http.Request) (*url.URL, error) {
-				return url.Parse("http://i.do.nothing")
-			},
-		}
+		// Reconfigure our local HTTP CONNECT proxy to use our new QUIC connection as a transport
+		rt.setConn(conn)
 
 		// The egress server doesn't actually open streams to us, this is just how we detect a half open
 		_, err := conn.AcceptStream(context.Background())
