@@ -19,6 +19,7 @@ const Divider = styled.div`
 const LanternLink = styled.a`
   align-items: center;
   gap: 10px;
+	text-decoration: underline;
 `
 
 export {Container, Divider, LanternLink}

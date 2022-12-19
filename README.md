@@ -89,7 +89,7 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
    data-layout="banner"     <!--string "banner" or "panel" layout-->
    data-theme="dark"        <!--string "dark" or "light" theme-->
    data-globe="true"        <!--boolean to include webgl globe-->
-   data-toast="true"        <!--boolean to include sharing toast-->
+   data-exit="true"         <!--boolean to include toast on exit intent-->
    data-donate="true"       <!--boolean to include donate link-->
    data-mobile-bg="false"   <!--boolean to run on mobile background-->
    data-desktop-bg="true"   <!--boolean to run on desktop background-->

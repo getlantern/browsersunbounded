@@ -47,7 +47,7 @@ const App = ({appId, embed}: Props) => {
         theme={settings.theme}
         layout={settings.layout}
       >
-        { settings.toast && <Toast /> }
+        <Toast exit={settings.exit} />
         { settings.layout === Layouts.BANNER && (
           <Banner
             settings={settings}

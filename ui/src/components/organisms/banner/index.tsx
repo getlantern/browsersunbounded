@@ -1,10 +1,10 @@
 import {Body, BodyWrapper, Container, Header, HeaderWrapper, Item} from './styles'
 import {Logo} from '../../atoms/icons'
 import Control from '../../molecules/control'
-import React, {useContext, useState} from 'react'
+import React, {useContext, useState, lazy, Suspense, useEffect} from 'react'
 import {Settings, Themes} from '../../../index'
 import Col from '../../atoms/col'
-import Globe from '../../molecules/globe'
+import GlobeSuspense from '../../molecules/globe/suspense'
 import Row from '../../atoms/row'
 import {BREAKPOINT, COLORS} from '../../../constants'
 import Stats, {Connections} from '../../molecules/stats'
@@ -14,15 +14,18 @@ import {AppContext} from '../../../context'
 import {useLatch} from '../../../hooks/useLatch'
 import ExpandCollapse from '../../atoms/expandCollapse'
 
+const Globe = lazy(() => import('../../molecules/globe'))
+
 interface Props {
 	settings: Settings
 }
 
 const Banner = ({settings}: Props) => {
 	const {width} = useContext(AppContext)
-	const [expanded, setExpanded] = useState(false)
+	const [expanded, setExpanded] = useState(!settings.collapse)
 	const interacted = useLatch(expanded)
 	const onToggle = (share: boolean) => !interacted && share ? setExpanded(share) : null
+	useEffect(() => setExpanded(!settings.collapse), [settings.collapse]) // hydrate on settings change
 	return (
 		<Container
 			theme={settings.theme}
@@ -64,10 +67,14 @@ const Banner = ({settings}: Props) => {
 							/>
 						)
 					}
-					<ExpandCollapse
-						expanded={expanded}
-						setExpanded={setExpanded}
-					/>
+					{
+						settings.collapse && (
+							<ExpandCollapse
+								expanded={expanded}
+								setExpanded={setExpanded}
+							/>
+						)
+					}
 				</Header>
 				{
 					!expanded && width <= 650 && (
@@ -87,7 +94,7 @@ const Banner = ({settings}: Props) => {
 				expanded && (
 					<BodyWrapper
 						style={{
-							padding: width > BREAKPOINT ? '24px 32px' : '24px 16px'
+							padding: width > BREAKPOINT ? '24px 32px' : settings.globe ? '0 16px 24px' : '24px 16px'
 						}}
 					>
 						<Body
@@ -96,7 +103,9 @@ const Banner = ({settings}: Props) => {
 							{
 								settings.globe && (
 									<Col>
-										<Globe/>
+										<Suspense fallback={<GlobeSuspense />}>
+											<Globe/>
+										</Suspense>
 									</Col>
 								)
 							}

@@ -4,7 +4,7 @@ import {useStats} from '../../../hooks/useStats'
 import React, {useContext} from 'react'
 import {AppContext} from '../../../context'
 import {BREAKPOINT} from '../../../constants'
-import useBytesFormatLatch, {formatBytes, getIndex} from '../../../hooks/useBytesFormatLatch'
+import {formatBytes, getIndex} from '../../../hooks/useBytesFormatLatch'
 
 export const Connections = () => {
 	const {connections} = useStats({sampleMs: 500})
@@ -25,7 +25,7 @@ export const Connections = () => {
 const Stats = () => {
 	const {width} = useContext(AppContext)
 	const {connections, lifetimeConnections, throughput, chunks} = useStats({sampleMs: 500})
-	const formattedThroughput = useBytesFormatLatch(throughput)
+	const formattedThroughput = formatBytes(throughput, getIndex(throughput))
 	const currentConnections = connections.filter(c => c.state === 1).length
 	const totalChunks = chunks.map(c => c.size).reduce((p, c) => p + c, 0)
 	const formattedTotalChunks = formatBytes(totalChunks, getIndex(totalChunks))

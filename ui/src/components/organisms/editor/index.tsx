@@ -87,12 +87,12 @@ const Editor = ({settings, embed}: Props) => {
 				<div>
 					<input
 						type="checkbox"
-						id="toast"
-						name="toast"
-						checked={state.toast}
-						onChange={e => setState({...state, toast: e.target.checked})}
+						id="exit"
+						name="exit"
+						checked={state.exit}
+						onChange={e => setState({...state, exit: e.target.checked})}
 					/>
-					<label htmlFor="toast">Toast</label>
+					<label htmlFor="exit">Exit notification</label>
 				</div>
 
 				<div>
@@ -137,6 +137,17 @@ const Editor = ({settings, embed}: Props) => {
 						onChange={e => setState({...state, editor: e.target.checked})}
 					/>
 					<label htmlFor="editor">Editor</label>
+				</div>
+
+				<div>
+					<input
+						type="checkbox"
+						id="collapse"
+						name="collapse"
+						checked={state.collapse}
+						onChange={e => setState({...state, collapse: e.target.checked})}
+					/>
+					<label htmlFor="collapse">Collapse</label>
 				</div>
 			</fieldset>
 		</StyledEditor>

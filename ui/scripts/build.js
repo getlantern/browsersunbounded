@@ -6,13 +6,13 @@ const config = defaults.__get__('config');
 console.log('building broflake embed');
 
 // Consolidate chunk files instead
-config.optimization.splitChunks = {
-	cacheGroups: {
-		default: false,
-	},
-};
+// config.optimization.splitChunks = {
+// 	cacheGroups: {
+// 		default: false,
+// 	},
+// };
 // Move runtime into bundle instead of separate file
-config.optimization.runtimeChunk = false;
+// config.optimization.runtimeChunk = false;
 
 // JS
 config.output.filename = 'static/js/[name].js';
