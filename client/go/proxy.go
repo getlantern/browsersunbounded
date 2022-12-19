@@ -31,7 +31,7 @@ func (q *QUICGoproxyRoundTripper) setConn(c quic.Connection) {
 	q.conn = c
 }
 
-func (q *QUICGoproxyRoundTripper) Dial(network string, addr string) (net.Conn, error) {
+func (q *QUICGoproxyRoundTripper) dial(network string, addr string) (net.Conn, error) {
 	q.RLock()
 	defer q.RUnlock()
 	stream, err := q.conn.OpenStreamSync(context.Background())
@@ -48,7 +48,7 @@ func newQUICGoproxyRoundTripper() *QUICGoproxyRoundTripper {
 		},
 	}
 
-	q.Transport.Dial = q.Dial
+	q.Transport.Dial = q.dial
 	return &q
 }
 
