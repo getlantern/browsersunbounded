@@ -46,7 +46,9 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 
 			// Consumers are the offerers, so we must create a datachannel
-			d, err := peerConnection.CreateDataChannel("data", nil)
+			// The following configuration creates a UDP-like unreliable channel
+			dataChannelConfig := webrtc.DataChannelInit{Ordered: new(bool), MaxRetransmits: new(uint16)}
+			d, err := peerConnection.CreateDataChannel("data", &dataChannelConfig)
 			if err != nil {
 				panic(err)
 			}
