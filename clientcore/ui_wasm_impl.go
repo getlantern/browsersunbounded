@@ -61,5 +61,10 @@ func (ui UIImpl) OnDownstreamThroughput(bytesPerSec int) {
 }
 
 func (ui UIImpl) OnConsumerConnectionChange(state int, workerIdx int, addr net.IP) {
-	js.Global().Get("wasmClient").Call("_onConsumerConnectionChange", state, workerIdx, addr.String())
+	addrString := ""
+	if addr != nil {
+		addrString = addr.String()
+	}
+
+	js.Global().Get("wasmClient").Call("_onConsumerConnectionChange", state, workerIdx, addrString)
 }
