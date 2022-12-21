@@ -2,6 +2,7 @@
 package clientcore
 
 import (
+	"net"
 	"sync/atomic"
 	"time"
 
@@ -29,7 +30,7 @@ type UI interface {
 
 	OnDownstreamThroughput(bytesPerSec int)
 
-	OnConsumerConnectionChange(state int, workerIdx int, loc string)
+	OnConsumerConnectionChange(state int, workerIdx int, addr net.IP)
 }
 
 func DownstreamUIHandler(ui UIImpl) func(msg IPCMsg) {
@@ -67,7 +68,7 @@ func UpstreamUIHandler(ui UIImpl) func(msg IPCMsg) {
 			if ci.Nil() {
 				state = -1
 			}
-			ui.OnConsumerConnectionChange(state, int(msg.Wid), ci.Location)
+			ui.OnConsumerConnectionChange(state, int(msg.Wid), ci.Addr)
 		}
 	}
 }

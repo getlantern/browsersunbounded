@@ -35,3 +35,7 @@ func (c QUICStreamNetConn) LocalAddr() net.Addr {
 func (c QUICStreamNetConn) RemoteAddr() net.Addr {
 	return DebugAddr("DEBUG NELSON WUZ HERE")
 }
+
+func IsPublicAddr(addr net.IP) bool {
+	return !addr.IsPrivate() && !addr.IsUnspecified() && !addr.IsLoopback()
+}
