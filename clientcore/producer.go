@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -261,15 +262,28 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// Looks like we got some kind of response. Should be a slice of ICE candidates in a SignalMsg
 			// TODO: we ought to be getting an error back from DecodeSignalMsg if it's malformed
 			replyTo, candidates := common.DecodeSignalMsg(iceBytes)
+			var remoteAddr net.IP
 
 			// TODO: here we assume valid candidates, but we need to handle the invalid case too
 			for _, c := range candidates.([]webrtc.ICECandidate) {
 				// TODO: webrtc.AddICECandidate accepts ICECandidateInit types, which are apparently
 				// just serialized ICECandidates?
-				peerConnection.AddICECandidate(c.ToJSON())
+				err := peerConnection.AddICECandidate(c.ToJSON())
+				if err != nil {
+					// TODO: don't panic here
+					panic(err)
+				}
+
+				// We extract an address from the remote ICE candidates just to send it to the UI for
+				// geolocation purposes. Under the assumption that any public address will suffice, we
+				// arbitrarily select the last public address found in the list of candidates
+				parsedIP := net.ParseIP(c.Address)
+				if parsedIP != nil && common.IsPublicAddr(parsedIP) {
+					remoteAddr = parsedIP
+				}
 			}
 
-			return 4, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			return 4, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed, remoteAddr}
 		}),
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 4
@@ -277,16 +291,18 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// input[1]: chan *webrtc.DataChannel
 			// input[2]: chan webrtc.PeerConnectionState
 			// input[3]: chan struct{}
+			// input[4]: net.IP
 			peerConnection := input[0].(*webrtc.PeerConnection)
 			connectionEstablished := input[1].(chan *webrtc.DataChannel)
 			connectionChange := input[2].(chan webrtc.PeerConnectionState)
 			connectionClosed := input[3].(chan struct{})
+			remoteAddr := input[4].(net.IP)
 			fmt.Printf("Producer state 4, signaling complete!\n")
 
 			select {
 			case d := <-connectionEstablished:
 				fmt.Printf("A WebRTC connection has been established!\n")
-				return 5, []interface{}{peerConnection, d, connectionChange, connectionClosed}
+				return 5, []interface{}{peerConnection, d, connectionChange, connectionClosed, remoteAddr}
 			case <-time.After(options.NATFailTimeout):
 				fmt.Printf("NAT failure, aborting!\n")
 				// Borked!
@@ -300,15 +316,16 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// input[1]: *webrtc.DataChannel
 			// input[2]: chan webrtc.PeerConnectionState
 			// input[3]: chan struct{}
+			// input[4]: net.Ip
 			peerConnection := input[0].(*webrtc.PeerConnection)
 			d := input[1].(*webrtc.DataChannel)
 			connectionChange := input[2].(chan webrtc.PeerConnectionState)
 			connectionClosed := input[3].(chan struct{})
+			remoteAddr := input[4].(net.IP)
 			fmt.Printf("Producer state 5...\n")
 
 			// Announce the new connectivity situation for this slot
-			// TODO: actually acquire the location
-			com.tx <- IPCMsg{IpcType: ConsumerInfoIPC, Data: common.ConsumerInfo{Location: "DEBUG"}}
+			com.tx <- IPCMsg{IpcType: ConsumerInfoIPC, Data: common.ConsumerInfo{Addr: remoteAddr}}
 
 			// Inbound from datachannel:
 			d.OnMessage(func(msg webrtc.DataChannelMessage) {

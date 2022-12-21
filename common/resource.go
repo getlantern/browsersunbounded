@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/json"
+	"net"
 
 	"github.com/pion/webrtc/v3"
 )
@@ -34,11 +35,11 @@ func (pa PathAssertion) Nil() bool {
 // ConsumerInfo (and its client-specific accomplice, ConsumerInfoIPC) were motivated solely to
 // provide UI status information, and it's irksome that they exist for this reason alone.
 type ConsumerInfo struct {
-	Location string
+	Addr net.IP
 }
 
 func (ci ConsumerInfo) Nil() bool {
-	return ci.Location == ""
+	return ci.Addr == nil
 }
 
 type Endpoint struct {

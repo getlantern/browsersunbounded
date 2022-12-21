@@ -3,6 +3,10 @@
 // ui_default_impl.go implements the UI interface (see ui.go) for non-wasm build targets
 package clientcore
 
+import (
+	"net"
+)
+
 type UIImpl struct {
 	UI
 	Broflake *Broflake
@@ -40,6 +44,6 @@ func (ui UIImpl) OnDownstreamThroughput(bytesPerSec int) {
 	// TODO: do something?
 }
 
-func (ui UIImpl) OnConsumerConnectionChange(state int, workerIdx int, loc string) {
+func (ui UIImpl) OnConsumerConnectionChange(state int, workerIdx int, addr net.IP) {
 	// TODO: do something?
 }

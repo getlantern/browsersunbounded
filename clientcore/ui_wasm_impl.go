@@ -4,6 +4,7 @@
 package clientcore
 
 import (
+	"net"
 	"syscall/js"
 )
 
@@ -59,6 +60,6 @@ func (ui UIImpl) OnDownstreamThroughput(bytesPerSec int) {
 	js.Global().Get("wasmClient").Call("_onDownstreamThroughput", bytesPerSec)
 }
 
-func (ui UIImpl) OnConsumerConnectionChange(state int, workerIdx int, loc string) {
-	js.Global().Get("wasmClient").Call("_onConsumerConnectionChange", state, workerIdx, loc)
+func (ui UIImpl) OnConsumerConnectionChange(state int, workerIdx int, addr net.IP) {
+	js.Global().Get("wasmClient").Call("_onConsumerConnectionChange", state, workerIdx, addr.String())
 }
