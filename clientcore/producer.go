@@ -286,7 +286,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}
 			}
-			
+      
       var remoteAddr net.IP
 
 			// TODO: here we assume valid candidates, but we need to handle the invalid case too
