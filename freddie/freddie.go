@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"sync"
@@ -78,7 +79,7 @@ func handleSignalGet(w http.ResponseWriter, r *http.Request) {
 	consumerID := uuid.NewString()
 	consumerChan := consumerTable.Add(consumerID)
 	defer consumerTable.Delete(consumerID)
-	fmt.Printf("New consumer listening (%v) | total consumers: %v\n", consumerID, consumerTable.Size())
+	log.Printf("New consumer listening (%v) | total consumers: %v\n", consumerID, consumerTable.Size())
 
 	// TODO: Matchmaking would happen here. (Just be selective about which consumers you broadcast
 	// to, and you've implemented matchmaking!) If consumerTable was an indexed datastore, we could
@@ -90,7 +91,7 @@ func handleSignalGet(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("%v\n", msg)))
 		w.(http.Flusher).Flush()
 	case <-time.After(consumerTTL * time.Second):
-		fmt.Printf("Consumer %v timeout, bye bye!\n", consumerID)
+		log.Printf("Consumer %v timeout, bye bye!\n", consumerID)
 	}
 }
 
@@ -106,11 +107,13 @@ func handleSignalPost(w http.ResponseWriter, r *http.Request) {
 	data := r.Form.Get("data")
 	msgType, err := strconv.ParseInt(r.Form.Get("type"), 10, 32)
 	if err != nil {
-		// TODO: shouldn't panic here, it's validation
-		panic(err)
+		// Malformed request
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400\n"))
+		return
 	}
 
-	fmt.Printf(
+	log.Printf(
 		"New msg (%v) -> %v: %v | total open messages: %v\n",
 		reqID,
 		sendTo,
@@ -119,12 +122,14 @@ func handleSignalPost(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Package the message
-	// TODO: This def shouldn't panic, we're supposed to validate here
 	msg, err := json.Marshal(
 		common.SignalMsg{ReplyTo: reqID, Type: common.SignalMsgType(msgType), Payload: data},
 	)
 	if err != nil {
-		panic(err)
+		// Malformed request
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400\n"))
+		return
 	}
 
 	if sendTo == "genesis" {
@@ -149,7 +154,7 @@ func handleSignalPost(w http.ResponseWriter, r *http.Request) {
 	case res := <-reqChan:
 		w.Write([]byte(fmt.Sprintf("%v\n", res)))
 	case <-time.After(msgTTL * time.Second):
-		fmt.Printf("Msg %v received no reply, bye bye!\n", reqID)
+		log.Printf("Msg %v received no reply, bye bye!\n", reqID)
 		w.Write(nil)
 	}
 }
@@ -166,9 +171,9 @@ func main() {
 		Addr:         ":8000",
 	}
 	http.HandleFunc("/v1/signal", handleSignal)
-	fmt.Printf("Discovery server listening on %v\n\n", srv.Addr)
+	log.Printf("Discovery server listening on %v\n\n", srv.Addr)
 	err := srv.ListenAndServe()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 }

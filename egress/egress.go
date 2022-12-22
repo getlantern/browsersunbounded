@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"log"
 	"math/big"
 	"net"
 	"net/http"
@@ -47,7 +48,7 @@ func (q websocketPacketConn) WriteTo(p []byte, addr net.Addr) (n int, err error)
 
 func (q websocketPacketConn) Close() error {
 	nClientsNow := atomic.AddUint64(&nClients, ^uint64(0))
-	defer fmt.Printf("Closed a WebSocket connection! (%v total)\n", nClientsNow)
+	defer log.Printf("Closed a WebSocket connection! (%v total)\n", nClientsNow)
 	return q.w.Close(websocket.StatusNormalClosure, "")
 }
 
@@ -110,12 +111,12 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		// TODO: this is the idiom for our WebSocket library, but we should log the err better
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 
 	nClientsNow := atomic.AddUint64(&nClients, 1)
-	fmt.Printf("Accepted a new WebSocket connection! (%v total)\n", nClientsNow)
+	log.Printf("Accepted a new WebSocket connection! (%v total)\n", nClientsNow)
 
 	wspconn := websocketPacketConn{
 		w:    c,
@@ -124,20 +125,22 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 
 	listener, err := quic.Listen(wspconn, l.tlsConfig, &common.QUICCfg)
 	if err != nil {
-		panic(err)
+		log.Printf("Error creating QUIC listener: %v\n", err)
+		wspconn.Close()
+		return
 	}
 
 	go func() {
 		for {
 			conn, err := listener.Accept(context.Background())
 			if err != nil {
-				fmt.Printf("%v QUIC listener error (%v), closing!\n", wspconn.addr, err)
+				log.Printf("%v QUIC listener error (%v), closing!\n", wspconn.addr, err)
 				listener.Close()
 				defer wspconn.Close()
 				return
 			}
 
-			fmt.Printf("%v accepted a new QUIC connection!\n", wspconn.addr)
+			log.Printf("%v accepted a new QUIC connection!\n", wspconn.addr)
 
 			go func() {
 				for {
@@ -147,7 +150,7 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 						// TODO: we interpret an error here as catastrophic failure and we close the QUIC
 						// connection, leaving the underlying WebSocket connection open for a new connection.
 						errString := fmt.Sprintf("%v stream error (%v), closing QUIC connection!", wspconn.addr, err)
-						fmt.Printf("%v\n", errString)
+						log.Printf("%v\n", errString)
 						conn.CloseWithError(quic.ApplicationErrorCode(42069), errString)
 						return
 					}
@@ -170,16 +173,16 @@ func main() {
 	// Instantiate our local HTTP CONNECT proxy
 	proxy := goproxy.NewProxyHttpServer()
 	proxy.Verbose = true
-	fmt.Printf("Starting HTTP CONNECT proxy...\n")
+	log.Printf("Starting HTTP CONNECT proxy...\n")
 
 	proxy.OnRequest().DoFunc(
 		func(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
-			fmt.Println("HTTP proxy just saw a request:")
+			log.Println("HTTP proxy just saw a request:")
 			// TODO: overriding the context is a hack to prevent "context canceled" errors when proxying
 			// HTTP (not HTTPS) requests. It's not yet clear why this is necessary -- it may be a quirk
 			// of elazarl/goproxy. See: https://github.com/getlantern/broflake/issues/47
 			r = r.WithContext(context.Background())
-			fmt.Println(r)
+			log.Println(r)
 			return r, nil
 		},
 	)
@@ -194,7 +197,6 @@ func main() {
 	go func() {
 		err := http.Serve(l, proxy)
 		if err != nil {
-			// TODO: handle this error gracefully
 			panic(err)
 		}
 	}()
@@ -206,9 +208,9 @@ func main() {
 	}
 
 	http.HandleFunc("/ws", l.handleWebsocket)
-	fmt.Printf("Egress server listening for WebSocket connections on %v\n\n", srv.Addr)
+	log.Printf("Egress server listening for WebSocket connections on %v\n\n", srv.Addr)
 	err := srv.ListenAndServe()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 }

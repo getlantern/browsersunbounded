@@ -6,7 +6,7 @@ package clientcore
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"sync"
 
 	"github.com/getlantern/broflake/common"
@@ -18,7 +18,7 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 0
 			// (no input data)
-			fmt.Printf("Egress consumer state 0, opening WebSocket connection...\n")
+			log.Printf("Egress consumer state 0, opening WebSocket connection...\n")
 
 			// We're resetting this slot, so send a nil path assertion IPC message
 			com.tx <- IPCMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{}}
@@ -42,7 +42,7 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 
 			c, _, err := websocket.Dial(ctx, options.Addr+options.Endpoint, nil)
 			if err != nil {
-				fmt.Printf("Couldn't connect to egress server at %v\n", options.Addr)
+				log.Printf("Couldn't connect to egress server at %v\n", options.Addr)
 				return 0, []interface{}{}
 			}
 
@@ -52,7 +52,7 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 			// State 1
 			// input[0]: *websocket.Conn
 			c := input[0].(*websocket.Conn)
-			fmt.Printf("Egress consumer state 1, WebSocket connection established!\n")
+			log.Printf("Egress consumer state 1, WebSocket connection established!\n")
 
 			// Send a path assertion IPC message representing the connectivity now provided by this slot
 			// TODO: post-MVP we shouldn't be hardcoding (*, 1) here...
@@ -94,12 +94,12 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 					err := c.Write(context.Background(), websocket.MessageBinary, msg.Data.([]byte))
 					if err != nil {
 						c.Close(websocket.StatusNormalClosure, err.Error())
-						fmt.Printf("Egress consumer WebSocket write error: %v\n", err)
+						log.Printf("Egress consumer WebSocket write error: %v\n", err)
 						return 0, []interface{}{}
 					}
 				case err := <-readStatus:
 					c.Close(websocket.StatusNormalClosure, err.Error())
-					fmt.Printf("Egress consumer WebSocket read error: %v\n", err)
+					log.Printf("Egress consumer WebSocket read error: %v\n", err)
 					return 0, []interface{}{}
 
 					// Ordinarily it would be incorrect to put a worker into an infinite loop without including

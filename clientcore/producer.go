@@ -6,8 +6,8 @@ package clientcore
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -24,7 +24,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 0
 			// (no input data)
-			fmt.Printf("Producer state 0, constructing RTCPeerConnection...\n")
+			log.Printf("Producer state 0, constructing RTCPeerConnection...\n")
 
 			// TODO: STUN servers will eventually be provided in a more sophisticated way
 			config := webrtc.Configuration{
@@ -38,7 +38,8 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// Construct the RTCPeerConnection
 			peerConnection, err := webrtc.NewPeerConnection(config)
 			if err != nil {
-				panic(err)
+				log.Printf("Error creating RTCPeerConnection: %v\n", err)
+				return 0, []interface{}{}
 			}
 
 			// Producers are the answerers, so we don't create a datachannel
@@ -59,15 +60,15 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// benefit from faster connection failure detection by listening for the `failed` event.
 			connectionClosed := make(chan struct{}, 1)
 			peerConnection.OnDataChannel(func(d *webrtc.DataChannel) {
-				fmt.Printf("Created new datachannel...\n")
+				log.Printf("Created new datachannel...\n")
 
 				d.OnOpen(func() {
-					fmt.Printf("A datachannel has opened!\n")
+					log.Printf("A datachannel has opened!\n")
 					connectionEstablished <- d
 				})
 
 				d.OnClose(func() {
-					fmt.Printf("A datachannel has closed!\n")
+					log.Printf("A datachannel has closed!\n")
 					connectionClosed <- struct{}{}
 				})
 			})
@@ -75,7 +76,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// Ditto, but for connection state changes
 			connectionChange := make(chan webrtc.PeerConnectionState, 16)
 			peerConnection.OnConnectionStateChange(func(s webrtc.PeerConnectionState) {
-				fmt.Printf("Peer connection state change: %v\n", s.String())
+				log.Printf("Peer connection state change: %v\n", s.String())
 				connectionChange <- s
 			})
 
@@ -91,7 +92,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			connectionEstablished := input[1].(chan *webrtc.DataChannel)
 			connectionChange := input[2].(chan webrtc.PeerConnectionState)
 			connectionClosed := input[3].(chan struct{})
-			fmt.Printf("Producer state 1...\n")
+			log.Printf("Producer state 1...\n")
 
 			// Do we have a non-nil path assertion, indicating that we have upstream connectivity to share?
 			// We find out by sending an ConnectivityCheckIPC message, which asks the process responsible
@@ -125,10 +126,14 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			connectionEstablished := input[2].(chan *webrtc.DataChannel)
 			connectionChange := input[3].(chan webrtc.PeerConnectionState)
 			connectionClosed := input[4].(chan struct{})
-			fmt.Printf("Producer state 2...\n")
+			log.Printf("Producer state 2...\n")
 
 			// Construct a genesis message
-			g := common.GenesisMsg{PathAssertion: pa}.ToJSON()
+			g, err := json.Marshal(common.GenesisMsg{PathAssertion: pa})
+			if err != nil {
+				log.Printf("Error marshaling JSON: %v\n", err)
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			}
 
 			// Signal the genesis message
 			// TODO: use a custom http.Client and control our TCP connections
@@ -137,7 +142,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				url.Values{"data": {string(g)}, "send-to": {options.GenesisAddr}, "type": {strconv.Itoa(int(common.SignalMsgGenesis))}},
 			)
 			if err != nil {
-				fmt.Printf("Couldn't signal genesis message to %v\n", options.DiscoverySrv+options.Endpoint)
+				log.Printf("Couldn't signal genesis message to %v\n", options.DiscoverySrv+options.Endpoint)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
 			defer res.Body.Close()
@@ -153,13 +158,16 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// TODO: Freddie sends back a 0-length body when nobody replied to our message. Is that the
 			// smartest way to handle this case systemwide?
 			if len(offerBytes) == 0 {
-				fmt.Printf("No answer for genesis message!\n")
+				log.Printf("No answer for genesis message!\n")
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
 
 			// Looks like we got some kind of response. It ought to be an offer SDP wrapped in a SignalMsg
-			// TODO: we ought to be getting an error back from DecodeSignalMsg if it's malformed
-			replyTo, offer := common.DecodeSignalMsg(offerBytes)
+			replyTo, offer, err := common.DecodeSignalMsg(offerBytes)
+			if err != nil {
+				log.Printf("Error decoding signal message: %v\n", err)
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			}
 
 			// TODO: here we assume we've received a valid offer SDP, we also need to handle invalid case
 			return 3, []interface{}{peerConnection, replyTo, offer, connectionEstablished, connectionChange, connectionClosed}
@@ -178,7 +186,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			connectionEstablished := input[3].(chan *webrtc.DataChannel)
 			connectionChange := input[4].(chan webrtc.PeerConnectionState)
 			connectionClosed := input[5].(chan struct{})
-			fmt.Printf("Producer state 3...\n")
+			log.Printf("Producer state 3...\n")
 
 			// Create a channel that's blocked until ICE gathering is complete
 			gatherComplete := webrtc.GatheringCompletePromise(peerConnection)
@@ -186,27 +194,35 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// Assign the offer to our connection
 			err := peerConnection.SetRemoteDescription(offer)
 			if err != nil {
-				// TODO: Definitely shouldn't panic here, it just indicates the offer is malformed
-				panic(err)
+				log.Printf("Error setting remote description: %v\n", err)
+				// Borked!
+				peerConnection.Close() // TODO: there's an err we should handle here
+				return 0, []interface{}{}
 			}
 
 			// Generate an answer
 			answer, err := peerConnection.CreateAnswer(nil)
 			if err != nil {
-				panic(err)
+				log.Printf("Error creating answer SDP: %v\n", err)
+				// Borked!
+				peerConnection.Close() // TODO: there's an err we should handle here
+				return 0, []interface{}{}
 			}
 
 			// This kicks off ICE candidate gathering
 			err = peerConnection.SetLocalDescription(answer)
 			if err != nil {
-				panic(err)
+				log.Printf("Error setting local description: %v\n", err)
+				// Borked!
+				peerConnection.Close() // TODO: there's an err we should handle here
+				return 0, []interface{}{}
 			}
 
 			select {
 			case <-gatherComplete:
-				fmt.Println("Ice gathering complete!")
+				log.Println("Ice gathering complete!")
 			case <-time.After(options.ICEFailTimeout):
-				fmt.Printf("Failed to gather ICE candidates!\n")
+				log.Printf("Failed to gather ICE candidates!\n")
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}
@@ -217,7 +233,10 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 
 			a, err := json.Marshal(finalAnswer)
 			if err != nil {
-				panic(err)
+				log.Printf("Error marshaling JSON: %v\n", err)
+				// Borked!
+				peerConnection.Close() // TODO: there's an err we should handle here
+				return 0, []interface{}{}
 			}
 
 			// Signal our answer
@@ -227,7 +246,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				url.Values{"data": {string(a)}, "send-to": {replyTo}, "type": {strconv.Itoa(int(common.SignalMsgAnswer))}},
 			)
 			if err != nil {
-				fmt.Printf("Couldn't signal answer SDP to %v\n", options.DiscoverySrv+options.Endpoint)
+				log.Printf("Couldn't signal answer SDP to %v\n", options.DiscoverySrv+options.Endpoint)
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}
@@ -236,7 +255,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 
 			// Our signaling partner hung up
 			if res.StatusCode == 404 {
-				fmt.Printf("Signaling partner hung up, aborting!\n")
+				log.Printf("Signaling partner hung up, aborting!\n")
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}
@@ -253,15 +272,21 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// TODO: Freddie sends back a 0-length body when our signaling partner doesn't reply.
 			// Is that the smartest way to handle this case systemwide?
 			if len(iceBytes) == 0 {
-				fmt.Printf("No ICE candidates from signaling partner!\n")
+				log.Printf("No ICE candidates from signaling partner!\n")
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}
 			}
 
 			// Looks like we got some kind of response. Should be a slice of ICE candidates in a SignalMsg
-			// TODO: we ought to be getting an error back from DecodeSignalMsg if it's malformed
-			replyTo, candidates := common.DecodeSignalMsg(iceBytes)
+			replyTo, candidates, err := common.DecodeSignalMsg(iceBytes)
+			if err != nil {
+				log.Printf("Error decoding signal message: %v\n", err)
+				// Borked!
+				peerConnection.Close() // TODO: there's an err we should handle here
+				return 0, []interface{}{}
+			}
+
 			var remoteAddr net.IP
 
 			// TODO: here we assume valid candidates, but we need to handle the invalid case too
@@ -270,8 +295,10 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				// just serialized ICECandidates?
 				err := peerConnection.AddICECandidate(c.ToJSON())
 				if err != nil {
-					// TODO: don't panic here
-					panic(err)
+					log.Printf("Error adding ICE candidate: %v\n", err)
+					// Borked!
+					peerConnection.Close() // TODO: there's an err we should handle here
+					return 0, []interface{}{}
 				}
 
 				// We extract an address from the remote ICE candidates just to send it to the UI for
@@ -297,14 +324,14 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			connectionChange := input[2].(chan webrtc.PeerConnectionState)
 			connectionClosed := input[3].(chan struct{})
 			remoteAddr := input[4].(net.IP)
-			fmt.Printf("Producer state 4, signaling complete!\n")
+			log.Printf("Producer state 4, signaling complete!\n")
 
 			select {
 			case d := <-connectionEstablished:
-				fmt.Printf("A WebRTC connection has been established!\n")
+				log.Printf("A WebRTC connection has been established!\n")
 				return 5, []interface{}{peerConnection, d, connectionChange, connectionClosed, remoteAddr}
 			case <-time.After(options.NATFailTimeout):
-				fmt.Printf("NAT failure, aborting!\n")
+				log.Printf("NAT failure, aborting!\n")
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}
@@ -322,7 +349,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			connectionChange := input[2].(chan webrtc.PeerConnectionState)
 			connectionClosed := input[3].(chan struct{})
 			remoteAddr := input[4].(net.IP)
-			fmt.Printf("Producer state 5...\n")
+			log.Printf("Producer state 5...\n")
 
 			// Announce the new connectivity situation for this slot
 			com.tx <- IPCMsg{IpcType: ConsumerInfoIPC, Data: common.ConsumerInfo{Addr: remoteAddr}}
@@ -343,19 +370,19 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				// Handle connection failure
 				case s := <-connectionChange:
 					if s == webrtc.PeerConnectionStateFailed || s == webrtc.PeerConnectionStateDisconnected {
-						fmt.Printf("Connection failure, resetting!\n")
+						log.Printf("Connection failure, resetting!\n")
 						break proxyloop
 					}
 				// Handle connection failure for Firefox
 				case _ = <-connectionClosed:
-					fmt.Printf("Firefox connection failure, resetting!\n")
+					log.Printf("Firefox connection failure, resetting!\n")
 					break proxyloop
 				// Handle messages from the router
 				case msg := <-com.rx:
 					switch msg.IpcType {
 					case ChunkIPC:
 						if err := d.Send(msg.Data.([]byte)); err != nil {
-							fmt.Printf("Error sending to datachannel, resetting!\n")
+							log.Printf("Error sending to datachannel, resetting!\n")
 							break proxyloop
 						}
 					}
