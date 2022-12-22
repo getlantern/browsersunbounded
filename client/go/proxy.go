@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -71,17 +71,17 @@ func runLocalProxy() {
 
 	proxy.OnRequest().DoFunc(
 		func(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
-			fmt.Println("HTTP proxy just saw a request:")
-			fmt.Println(r)
+			log.Println("HTTP proxy just saw a request:")
+			log.Println(r)
 			return r, nil
 		},
 	)
 
 	go func() {
-		fmt.Printf("Starting HTTP CONNECT proxy on %v...\n", addr)
+		log.Printf("Starting HTTP CONNECT proxy on %v...\n", addr)
 		err := http.ListenAndServe(addr, proxy)
 		if err != nil {
-			panic(err)
+			log.Printf("HTTP CONNECT proxy error: %v\n", err)
 		}
 	}()
 
@@ -93,14 +93,14 @@ func runLocalProxy() {
 			var err error
 			conn, err = quic.Dial(bfconn, common.DebugAddr("NELSON WUZ HERE"), "DEBUG", tlsConf, &common.QUICCfg)
 			if err != nil {
-				fmt.Printf("QUIC dial failed (%v), retrying...\n", err)
+				log.Printf("QUIC dial failed (%v), retrying...\n", err)
 				continue
 			}
 
 			break
 		}
 
-		fmt.Println("QUIC connection established, ready to proxy!")
+		log.Println("QUIC connection established, ready to proxy!")
 
 		// Reconfigure our local HTTP CONNECT proxy to use our new QUIC connection as a transport
 		rt.setConn(conn)
@@ -108,7 +108,7 @@ func runLocalProxy() {
 		// The egress server doesn't actually open streams to us, this is just how we detect a half open
 		_, err := conn.AcceptStream(context.Background())
 		if err != nil {
-			fmt.Printf("QUIC connection error (%v), closing!\n", err)
+			log.Printf("QUIC connection error (%v), closing!\n", err)
 			conn.CloseWithError(42069, "")
 		}
 	}

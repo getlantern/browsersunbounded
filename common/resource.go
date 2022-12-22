@@ -51,58 +51,38 @@ type GenesisMsg struct {
 	PathAssertion PathAssertion
 }
 
-func (msg GenesisMsg) ToJSON() []byte {
-	g, err := json.Marshal(msg)
-	if err != nil {
-		panic(err)
-	}
-	return g
-}
-
 type SignalMsg struct {
 	ReplyTo string
 	Type    SignalMsgType
 	Payload string
 }
 
-// TODO: These definitely shouldn't panic, because we use them to validate response messages,
-// but we'll just delete this whole mess when we swap in protobufs anyway
-func DecodeSignalMsg(raw []byte) (string, interface{}) {
+func DecodeSignalMsg(raw []byte) (string, interface{}, error) {
+	var err error
 	var msg SignalMsg
-	err := json.Unmarshal(raw, &msg)
-	if err != nil {
-		panic(err)
+
+	err = json.Unmarshal(raw, &msg)
+
+	if err == nil {
+		switch msg.Type {
+		case SignalMsgGenesis:
+			var genesis GenesisMsg
+			err = json.Unmarshal([]byte(msg.Payload), &genesis)
+			return msg.ReplyTo, genesis, err
+		case SignalMsgOffer:
+			var offer webrtc.SessionDescription
+			err := json.Unmarshal([]byte(msg.Payload), &offer)
+			return msg.ReplyTo, offer, err
+		case SignalMsgAnswer:
+			var answer webrtc.SessionDescription
+			err := json.Unmarshal([]byte(msg.Payload), &answer)
+			return msg.ReplyTo, answer, err
+		case SignalMsgICE:
+			var candidates []webrtc.ICECandidate
+			err := json.Unmarshal([]byte(msg.Payload), &candidates)
+			return msg.ReplyTo, candidates, err
+		}
 	}
 
-	switch msg.Type {
-	case SignalMsgGenesis:
-		var genesis GenesisMsg
-		err := json.Unmarshal([]byte(msg.Payload), &genesis)
-		if err != nil {
-			panic(err)
-		}
-		return msg.ReplyTo, genesis
-	case SignalMsgOffer:
-		var offer webrtc.SessionDescription
-		err := json.Unmarshal([]byte(msg.Payload), &offer)
-		if err != nil {
-			panic(err)
-		}
-		return msg.ReplyTo, offer
-	case SignalMsgAnswer:
-		var answer webrtc.SessionDescription
-		err := json.Unmarshal([]byte(msg.Payload), &answer)
-		if err != nil {
-			panic(err)
-		}
-		return msg.ReplyTo, answer
-	case SignalMsgICE:
-		var candidates []webrtc.ICECandidate
-		err := json.Unmarshal([]byte(msg.Payload), &candidates)
-		if err != nil {
-			panic(err)
-		}
-		return msg.ReplyTo, candidates
-	}
-	return "", nil
+	return "", nil, err
 }

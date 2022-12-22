@@ -3,7 +3,7 @@ package clientcore
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"sync"
 )
 
@@ -46,13 +46,13 @@ func (fsm *WorkerFSM) Start() {
 				fsm.wg.Done()
 			}
 		}()
-		fmt.Println("Starting WorkerFSM...")
+		log.Println("Starting WorkerFSM...")
 		fsm.ctx, fsm.cancel = context.WithCancel(context.Background())
 
 		for {
 			select {
 			case <-fsm.ctx.Done():
-				fmt.Println("Stopping WorkerFSM...")
+				log.Println("Stopping WorkerFSM...")
 				return
 			default:
 				fsm.currentState, fsm.nextInput = fsm.state[fsm.currentState](fsm.ctx, fsm.com, fsm.nextInput)
