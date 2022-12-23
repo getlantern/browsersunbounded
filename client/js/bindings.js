@@ -36,7 +36,9 @@ wasmClient._onDownstreamThroughput = (bytesPerSec) => {
 
 // 'consumerConnectionChange' fires when a consumer connects or disconnects. 'state' is 1 or -1,
 // representing connection or disconnection, respectively; 'workerIdx' is the 0-indexed ID of the
-// connection slot; 'loc' represents the geographic location of the consumer
+// connection slot; 'addr' is a string which, when state == 1, represents the IPv4 or IPv6 address 
+// of the new consumer (or a 0-length string indicating that address extraction failed); when 
+// state == -1, addr == "<nil>"
 wasmClient._onConsumerConnectionChange = (state, workerIdx, addr) => {
   wasmClient._fire("consumerConnectionChange", {state: state, workerIdx: workerIdx, addr: addr})
 }
