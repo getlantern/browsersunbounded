@@ -30,11 +30,18 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// We're resetting this slot, so send a nil path assertion IPC message
 			com.tx <- IPCMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{}}
 
-			// TODO: STUN servers will eventually be provided in a more sophisticated way
+			STUNSrvs, err := options.STUNBatch(options.STUNBatchSize)
+			if err != nil {
+				log.Printf("Error creating STUN batch: %v\n", err)
+				return 0, []interface{}{}
+			}
+
+			log.Printf("Created STUN batch (%v/%v servers)\n", len(STUNSrvs), options.STUNBatchSize)
+
 			config := webrtc.Configuration{
 				ICEServers: []webrtc.ICEServer{
 					{
-						URLs: options.StunSrvs,
+						URLs: STUNSrvs,
 					},
 				},
 			}
