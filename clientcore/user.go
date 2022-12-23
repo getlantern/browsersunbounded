@@ -8,7 +8,7 @@ package clientcore
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"net"
 	"sync"
 
@@ -52,7 +52,7 @@ func NewProducerUserStream(wg *sync.WaitGroup) (*BroflakeConn, *WorkerFSM) {
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 0
 			// (no input data)
-			fmt.Printf("User stream producer state 0...\n")
+			log.Printf("User stream producer state 0...\n")
 			// TODO: check for a non-nil path assertion to alert the UI that we're ready to proxy?
 			select {}
 		}),

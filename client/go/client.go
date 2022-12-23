@@ -2,7 +2,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"sync"
 	"time"
@@ -89,7 +89,7 @@ func main() {
 		pTable = clientcore.NewWorkerTable(pfsms)
 		pRouter = clientcore.NewProducerPoolRouter(bus.Upstream, pTable)
 	default:
-		fmt.Printf("Invalid clientType '%v'\n", clientType)
+		log.Printf("Invalid clientType '%v'\n", clientType)
 		os.Exit(1)
 	}
 

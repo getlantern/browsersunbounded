@@ -2,7 +2,7 @@
 package clientcore
 
 import (
-	"fmt"
+	"log"
 	"runtime"
 	"sync"
 )
@@ -34,5 +34,5 @@ func (b *Broflake) stop() {
 }
 
 func (b *Broflake) debug() {
-	fmt.Printf("NumGoroutine: %v\n", runtime.NumGoroutine())
+	log.Printf("NumGoroutine: %v\n", runtime.NumGoroutine())
 }
