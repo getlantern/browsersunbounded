@@ -123,7 +123,7 @@ const Globe = () => {
 				}}
 			/>
 			<ToolTip
-				text={!!arc && `${arc.count} People from ${arc.country}`}
+				text={!!arc && `${arc.count} ${arc.count === 1 ? 'person' : 'people'} from ${arc.country}`}
 				show={!!arc}
 				container={container}
 			/>

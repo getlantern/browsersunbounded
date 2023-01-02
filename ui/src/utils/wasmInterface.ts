@@ -1,6 +1,5 @@
 import go from './goWasmExec'
 import wasmClient from './wasmBinding'
-import {mockGeo} from '../mocks/mockData'
 import {MockWasmInterface} from '../mocks/mockWasmInterface'
 import {StateEmitter} from '../hooks/useStateEmitter'
 
@@ -13,11 +12,7 @@ export interface Chunk {
 export interface Connection {
 	state: 1 | -1
 	workerIdx: number
-	loc: {
-		coords: number[]
-		country: string
-		count: number
-	}
+	addr: string
 }
 export interface Throughput {
 	bytesPerSec: number
@@ -110,7 +105,6 @@ class WasmInterface {
 	handleConnection = (e: { detail: Connection }) => {
 		const {detail: connection} = e
 		const {state, workerIdx} = connection
-		connection.loc = mockGeo[workerIdx] // mock location
 		const existingState = this.connectionMap[workerIdx]?.state || -1
 		if (existingState === -1 && state === 1) this.lifetimeConnections += 1
 		this.connectionMap = {
