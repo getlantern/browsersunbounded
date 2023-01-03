@@ -25,6 +25,7 @@ const Globe = () => {
 	const size = width < BREAKPOINT ? 250 : 400
 	const isSetup = useRef(false)
 	const [arc, setArc] = useState(null)
+	const count = arc ? arc.workerIdxArr.length : 0
 	const globe = useRef()
 	const container = useRef()
 	const {arcs, points} = useGeo()
@@ -123,7 +124,7 @@ const Globe = () => {
 				}}
 			/>
 			<ToolTip
-				text={!!arc && `${arc.count} ${arc.count === 1 ? 'person' : 'people'} from ${arc.country}`}
+				text={!!arc && `${count} ${count === 1 ? 'person' : 'people'} from ${arc.country}`}
 				show={!!arc}
 				container={container}
 			/>
