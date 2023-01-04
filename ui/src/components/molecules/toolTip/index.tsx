@@ -27,7 +27,7 @@ const ToolTip = ({text, show, container}: Props) => {
 			style={{
 				position: 'absolute',
 				top: pos.y - 10,
-				left: pos.x - 10
+				left: pos.x - 10,
 			}}
 			show={show}
 			aria-hidden={!show}

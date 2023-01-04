@@ -86,18 +86,29 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 
 ```html
 <broflake
-   data-layout="banner"     <!--string "banner" or "panel" layout-->
-   data-theme="dark"        <!--string "dark" or "light" theme-->
-   data-globe="true"        <!--boolean to include webgl globe-->
-   data-exit="true"         <!--boolean to include toast on exit intent-->
-   data-donate="true"       <!--boolean to include donate link-->
-   data-mobile-bg="false"   <!--boolean to run on mobile background-->
-   data-desktop-bg="true"   <!--boolean to run on desktop background-->
-   data-editor="false"      <!--boolean to include debug editor-->
-   style='width: 100%;'     <!--embed wrapper styles-->
+   data-layout="banner"
+   data-theme="dark"
+   data-globe="true"
+   data-exit="true"
+   data-donate="true"
+   data-mobile-bg="false"
+   data-desktop-bg="true"
+   data-editor="false"
+   style='width: 100%;'
 ></broflake>
 <script defer="defer" src="https://devblog.getlantern.org/broflake/static/js/main.js"></script>
 ```
+
+| Data-set  | Description                             |
+|-----------|-----------------------------------------|
+| layout    | string "banner" or "panel" layout       |
+| theme     | string "dark" or "light" theme          |
+| globe     | boolean to include webgl globe          |
+| exit      | boolean to include toast on exit intent |
+| donate    | boolean to include donate link          |
+| mobile-bg | boolean to run on mobile background     |
+| mobile-bg | boolean to run on desktop background    |
+| editor    | boolean to include debug dataset editor |
 
 [Github pages live demo](https://devblog.getlantern.org/broflake)
 
@@ -106,6 +117,7 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 2. Configure your .env file: `cp .env.example .env` 
    1. Set `REACT_APP_MOCK_DATA=false` to use the wasm widget as data source, or `true` to develop with mock "real-time" data.
    2. Set `REACT_APP_WIDGET_WASM_URL` to your intended hosted `widget.wasm` file. If you are serving it from `client` in [step #8](#arrow_forward-quickstart-for-devs), use [http://localhost:9000/widget.wasm](http://localhost:9000/widget.wasm). If you ran `./build_web.sh` ([step #7](#arrow_forward-quickstart-for-devs)) you can also use `/broflake/widget.wasm`. To config for prod point to a publicly hosted `widget.wasm` e.g. `https://devblog.getlantern.org/broflake/widget.wasm`. If you know you know, if not, you likely want to use `/broflake/widget.wasm`.
+   3. Set `REACT_APP_GEO_LOOKUP` to your intended geo lookup service. Most likely `https://geo.getiantem.org/lookup` or `http://localhost:<PORT>/lookup` if testing geo lookups locally
 
 3. Install the dependencies: `yarn`
 

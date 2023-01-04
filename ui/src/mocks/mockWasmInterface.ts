@@ -7,7 +7,7 @@ import {
 	sharingEmitter,
 	Throughput
 } from '../utils/wasmInterface'
-import {mockGeo, mockRandomInt} from './mockData'
+import {mockAddr, mockRandomInt} from './mockData'
 
 export class MockWasmInterface {
 	// raw data
@@ -28,7 +28,7 @@ export class MockWasmInterface {
 		this.lifetimeConnections = 0
 		this.chunks = []
 		this.connections = [...Array(5)].map((_, i) => (
-			{state: -1, loc: mockGeo[i], workerIdx: i}
+			{state: -1, addr: mockAddr[i], workerIdx: i}
 		))
 		this.tick = 0
 	}
@@ -53,7 +53,7 @@ export class MockWasmInterface {
 			if ((this.tick === 0 || this.tick % 10 === 0) && active.length !== 5) {
 				this.lifetimeConnections = this.lifetimeConnections += 1
 				this.connections = this.connections.map((_, i) => (
-					{state: i === active.length ? 1 : this.connections[i].state, loc: mockGeo[i], workerIdx: i}
+					{state: i === active.length ? 1 : this.connections[i].state, addr: mockAddr[i], workerIdx: i}
 				))
 				// emit state
 				connectionsEmitter.update(this.connections)

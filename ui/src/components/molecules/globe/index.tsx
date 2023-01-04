@@ -25,6 +25,7 @@ const Globe = () => {
 	const size = width < BREAKPOINT ? 250 : 400
 	const isSetup = useRef(false)
 	const [arc, setArc] = useState(null)
+	const count = arc ? arc.workerIdxArr.length : 0
 	const globe = useRef()
 	const container = useRef()
 	const {arcs, points} = useGeo()
@@ -38,7 +39,7 @@ const Globe = () => {
 				altitude: 2.5
 			}, 1000)
 		}
-	}, [arcs, sharing])
+	}, [sharing])
 
 	useEffect(() => {
 		const controls = globe.current.controls()
@@ -123,7 +124,7 @@ const Globe = () => {
 				}}
 			/>
 			<ToolTip
-				text={!!arc && `${arc.count} People from ${arc.country}`}
+				text={!!arc && `${count} ${count === 1 ? 'person' : 'people'} from ${arc.country.split(',')[0]}`}
 				show={!!arc}
 				container={container}
 			/>
