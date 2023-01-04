@@ -4,6 +4,8 @@ import {Connection, connectionsEmitter} from '../utils/wasmInterface'
 import {useEmitterState} from './useStateEmitter'
 import {countries} from "../utils/countries";
 
+type ISO = keyof typeof countries
+
 export interface Arch {
 	startLat: number
 	startLng: number
@@ -24,16 +26,25 @@ export interface GeoLookup {
 	workerIdx: number
 }
 
+const CENSORED_ISO_FALLBACK = 'IR'
+const UNCENSORED_ISO_FALLBACK = 'US'
+
+// this function is a fallback if geo lookup fails. It uses the navigator's language to determine the country
+const getCountryFromNavigator = (): ISO => {
+	const lang = navigator.language
+	return lang.split('-')?.[1] as ISO || UNCENSORED_ISO_FALLBACK
+}
+
 // a null ip results in a self lookup
-export const geoLookup = async (ip: string | null): Promise<string> => {
+export const geoLookup = async (ip: string | null): Promise<ISO> => {
 	const isSelf = ip === null
 	try {
 		const res = await fetch(`${process.env.REACT_APP_GEO_LOOKUP}/${isSelf ? '' : ip}`);
 		const data = await res.json()
 		return data.Country.IsoCode
 	} catch (e) {
-		console.warn('Geo lookup failed')
-		return isSelf ? 'US': 'IR'  // @todo locale fallback for isSelf geo
+		console.warn('Geo lookup failed, using fallback.')
+		return isSelf ? getCountryFromNavigator() : CENSORED_ISO_FALLBACK
 	}
 }
 
@@ -42,12 +53,12 @@ const geoLookupAll = async (connections: Connection[]): Promise<GeoLookup[]> => 
 	return res.flat().map((iso, index) => ({iso, workerIdx: connections[index].workerIdx}))
 }
 
-const createArcs = (geos: GeoLookup[], userIso: string ) => (
+const createArcs = (geos: GeoLookup[], userIso: ISO ) => (
 	geos.map(geo => {
 		const {workerIdx} = geo
 		const iso = geo.iso as keyof typeof countries
-		const country = countries[iso]
-		const userCountry = countries[userIso as keyof typeof countries]
+		const country = countries[iso] || countries[CENSORED_ISO_FALLBACK]
+		const userCountry = countries[userIso] || countries[UNCENSORED_ISO_FALLBACK]
 		return ({
 			startLng: userCountry.longitude,
 			startLat: userCountry.latitude,
@@ -83,7 +94,7 @@ const incrementArcs = (arcs: Arch[], geos: GeoLookup[]) => {
 export const useGeo = () => {
 	const [arcs, setArcs] = useState<Arch[]>([])
 	const activeArcs = useMemo(() => arcs.filter(a => a.workerIdxArr.length > 0), [arcs])
-	const country = useRef<string>()
+	const country = useRef<ISO>()
 	const connections = useEmitterState(connectionsEmitter)
 	const prevConnections = usePrevious(connections)
 

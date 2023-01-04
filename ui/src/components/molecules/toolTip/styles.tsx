@@ -2,6 +2,7 @@ import styled from 'styled-components'
 import {COLORS, SHADOWS} from '../../../constants'
 
 const Container = styled.div`
+  white-space: nowrap;
   background: ${COLORS.grey6};
   border-radius: 100px;
   box-shadow: ${SHADOWS.dark};
