@@ -39,7 +39,7 @@ const Globe = () => {
 				altitude: 2.5
 			}, 1000)
 		}
-	}, [arcs, sharing])
+	}, [sharing])
 
 	useEffect(() => {
 		const controls = globe.current.controls()

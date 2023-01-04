@@ -82,7 +82,7 @@ const incrementArcs = (arcs: Arch[], geos: GeoLookup[]) => {
 
 export const useGeo = () => {
 	const [arcs, setArcs] = useState<Arch[]>([])
-	const activeArcs = arcs.filter(a => a.workerIdxArr.length > 0)
+	const activeArcs = useMemo(() => arcs.filter(a => a.workerIdxArr.length > 0), [arcs])
 	const country = useRef<string>()
 	const connections = useEmitterState(connectionsEmitter)
 	const prevConnections = usePrevious(connections)
@@ -143,7 +143,7 @@ export const useGeo = () => {
 	}, [activeArcs])
 
 	return {
-		arcs: activeArcs,
+		arcs,
 		points
 	}
 }
