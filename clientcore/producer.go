@@ -26,11 +26,18 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// (no input data)
 			log.Printf("Producer state 0, constructing RTCPeerConnection...\n")
 
-			// TODO: STUN servers will eventually be provided in a more sophisticated way
+			STUNSrvs, err := options.STUNBatch(options.STUNBatchSize)
+			if err != nil {
+				log.Printf("Error creating STUN batch: %v\n", err)
+				return 0, []interface{}{}
+			}
+
+			log.Printf("Created STUN batch (%v/%v servers)\n", len(STUNSrvs), options.STUNBatchSize)
+
 			config := webrtc.Configuration{
 				ICEServers: []webrtc.ICEServer{
 					{
-						URLs: options.StunSrvs,
+						URLs: STUNSrvs,
 					},
 				},
 			}
