@@ -16,7 +16,7 @@ import (
 
 var (
 	webrtcOptions = &clientcore.WebRTCOptions{
-		DiscoverySrv:   "http://localhost:8000",
+		DiscoverySrv:   "http://localhost:8080",
 		Endpoint:       "/v1/signal",
 		GenesisAddr:    "genesis",
 		NATFailTimeout: 5 * time.Second,
