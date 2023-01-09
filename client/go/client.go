@@ -16,7 +16,7 @@ import (
 
 var (
 	webrtcOptions = &clientcore.WebRTCOptions{
-		DiscoverySrv:   "http://localhost:8080",
+		DiscoverySrv:   "https://broflake-freddie-xdy27ofj3a-ue.a.run.app",
 		Endpoint:       "/v1/signal",
 		GenesisAddr:    "genesis",
 		NATFailTimeout: 5 * time.Second,
@@ -49,11 +49,11 @@ var (
 
 			return batch, err
 		},
-		STUNBatchSize: 10,
+		STUNBatchSize: 5,
 	}
 
 	egressOptions = &clientcore.EgressOptions{
-		Addr:           "ws://localhost:8080",
+		Addr:           "wss://broflake-egress-xdy27ofj3a-ue.a.run.app",
 		Endpoint:       "/ws",
 		ConnectTimeout: 5 * time.Second,
 	}
