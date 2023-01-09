@@ -17,6 +17,7 @@ const (
 	consumerTTL = 20
 	msgTTL      = 5
 	bufferSz    = 16384
+	port        = 8000
 )
 
 var consumerTable = userTable{Data: make(map[string]chan string)}
@@ -168,7 +169,7 @@ func main() {
 	srv := &http.Server{
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
-		Addr:         ":8000",
+		Addr:         fmt.Sprintf(":%v", port),
 	}
 	http.HandleFunc("/v1/signal", handleSignal)
 	log.Printf("Discovery server listening on %v\n\n", srv.Addr)
