@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -17,7 +18,6 @@ const (
 	consumerTTL = 20
 	msgTTL      = 5
 	bufferSz    = 16384
-	port        = 8000
 )
 
 var consumerTable = userTable{Data: make(map[string]chan string)}
@@ -166,6 +166,11 @@ func enableCors(w *http.ResponseWriter) {
 }
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
+
 	srv := &http.Server{
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
