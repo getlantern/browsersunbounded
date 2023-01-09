@@ -13,7 +13,7 @@ client/dist/public/*.wasm
 # ui
 ui/node_modules
 ui/coverage
-# ui/build
+ui/build
 ui/yarn-debug.log*
 ui/yarn-error.log*
 ui/.env
