@@ -5,16 +5,21 @@ go 1.18
 require github.com/getlantern/broflake/common v0.0.0-00010101000000-000000000000
 
 require (
+	github.com/anacrolix/envpprof v1.2.1
 	github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819
 	github.com/getlantern/broflake/clientcore v0.0.0-00010101000000-000000000000
 	github.com/lucas-clemente/quic-go v0.31.1
 )
 
 require (
+	github.com/anacrolix/log v0.3.0 // indirect
+	github.com/anacrolix/missinggo v1.2.1 // indirect
+	github.com/bradfitz/iter v0.0.0-20190303215204-33e6a9893b0c // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
 	github.com/google/uuid v1.3.0 // indirect
+	github.com/huandu/xstrings v1.0.0 // indirect
 	github.com/klauspost/compress v1.10.3 // indirect
 	github.com/marten-seemann/qtls-go1-18 v0.1.3 // indirect
 	github.com/marten-seemann/qtls-go1-19 v0.1.1 // indirect

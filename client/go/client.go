@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/anacrolix/envpprof"
 	"github.com/getlantern/broflake/clientcore"
 )
 
@@ -87,6 +88,7 @@ var wgReady sync.WaitGroup
 // both widget and desktop can be compiled to native binary AND wasm.
 
 func main() {
+	defer envpprof.Stop()
 	switch clientType {
 	case "desktop":
 		// Desktop peers don't share connectivity for the MVP, so the consumer table only gets one
