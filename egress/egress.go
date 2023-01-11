@@ -29,6 +29,10 @@ import (
 var nClients uint64
 var nQUICStreams uint64
 
+// XXX part of a hack for testing
+// go build -ldflags="-X 'main.cfgSvrAuthToken=value'" or use env var CONFIG_SERVER_AUTH_TOKEN
+var cfgSvrAuthToken = ""
+
 // webSocketPacketConn wraps a websocket.Conn as a net.PacketConn
 type websocketPacketConn struct {
 	net.PacketConn
@@ -188,6 +192,17 @@ func main() {
 		},
 	)
 
+	// XXX this is a hack for testing ...
+	proxy.OnRequest(goproxy.DstHostIs("config.getiantem.org")).DoFunc(
+		func(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
+			log.Println("handling a request to config server, attaching headers...")
+			r.Header.Set("X-Lantern-Config-Auth-Token", cfgSvrAuthToken)
+			// XXX this is a lie inside a hack for testing ...
+			r.Header.Set("X-Lantern-Config-Client-Ip", "134.209.175.242")
+			return r, nil
+		},
+	)
+
 	proxy.OnResponse().DoFunc(
 		func(r *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
 			// TODO: log something interesting?
@@ -205,6 +220,11 @@ func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
+	}
+
+	// XXX part of a hack for testing ...
+	if auth := os.Getenv("CONFIG_SERVER_AUTH_TOKEN"); auth != "" {
+		cfgSvrAuthToken = auth
 	}
 
 	srv := &http.Server{
