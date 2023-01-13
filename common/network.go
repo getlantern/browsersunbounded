@@ -26,6 +26,7 @@ func (a DebugAddr) String() string {
 
 type QUICStreamNetConn struct {
 	quic.Stream
+	OnClose func()
 }
 
 func (c QUICStreamNetConn) LocalAddr() net.Addr {
@@ -34,6 +35,13 @@ func (c QUICStreamNetConn) LocalAddr() net.Addr {
 
 func (c QUICStreamNetConn) RemoteAddr() net.Addr {
 	return DebugAddr("DEBUG NELSON WUZ HERE")
+}
+
+func (c QUICStreamNetConn) Close() error {
+	if c.OnClose != nil {
+		c.OnClose()
+	}
+	return c.Stream.Close()
 }
 
 func IsPublicAddr(addr net.IP) bool {

@@ -22,12 +22,11 @@ import (
 	"nhooyr.io/websocket"
 )
 
-// TODO: WSS
-
 // TODO: rate limiters and fancy settings and such:
 // https://github.com/nhooyr/websocket/blob/master/examples/echo/server.go
 
 var nClients uint64
+var nQUICStreams uint64
 
 // webSocketPacketConn wraps a websocket.Conn as a net.PacketConn
 type websocketPacketConn struct {
@@ -156,7 +155,11 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 
-					l.connections <- common.QUICStreamNetConn{Stream: stream}
+					log.Printf("Accepted a new QUIC stream! (%v total)\n", atomic.AddUint64(&nQUICStreams, 1))
+
+					l.connections <- common.QUICStreamNetConn{Stream: stream, OnClose: func() {
+						defer log.Printf("Closed a QUIC stream! (%v total)\n", atomic.AddUint64(&nQUICStreams, ^uint64(0)))
+					}}
 				}
 			}()
 		}
