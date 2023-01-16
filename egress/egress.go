@@ -33,10 +33,6 @@ var nQUICStreams uint64
 // go build -ldflags="-X 'main.cfgSvrAuthToken=value'" or use env var CONFIG_SERVER_AUTH_TOKEN
 var cfgSvrAuthToken = ""
 
-// XXX part of a hack for testing
-// go build -ldflags="-X 'main.cfgSvrAuthToken=value'" or use env var CONFIG_SERVER_AUTH_TOKEN
-var cfgSvrAuthToken = ""
-
 // webSocketPacketConn wraps a websocket.Conn as a net.PacketConn
 type websocketPacketConn struct {
 	net.PacketConn
