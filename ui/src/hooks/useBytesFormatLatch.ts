@@ -3,10 +3,11 @@ import {useEffect, useState} from 'react'
 const factor = 1000 // 1024 for binary prefixes, 1000 for SI prefixes
 const sizes = ['bytes', 'kb', 'mb', 'gb', 'tb', 'pb', 'eb', 'zb', 'yb']
 // get size index from bytes
-export const getIndex = (bytes: number) => bytes <= 1 ? 0 : Math.floor(Math.log(bytes) / Math.log(factor))
+export const getIndex = (bytes: number) => bytes < 1 ? 0 : Math.floor(Math.log(bytes) / Math.log(factor))
 // format bytes to human-readable format
 export const formatBytes = (bytes: number, index = 0, decimals = 1) => {
-	if (bytes <= 1) return '0 bytes'
+	if (bytes < 1) return '0 bytes'
+	if (index > sizes.length - 1) index = sizes.length - 1 // max size "yb"
 	return parseFloat((bytes / Math.pow(factor, index)).toFixed(decimals)) + ' ' + sizes[index]
 }
 
