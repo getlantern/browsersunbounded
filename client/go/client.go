@@ -133,7 +133,11 @@ func main() {
 	ui.OnStartup()
 
 	if clientType == "desktop" {
-		runLocalProxy()
+		port := os.Getenv("PORT")
+		if port == "" {
+			port = "1080"
+		}
+		runLocalProxy(port)
 	}
 
 	select {}
