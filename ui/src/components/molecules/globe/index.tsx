@@ -14,10 +14,10 @@ import {BREAKPOINT, COLORS, UV_MAP_PATH_DARK, UV_MAP_PATH_LIGHT} from '../../../
 import Shadow from './shadow'
 import ToolTip from '../toolTip'
 import {useGeo} from '../../../hooks/useGeo'
-import {mockLoc} from '../../../mocks/mockData'
 import {Themes} from '../../../index'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
 import {sharingEmitter} from '../../../utils/wasmInterface'
+import {countries} from "../../../utils/countries";
 
 const Globe = () => {
 	const sharing = useEmitterState(sharingEmitter)
@@ -28,18 +28,23 @@ const Globe = () => {
 	const count = arc ? arc.workerIdxArr.length : 0
 	const globe = useRef()
 	const container = useRef()
-	const {arcs, points} = useGeo()
+	const {arcs, points, country} = useGeo()
 	const [altitude, setAltitude] = useState(14)
+	const lastAnimation = useRef(0)
 
 	useEffect(() => {
-		if (sharing) {
+		const now = Date.now()
+		if (sharing && country && (now - lastAnimation.current) > 5000) {
+			const userLoc = countries[country]
 			globe.current.pointOfView({
 				lat: 20, // equator
-				lng: mockLoc[0], // @todo use user loc
+				lng: points.length === 0 ? userLoc.longitude : points[points.length - 1].lng,
 				altitude: 2.5
 			}, 1000)
+			lastAnimation.current = now
 		}
-	}, [sharing])
+		// alert(points[points.length - 1])
+	}, [sharing, country, points])
 
 	useEffect(() => {
 		const controls = globe.current.controls()
@@ -55,7 +60,7 @@ const Globe = () => {
 		controls.autoRotate = true
 		controls.maxDistance = 1500
 		controls.minDistance = 300
-		controls.autoRotateSpeed = 1
+		controls.autoRotateSpeed = 1.5
 		const directionalLight = scene.children.find(obj3d => obj3d.type === 'DirectionalLight')
 		if (directionalLight) directionalLight.intensity = .25
 		const clonedLight = directionalLight.clone()
@@ -86,6 +91,7 @@ const Globe = () => {
 		<Container
 			ref={container}
 			size={size}
+			active={!!arc}
 		>
 			<Shadow
 				scale={1/(altitude/2)} // altitude is 2-14

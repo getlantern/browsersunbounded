@@ -93,7 +93,7 @@ const Lantern = () => (
 )
 
 const LogoWrapper = styled.div`
-  width: 167px;
+  width: 172px;
   height: 32px;
   display: flex;
   justify-content: flex-end;
@@ -172,9 +172,14 @@ const Logo = () => {
 	)
 }
 
-const Expand = () => {
+const Expand = ({carrot = false}: {carrot?: boolean}) => {
 	const {theme} = useContext(AppContext)
 	const color = theme === Themes.DARK ? COLORS.grey1 : COLORS.grey5
+	if (carrot) return (
+		<svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<path d="M10.59 7.40997L6 2.82997L1.41 7.40997L-1.23266e-07 5.99997L6 -2.61783e-05L12 5.99997L10.59 7.40997Z" fill={color} />
+		</svg>
+	)
 	return (
 		<svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 			<g clipPath="url(#clip0_954_13345)">
@@ -190,9 +195,15 @@ const Expand = () => {
 	)
 }
 
-const Collapse = () => {
+const Collapse = ({carrot = false}: {carrot?: boolean}) => {
 	const {theme} = useContext(AppContext)
 	const color = theme === Themes.DARK ? COLORS.grey1 : COLORS.grey5
+
+	if (carrot) return (
+		<svg width="12" height="9" viewBox="0 0 12 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<path d="M1.41 0.714294L6 5.29429L10.59 0.714294L12 2.12429L6 8.12429L0 2.12429L1.41 0.714294Z" fill={color}/>
+		</svg>
+	)
 	return (
 		<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 			<g clipPath="url(#clip0_954_13741)">

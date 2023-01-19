@@ -17,15 +17,16 @@ const StyledButton = styled.button`
 interface Props {
 	expanded: boolean
 	setExpanded: Dispatch<SetStateAction<boolean>>
+	carrot?: boolean
 }
-const ExpandCollapse = ({expanded, setExpanded}: Props) => {
+const ExpandCollapse = ({expanded, setExpanded, carrot = false}: Props) => {
 	return (
 		<StyledButton
 			aria-label={expanded ? 'collapse' : 'expand'}
 			onClick={() => setExpanded(!expanded)}
 		>
 			{
-				expanded ? <Collapse /> : <Expand />
+				expanded ? <Collapse carrot={carrot} /> : <Expand carrot={carrot} />
 			}
 		</StyledButton>
 	)

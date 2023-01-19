@@ -34,6 +34,7 @@ const Suspense = () => {
 	return (
 		<Container
 			size={size}
+			active={false}
 		>
 			{/*@todo globe loading ui*/}
 			<Loading
