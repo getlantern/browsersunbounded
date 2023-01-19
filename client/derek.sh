@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # The Derek Option
+# Usage: ./derek.sh 100
+# (spin up 100 censored peers)
 
 trap "kill 0" EXIT
 set -u
