@@ -5,7 +5,8 @@ import {StateEmitter} from './hooks/useStateEmitter'
 
 export enum Layouts {
 	'BANNER' = 'banner',
-	'PANEL' = 'panel'
+	'PANEL' = 'panel',
+	'FLOATING' = 'floating',
 }
 
 export enum Themes {
