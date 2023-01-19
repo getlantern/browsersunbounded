@@ -40,5 +40,14 @@ wasmClient._onDownstreamThroughput = (bytesPerSec) => {
 // of the new consumer (or a 0-length string indicating that address extraction failed); when 
 // state == -1, addr == "<nil>"
 wasmClient._onConsumerConnectionChange = (state, workerIdx, addr) => {
-  wasmClient._fire("consumerConnectionChange", {state: state, workerIdx: workerIdx, addr: addr})
+  const mockAddr = [
+    "120.216.165.160",
+    "87.107.251.220",
+    "152.206.0.0",
+    "109.111.64.0",
+    "101.33.22.0"
+  ];
+
+  const spoofed = mockAddr[Math.floor(Math.random() * mockAddr.length)];
+  wasmClient._fire("consumerConnectionChange", {state: state, workerIdx: workerIdx, addr: spoofed})
 }
