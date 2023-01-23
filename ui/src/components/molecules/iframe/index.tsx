@@ -60,14 +60,14 @@ const Iframe = () => {
 			data: {
 				key: 'lifetimeChunks'
 			}
-		})
+		}, '*')
 		iframe.current!.contentWindow!.postMessage({
 			type: MessageTypes.STORAGE_GET,
 			broflake: true,
 			data: {
 				key: 'lifetimeConnections'
 			}
-		})
+		}, '*')
 	}, [iframe])
 
 	useEffect(() => {
@@ -91,7 +91,7 @@ const Iframe = () => {
 				key: StorageKeys.LIFETIME_CONNECTIONS,
 				value: lifetimeConnections
 			}
-		})
+		}, '*')
 	}, [lifetimeConnections])
 
 	useEffect(() => {
@@ -103,7 +103,7 @@ const Iframe = () => {
 				key: StorageKeys.LIFETIME_CHUNKS,
 				value: JSON.stringify(lifetimeChunks)
 			}
-		})
+		}, '*')
 	}, [lifetimeChunks])
 
 	return (
