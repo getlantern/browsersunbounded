@@ -69,11 +69,6 @@ const (
 
 var bfconn *clientcore.BroflakeConn
 var ui = clientcore.UIImpl{}
-var bus = clientcore.NewIpcObserver(
-	busBufferSz,
-	clientcore.UpstreamUIHandler(ui),
-	clientcore.DownstreamUIHandler(ui),
-)
 var cTable *clientcore.WorkerTable
 var cRouter clientcore.TableRouter
 var pTable *clientcore.WorkerTable
@@ -87,6 +82,24 @@ var wgReady sync.WaitGroup
 // both widget and desktop can be compiled to native binary AND wasm.
 
 func main() {
+	netstated := os.Getenv("NETSTATED")
+	tag := os.Getenv("TAG")
+	proxyport := os.Getenv("PORT")
+	if proxyport == "" {
+		proxyport = "1080"
+	}
+
+	log.Printf("Welcome to Broflake\n")
+	log.Printf("type: %v, netstated: %v, tag: %v, proxyport: %v", clientType, netstated, tag, proxyport)
+
+	// TODO: bus construction has been separated from the rest of client construction because we need
+	// to wait until netstated and tag can be plucked from the environment, but we can prob make this cleaner
+	var bus = clientcore.NewIpcObserver(
+		busBufferSz,
+		clientcore.UpstreamUIHandler(ui, netstated, tag),
+		clientcore.DownstreamUIHandler(ui, netstated, tag),
+	)
+
 	switch clientType {
 	case "desktop":
 		// Desktop peers don't share connectivity for the MVP, so the consumer table only gets one
@@ -133,11 +146,7 @@ func main() {
 	ui.OnStartup()
 
 	if clientType == "desktop" {
-		port := os.Getenv("PORT")
-		if port == "" {
-			port = "1080"
-		}
-		runLocalProxy(port)
+		runLocalProxy(proxyport)
 	}
 
 	select {}

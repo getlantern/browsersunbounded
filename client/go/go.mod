@@ -11,6 +11,7 @@ require (
 )
 
 require (
+	github.com/getlantern/broflake/netstate/client v0.0.0-00010101000000-000000000000 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
@@ -48,3 +49,5 @@ require (
 replace github.com/getlantern/broflake/common => ../../common
 
 replace github.com/getlantern/broflake/clientcore => ../../clientcore
+
+replace github.com/getlantern/broflake/netstate/client => ../../netstate/client
