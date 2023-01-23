@@ -12,14 +12,11 @@ require (
 )
 
 require (
-	github.com/anacrolix/log v0.3.0 // indirect
-	github.com/anacrolix/missinggo v1.2.1 // indirect
-	github.com/bradfitz/iter v0.0.0-20190303215204-33e6a9893b0c // indirect
+	github.com/anacrolix/log v0.13.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	github.com/huandu/xstrings v1.0.0 // indirect
 	github.com/klauspost/compress v1.10.3 // indirect
 	github.com/marten-seemann/qtls-go1-18 v0.1.3 // indirect
 	github.com/marten-seemann/qtls-go1-19 v0.1.1 // indirect
