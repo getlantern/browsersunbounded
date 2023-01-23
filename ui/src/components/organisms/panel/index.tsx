@@ -10,7 +10,7 @@ import Control from '../../molecules/control'
 import Stats, {Connections} from '../../molecules/stats'
 import About from '../../molecules/about'
 import Footer from '../../molecules/footer'
-import {Logo} from '../../atoms/icons'
+import {LogoCenter} from '../../atoms/icons'
 import {ExpandCollapsePanel} from '../../atoms/expandCollapse'
 import {useLatch} from '../../../hooks/useLatch'
 
@@ -39,7 +39,7 @@ const Panel = ({settings}: Props) => {
 				<Body
 					mobile={width < BREAKPOINT}
 				>
-					<Logo/>
+					{ settings.branding && <LogoCenter /> }
 					{ !expanded && <About style={{padding: '24px 0'}} /> }
 					{
 						settings.globe && expanded && (

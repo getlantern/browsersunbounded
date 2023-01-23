@@ -62,7 +62,7 @@ class MockWasmClient {
 			await sleep(50)
 			wasmClient._fire('downstreamThroughput', {bytesPerSec: 0})
 		}
-		setTimeout(() => this.ready(), 2000)
+		this.ready()
 	}
 	ready = () => {
 		wasmClient._fire('ready', {})

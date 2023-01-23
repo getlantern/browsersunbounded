@@ -14,7 +14,6 @@ export const Header = styled.div`
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-	height: 32px;
   width: 100%;
 	a {
 		outline: none;

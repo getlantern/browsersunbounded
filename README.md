@@ -94,6 +94,7 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
    data-mobile-bg="false"
    data-desktop-bg="true"
    data-editor="false"
+   data-branding="true"
    style='width: 100%;'
 ></broflake>
 <script defer="defer" src="https://devblog.getlantern.org/broflake/static/js/main.js"></script>
@@ -109,6 +110,7 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 | mobile-bg | boolean to run on mobile background     |
 | mobile-bg | boolean to run on desktop background    |
 | editor    | boolean to include debug dataset editor |
+| branding  | boolean to include logos                |
 
 [Github pages live demo](https://devblog.getlantern.org/broflake)
 
