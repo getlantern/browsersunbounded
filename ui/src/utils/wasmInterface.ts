@@ -1,7 +1,9 @@
 import go from './goWasmExec'
 import wasmClient from './wasmBinding'
-import {MockWasmInterface} from '../mocks/mockWasmInterface'
 import {StateEmitter} from '../hooks/useStateEmitter'
+import mockWasmClient from '../mocks/mockWasmClient'
+
+const MOCK_CLIENT = process.env.REACT_APP_MOCK_DATA === 'true'
 
 type WebAssemblyInstance = InstanceType<typeof WebAssembly.Instance>
 
@@ -20,7 +22,9 @@ export interface Throughput {
 
 // create state emitters
 export const connectionsEmitter = new StateEmitter<Connection[]>([])
+export const averageThroughputEmitter = new StateEmitter<number>(0)
 export const lifetimeConnectionsEmitter = new StateEmitter<number>(0)
+export const lifetimeChunksEmitter = new StateEmitter<Chunk[]>([])
 export const readyEmitter = new StateEmitter<boolean>(false)
 export const sharingEmitter = new StateEmitter<boolean>(false)
 
@@ -29,31 +33,27 @@ class WasmInterface {
 	wasmClient: typeof wasmClient
 	instance: WebAssemblyInstance | undefined
 	// raw data
-	chunkMap: {[key: number]: Chunk}
 	connectionMap: {[key: number]: Connection}
 	throughput: Throughput
 	// smoothed and agg data
-	movingAverageThroughput: number
-	lifetimeConnections: number
-	chunks: Chunk[]
 	connections: Connection[]
 	// states
 	ready: boolean
 
 	constructor() {
 		this.ready = false
-		this.chunkMap = {}
 		this.connectionMap = {}
 		this.throughput = { bytesPerSec: 0 }
-		this.movingAverageThroughput = 0
-		this.lifetimeConnections = 0
-		this.chunks = []
 		this.connections = []
 		this.go = go
 		this.wasmClient = wasmClient
 	}
 
-	initialize = async (): Promise<WebAssemblyInstance> => {
+	initialize = async (mock = false): Promise<WebAssemblyInstance | undefined> => {
+		if (mock) {
+			await this.mockInitialize()
+			return // if mocking data, skip wasm init mock client does not return an instance
+		}
 		if (!this.instance) {
 			const res = await WebAssembly.instantiateStreaming(
 				fetch(process.env.REACT_APP_WIDGET_WASM_URL!), this.go.importObject
@@ -64,6 +64,12 @@ class WasmInterface {
 			this.ready = true
 		}
 		return this.instance
+	}
+
+	mockInitialize = async () => {
+		this.initListeners()
+		this.ready = true
+		mockWasmClient.ready()
 	}
 
 	start = () => {
@@ -87,26 +93,26 @@ class WasmInterface {
 
 	handleChunk = (e: { detail: Chunk }) => {
 		const {detail} = e
-		const size = this.chunkMap[detail.workerIdx]?.size | 0
-		this.chunkMap = {
-			...this.chunkMap,
-			[detail.workerIdx]: {...detail, size: detail.size + size}
-		}
-		this.chunks = this.idxMapToArr(this.chunkMap)
+		const chunks = [...lifetimeChunksEmitter.state, detail].reduce((acc: Chunk[], chunk) => {
+			const found = acc.find((c: Chunk) => c.workerIdx === chunk.workerIdx)
+			if (found) found.size += chunk.size
+			else acc.push(chunk)
+			return acc
+		}, [])
+		lifetimeChunksEmitter.update(chunks)
 	}
 
 	handleThroughput = (e: { detail: Throughput }) => {
 		const {detail} = e
 		this.throughput = detail
-		// calc moving average for time series smoothing
-		this.movingAverageThroughput = (this.movingAverageThroughput + detail.bytesPerSec) / 2
+		// calc moving average for time series smoothing and emit state
+		averageThroughputEmitter.update((averageThroughputEmitter.state + detail.bytesPerSec) / 2)
 	}
 
 	handleConnection = (e: { detail: Connection }) => {
 		const {detail: connection} = e
 		const {state, workerIdx} = connection
 		const existingState = this.connectionMap[workerIdx]?.state || -1
-		if (existingState === -1 && state === 1) this.lifetimeConnections += 1
 		this.connectionMap = {
 			...this.connectionMap,
 			[workerIdx]: connection
@@ -114,7 +120,9 @@ class WasmInterface {
 		this.connections = this.idxMapToArr(this.connectionMap)
 		// emit state
 		connectionsEmitter.update(this.connections)
-		lifetimeConnectionsEmitter.update(this.lifetimeConnections)
+		if (existingState === -1 && state === 1) {
+			lifetimeConnectionsEmitter.update(lifetimeConnectionsEmitter.state + 1)
+		}
 	}
 
 	handleReady = () => {
@@ -136,5 +144,6 @@ class WasmInterface {
 	}
 }
 
-export const wasmInterface = process.env.REACT_APP_MOCK_DATA === 'true' ? new MockWasmInterface() : new WasmInterface()
-wasmInterface.initialize().then(() => console.log('p2p wasm initialized!'))
+export const wasmInterface = new WasmInterface()
+
+wasmInterface.initialize(MOCK_CLIENT).then(() => console.log('p2p wasm initialized!'))

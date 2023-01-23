@@ -10,6 +10,7 @@ import {sharingEmitter, wasmInterface} from './utils/wasmInterface'
 import {isMobile} from './utils/isMobile'
 import Editor from './components/organisms/editor'
 import Floating from "./components/organisms/floating";
+import Iframe from './components/molecules/iframe'
 
 interface Props {
   appId: number
@@ -43,6 +44,7 @@ const App = ({appId, embed}: Props) => {
 
   return (
     <>
+      <Iframe />
       { settings.editor && <Editor settings={settings} embed={embed} /> }
       <Layout
         theme={settings.theme}
