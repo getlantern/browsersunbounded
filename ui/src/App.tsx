@@ -9,6 +9,7 @@ import {useEmitterState} from './hooks/useStateEmitter'
 import {sharingEmitter, wasmInterface} from './utils/wasmInterface'
 import {isMobile} from './utils/isMobile'
 import Editor from './components/organisms/editor'
+import Floating from "./components/organisms/floating";
 
 interface Props {
   appId: number
@@ -57,6 +58,11 @@ const App = ({appId, embed}: Props) => {
           <Panel
             settings={settings}
           />
+        )}
+        { settings.layout === Layouts.FLOATING && (
+            <Floating
+                settings={settings}
+            />
         )}
       </Layout>
     </>

@@ -154,7 +154,8 @@ export const useGeo = () => {
 	}, [activeArcs])
 
 	return {
-		arcs,
-		points
+		arcs: activeArcs,
+		points,
+		country: country.current
 	}
 }

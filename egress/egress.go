@@ -18,16 +18,16 @@ import (
 
 	"github.com/elazarl/goproxy"
 	"github.com/getlantern/broflake/common"
+	"github.com/google/uuid"
 	"github.com/lucas-clemente/quic-go"
 	"nhooyr.io/websocket"
 )
-
-// TODO: WSS
 
 // TODO: rate limiters and fancy settings and such:
 // https://github.com/nhooyr/websocket/blob/master/examples/echo/server.go
 
 var nClients uint64
+var nQUICStreams uint64
 
 // webSocketPacketConn wraps a websocket.Conn as a net.PacketConn
 type websocketPacketConn struct {
@@ -48,8 +48,7 @@ func (q websocketPacketConn) WriteTo(p []byte, addr net.Addr) (n int, err error)
 }
 
 func (q websocketPacketConn) Close() error {
-	nClientsNow := atomic.AddUint64(&nClients, ^uint64(0))
-	defer log.Printf("Closed a WebSocket connection! (%v total)\n", nClientsNow)
+	defer log.Printf("Closed a WebSocket connection! (%v total)\n", atomic.AddUint64(&nClients, ^uint64(0)))
 	return q.w.Close(websocket.StatusNormalClosure, "")
 }
 
@@ -110,57 +109,58 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
+	wspconn := websocketPacketConn{
+		w:    c,
+		addr: common.DebugAddr(fmt.Sprintf("WebSocket connection %v", uuid.NewString())),
+	}
+
+	defer wspconn.Close()
+
 	if err != nil {
 		// TODO: this is the idiom for our WebSocket library, but we should log the err better
 		log.Println(err)
 		return
 	}
 
-	nClientsNow := atomic.AddUint64(&nClients, 1)
-	log.Printf("Accepted a new WebSocket connection! (%v total)\n", nClientsNow)
-
-	wspconn := websocketPacketConn{
-		w:    c,
-		addr: common.DebugAddr(fmt.Sprintf("WebSocket connection #%v", nClientsNow)),
-	}
+	log.Printf("Accepted a new WebSocket connection! (%v total)\n", atomic.AddUint64(&nClients, 1))
 
 	listener, err := quic.Listen(wspconn, l.tlsConfig, &common.QUICCfg)
 	if err != nil {
 		log.Printf("Error creating QUIC listener: %v\n", err)
-		wspconn.Close()
 		return
 	}
 
-	go func() {
-		for {
-			conn, err := listener.Accept(context.Background())
-			if err != nil {
-				log.Printf("%v QUIC listener error (%v), closing!\n", wspconn.addr, err)
-				listener.Close()
-				defer wspconn.Close()
-				return
-			}
-
-			log.Printf("%v accepted a new QUIC connection!\n", wspconn.addr)
-
-			go func() {
-				for {
-					stream, err := conn.AcceptStream(context.Background())
-
-					if err != nil {
-						// TODO: we interpret an error here as catastrophic failure and we close the QUIC
-						// connection, leaving the underlying WebSocket connection open for a new connection.
-						errString := fmt.Sprintf("%v stream error (%v), closing QUIC connection!", wspconn.addr, err)
-						log.Printf("%v\n", errString)
-						conn.CloseWithError(quic.ApplicationErrorCode(42069), errString)
-						return
-					}
-
-					l.connections <- common.QUICStreamNetConn{Stream: stream}
-				}
-			}()
+	for {
+		conn, err := listener.Accept(context.Background())
+		if err != nil {
+			log.Printf("%v QUIC listener error (%v), closing!\n", wspconn.addr, err)
+			listener.Close()
+			break
 		}
-	}()
+
+		log.Printf("%v accepted a new QUIC connection!\n", wspconn.addr)
+
+		go func() {
+			for {
+				stream, err := conn.AcceptStream(context.Background())
+
+				if err != nil {
+					// We interpret an error while accepting a stream to indicate an unrecoverable error with
+					// the QUIC connection, and so we close the QUIC connection altogether
+					errString := fmt.Sprintf("%v stream error (%v), closing QUIC connection!", wspconn.addr, err)
+					log.Printf("%v\n", errString)
+					conn.CloseWithError(quic.ApplicationErrorCode(42069), errString)
+					return
+				}
+
+				log.Printf("Accepted a new QUIC stream! (%v total)\n", atomic.AddUint64(&nQUICStreams, 1))
+
+				l.connections <- common.QUICStreamNetConn{Stream: stream, OnClose: func() {
+					defer log.Printf("Closed a QUIC stream! (%v total)\n", atomic.AddUint64(&nQUICStreams, ^uint64(0)))
+				}}
+			}
+		}()
+	}
 }
 
 func main() {

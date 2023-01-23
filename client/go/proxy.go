@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -16,7 +17,7 @@ import (
 )
 
 const (
-	addr = "127.0.0.1:1080"
+	ip = "127.0.0.1"
 )
 
 type QUICGoproxyRoundTripper struct {
@@ -52,7 +53,7 @@ func newQUICGoproxyRoundTripper() *QUICGoproxyRoundTripper {
 	return &q
 }
 
-func runLocalProxy() {
+func runLocalProxy(port string) {
 	// TODO: this is just to prevent a race with client boot processes, it's not worth getting too
 	// fancy with an event-driven solution because the local proxy is all mocked functionality anyway
 	<-time.After(2 * time.Second)
@@ -76,6 +77,8 @@ func runLocalProxy() {
 			return r, nil
 		},
 	)
+
+	addr := fmt.Sprintf("%v:%v", ip, port)
 
 	go func() {
 		log.Printf("Starting HTTP CONNECT proxy on %v...\n", addr)

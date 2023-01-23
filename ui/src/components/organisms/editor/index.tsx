@@ -44,6 +44,18 @@ const Editor = ({settings, embed}: Props) => {
 					/>
 					<label htmlFor={Layouts.PANEL}>Panel</label>
 				</div>
+
+				<div>
+					<input
+						type="radio"
+						id={Layouts.FLOATING}
+						name="layout"
+						value={Layouts.FLOATING}
+						checked={state.layout === Layouts.FLOATING}
+						onChange={() => setState({...state, layout: Layouts.FLOATING})}
+					/>
+					<label htmlFor={Layouts.FLOATING}>Floating</label>
+				</div>
 			</fieldset>
 			<fieldset>
 				<legend>Theme</legend>
