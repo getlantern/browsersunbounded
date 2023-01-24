@@ -12,6 +12,7 @@ type WebRTCOptions struct {
 	ICEFailTimeout time.Duration
 	STUNBatch      func(size uint32) (batch []string, err error)
 	STUNBatchSize  uint32
+	Tag            string
 }
 
 type EgressOptions struct {

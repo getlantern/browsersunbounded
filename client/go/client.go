@@ -1,4 +1,4 @@
-// client.go is the main entry point for all the client variants
+// client.go is the main entry point for all client types
 package main
 
 import (
@@ -14,8 +14,50 @@ import (
 	"github.com/getlantern/broflake/clientcore"
 )
 
+// Two client types are supported: 'desktop' and 'widget'. Informally, widget is a "free" peer and
+// desktop is a "censored" peer. Clients share ~90% common internal architecture; the notable
+// difference which defines client types is the flavor of workerFSMs and tableRouters selected to
+// manage their worker tables. The notion of client type is decoupled from build target -- that is,
+// both widget and desktop can be compiled to native binary AND wasm.
+
 var (
-	webrtcOptions = &clientcore.WebRTCOptions{
+	clientType = "desktop"
+)
+
+const (
+	cTableSize  = 5
+	pTableSize  = 5
+	busBufferSz = 4096
+)
+
+var bfconn *clientcore.BroflakeConn
+var ui = clientcore.UIImpl{}
+var cTable *clientcore.WorkerTable
+var cRouter clientcore.TableRouter
+var pTable *clientcore.WorkerTable
+var pRouter clientcore.TableRouter
+var wgReady sync.WaitGroup
+
+func main() {
+	netstated := os.Getenv("NETSTATED")
+	tag := os.Getenv("TAG")
+	proxyport := os.Getenv("PORT")
+	if proxyport == "" {
+		proxyport = "1080"
+	}
+
+	log.Printf("Welcome to Broflake\n")
+	log.Printf("type: %v, netstated: %v, tag: %v, proxyport: %v", clientType, netstated, tag, proxyport)
+
+	// TODO: bus construction has been separated from the rest of client construction because we need
+	// to wait until netstated and tag can be plucked from the environment, but we can prob make this cleaner
+	var bus = clientcore.NewIpcObserver(
+		busBufferSz,
+		clientcore.UpstreamUIHandler(ui, netstated, tag),
+		clientcore.DownstreamUIHandler(ui, netstated, tag),
+	)
+
+	webrtcOptions := &clientcore.WebRTCOptions{
 		DiscoverySrv:   "https://broflake-freddie-xdy27ofj3a-ue.a.run.app",
 		Endpoint:       "/v1/signal",
 		GenesisAddr:    "genesis",
@@ -50,55 +92,14 @@ var (
 			return batch, err
 		},
 		STUNBatchSize: 5,
+		Tag:           tag,
 	}
 
-	egressOptions = &clientcore.EgressOptions{
+	egressOptions := &clientcore.EgressOptions{
 		Addr:           "wss://broflake-egress-xdy27ofj3a-ue.a.run.app",
 		Endpoint:       "/ws",
 		ConnectTimeout: 5 * time.Second,
 	}
-
-	clientType = "desktop"
-)
-
-const (
-	cTableSize  = 5
-	pTableSize  = 5
-	busBufferSz = 4096
-)
-
-var bfconn *clientcore.BroflakeConn
-var ui = clientcore.UIImpl{}
-var cTable *clientcore.WorkerTable
-var cRouter clientcore.TableRouter
-var pTable *clientcore.WorkerTable
-var pRouter clientcore.TableRouter
-var wgReady sync.WaitGroup
-
-// Two client types are supported: 'desktop' and 'widget'. Informally, widget is a "free" peer and
-// desktop is a "censored" peer. Clients share ~90% common internal architecture; the notable
-// difference which defines client types is the flavor of workerFSMs and tableRouters selected to
-// manage their worker tables. The notion of client type is decoupled from build target -- that is,
-// both widget and desktop can be compiled to native binary AND wasm.
-
-func main() {
-	netstated := os.Getenv("NETSTATED")
-	tag := os.Getenv("TAG")
-	proxyport := os.Getenv("PORT")
-	if proxyport == "" {
-		proxyport = "1080"
-	}
-
-	log.Printf("Welcome to Broflake\n")
-	log.Printf("type: %v, netstated: %v, tag: %v, proxyport: %v", clientType, netstated, tag, proxyport)
-
-	// TODO: bus construction has been separated from the rest of client construction because we need
-	// to wait until netstated and tag can be plucked from the environment, but we can prob make this cleaner
-	var bus = clientcore.NewIpcObserver(
-		busBufferSz,
-		clientcore.UpstreamUIHandler(ui, netstated, tag),
-		clientcore.DownstreamUIHandler(ui, netstated, tag),
-	)
 
 	switch clientType {
 	case "desktop":

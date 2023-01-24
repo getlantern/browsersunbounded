@@ -70,6 +70,8 @@ func UpstreamUIHandler(ui UIImpl, netstated, tag string) func(msg IPCMsg) {
 			if ci.Nil() {
 				state = -1
 			}
+
+			// TODO: surface the rest of the ConsumerInfo fields to the UI?
 			ui.OnConsumerConnectionChange(state, int(msg.Wid), ci.Addr)
 
 			if netstated != "" {
@@ -77,7 +79,7 @@ func UpstreamUIHandler(ui UIImpl, netstated, tag string) func(msg IPCMsg) {
 					netstated,
 					&netstatecl.Instruction{
 						Op:   netstatecl.OpConsumerConnectionChange,
-						Args: []string{strconv.Itoa(state), strconv.Itoa(int(msg.Wid)), ci.Addr.String()},
+						Args: []string{strconv.Itoa(state), strconv.Itoa(int(msg.Wid)), ci.Addr.String(), ci.Tag},
 						Tag:  tag,
 					},
 				)
