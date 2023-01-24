@@ -121,7 +121,7 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
    1. Set `REACT_APP_MOCK_DATA=false` to use the wasm widget as data source, or `true` to develop with mock "real-time" data.
    2. Set `REACT_APP_WIDGET_WASM_URL` to your intended hosted `widget.wasm` file. If you are serving it from `client` in [step #8](#arrow_forward-quickstart-for-devs), use [http://localhost:9000/widget.wasm](http://localhost:9000/widget.wasm). If you ran `./build_web.sh` ([step #7](#arrow_forward-quickstart-for-devs)) you can also use `/widget.wasm`. To config for prod point to a publicly hosted `widget.wasm` e.g. `https://embed.lantern.io/widget.wasm`. If you know you know, if not, you likely want to use `/widget.wasm`.
    3. Set `REACT_APP_GEO_LOOKUP` to your intended geo lookup service. Most likely `https://geo.getiantem.org/lookup` or `http://localhost:<PORT>/lookup` if testing geo lookups locally
-   4. Set `REACT_APP_IFRAME_URL` to your intended iframe html for local storage of widget state and analytics. Most likely `https://embed.lantern.io/iframe.html` or `/iframe.html` if testing locally
+   4. Set `REACT_APP_IFRAME_SRC` to your intended iframe html for local storage of widget state and analytics. Most likely `https://embed.lantern.io/iframe.html` or `/iframe.html` if testing locally
 
 3. Install the dependencies: `yarn`
 
