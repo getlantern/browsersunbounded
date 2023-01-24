@@ -56,16 +56,16 @@ const Iframe = () => {
 	const onLoad = useCallback(() => {
 		iframe.current?.contentWindow?.postMessage({
 			type: MessageTypes.STORAGE_GET,
-			lanternNetwork: true,
+			[SIGNATURE]: true,
 			data: {
-				key: 'lifetimeChunks'
+				key: StorageKeys.LIFETIME_CHUNKS
 			}
 		}, '*')
 		iframe.current?.contentWindow?.postMessage({
 			type: MessageTypes.STORAGE_GET,
-			lanternNetwork: true,
+			[SIGNATURE]: true,
 			data: {
-				key: 'lifetimeConnections'
+				key: StorageKeys.LIFETIME_CONNECTIONS
 			}
 		}, '*')
 	}, [iframe])
