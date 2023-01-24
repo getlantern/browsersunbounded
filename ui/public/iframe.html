@@ -7,7 +7,7 @@
     <meta http-equiv='expires' content='0'>
     <meta http-equiv='pragma' content='no-cache'>
     <title>p2p web proxy</title>
-    <script defer data-domain="devblog.getlantern.org" src="https://plausible.io/js/script.js"></script>
+    <script defer data-domain="network.lantern.io" src="https://plausible.io/js/script.js"></script>
     <script>
         window.addEventListener('message', function (event) {
             var message = event.data
@@ -16,7 +16,7 @@
                 case 'storageGet':
                     window.parent.postMessage({
                         type: 'storageGet',
-                        broflake: true,
+                        lanternNetwork: true,
                         data: {
                             [message.data.key]: localStorage.getItem(message.data.key),
                         }
