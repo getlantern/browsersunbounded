@@ -11,12 +11,13 @@
     <script>
         window.addEventListener('message', function (event) {
             var message = event.data
-            if (typeof message !== 'object' || message === null || !message.hasOwnProperty('lanternNetwork')) return
+            var signature = 'lanternNetwork'
+            if (typeof message !== 'object' || message === null || !message.hasOwnProperty(signature)) return
             switch (message.type) {
                 case 'storageGet':
                     window.parent.postMessage({
                         type: 'storageGet',
-                        lanternNetwork: true,
+                        [signature]: true,
                         data: {
                             [message.data.key]: localStorage.getItem(message.data.key),
                         }
