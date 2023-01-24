@@ -110,6 +110,11 @@ const Banner = ({settings}: Props) => {
 								)
 							}
 							<Col>
+								<div
+									style={{marginBottom: 24}}
+								>
+									<About/>
+								</div>
 								<Row
 									borderTop
 									borderBottom
@@ -119,12 +124,7 @@ const Banner = ({settings}: Props) => {
 								</Row>
 								<Stats/>
 								<div
-									style={{margin: '24px 0'}}
-								>
-									<About/>
-								</div>
-								<div
-									style={{paddingLeft: 8, paddingRight: 8}}
+									style={{paddingLeft: 8, paddingRight: 8, marginTop: 24}}
 								>
 									<Footer
 										social={true}

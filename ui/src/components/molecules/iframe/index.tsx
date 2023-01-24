@@ -54,14 +54,14 @@ const Iframe = () => {
 	}, [])
 
 	const onLoad = useCallback(() => {
-		iframe.current!.contentWindow!.postMessage({
+		iframe.current?.contentWindow?.postMessage({
 			type: MessageTypes.STORAGE_GET,
 			broflake: true,
 			data: {
 				key: 'lifetimeChunks'
 			}
 		}, '*')
-		iframe.current!.contentWindow!.postMessage({
+		iframe.current?.contentWindow?.postMessage({
 			type: MessageTypes.STORAGE_GET,
 			broflake: true,
 			data: {
@@ -84,7 +84,7 @@ const Iframe = () => {
 
 	useEffect(() => {
 		if (!iframe.current || !synced.current?.[StorageKeys.LIFETIME_CONNECTIONS]) return
-		iframe.current.contentWindow!.postMessage({
+		iframe.current.contentWindow?.postMessage({
 			type: MessageTypes.STORAGE_SET,
 			[SIGNATURE]: true,
 			data: {
@@ -96,7 +96,7 @@ const Iframe = () => {
 
 	useEffect(() => {
 		if (!iframe.current || !synced.current?.[StorageKeys.LIFETIME_CHUNKS]) return
-		iframe.current.contentWindow!.postMessage({
+		iframe.current.contentWindow?.postMessage({
 			type: MessageTypes.STORAGE_SET,
 			[SIGNATURE]: true,
 			data: {
