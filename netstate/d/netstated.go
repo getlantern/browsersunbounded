@@ -80,7 +80,31 @@ func (g *multigraph) delEdge(v vertex, id string) {
 	}
 }
 
+// Encode this multigraph using Graphviz syntax using the 'neato' layout
+func (g *multigraph) toGraphvizNeato() string {
+	gv := "graph G {\n"
+	gv += "\tlayout=neato\n"
+	gv += "\toverlap=false\n"
+	gv += "\tsep=\"+20\"\n"
+
+	for vertex, edges := range g.data {
+		for _, e := range edges {
+			gv += fmt.Sprintf("\t\"%v\" -- \"%v\";\n", vertex, e.label)
+		}
+	}
+
+	gv += "}\n"
+	return gv
+}
+
 var world multigraph
+
+func handleRoot(w http.ResponseWriter, r *http.Request) {
+	g := world.toGraphvizNeato()
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(g))
+}
 
 func handleExec(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
@@ -98,6 +122,7 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: This switch is the interpreter, we could extract it into a function
 	switch inst.Op {
 	case netstatecl.OpConsumerConnectionChange:
 		state, workerIdx, addr, remoteTag := inst.Args[0], inst.Args[1], inst.Args[2], inst.Args[3]
@@ -119,10 +144,6 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func reset() {
-	// TODO: write me
-}
-
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -136,6 +157,7 @@ func main() {
 		WriteTimeout: 30 * time.Second,
 		Addr:         fmt.Sprintf(":%v", port),
 	}
+	http.HandleFunc("/", handleRoot)
 	http.HandleFunc("/exec", handleExec)
 	log.Printf("netstated listening on %v\n\n", srv.Addr)
 	err := srv.ListenAndServe()
