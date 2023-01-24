@@ -18,7 +18,7 @@ enum MessageTypes {
 	STORAGE_SET = 'storageSet',
 }
 
-const SIGNATURE = 'broflake'
+const SIGNATURE = 'lanternNetwork'
 
 const Iframe = () => {
 	const synced = useRef({[StorageKeys.LIFETIME_CONNECTIONS]: false, [StorageKeys.LIFETIME_CHUNKS]: false})
@@ -56,14 +56,14 @@ const Iframe = () => {
 	const onLoad = useCallback(() => {
 		iframe.current?.contentWindow?.postMessage({
 			type: MessageTypes.STORAGE_GET,
-			broflake: true,
+			lanternNetwork: true,
 			data: {
 				key: 'lifetimeChunks'
 			}
 		}, '*')
 		iframe.current?.contentWindow?.postMessage({
 			type: MessageTypes.STORAGE_GET,
-			broflake: true,
+			lanternNetwork: true,
 			data: {
 				key: 'lifetimeConnections'
 			}

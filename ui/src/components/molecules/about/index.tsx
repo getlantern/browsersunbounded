@@ -10,7 +10,7 @@ interface Props {
 
 const About = ({style = {}}: Props) => {
 	const {theme} = useContext(AppContext)
-	const color = theme === Themes.DARK ? COLORS.grey2 : COLORS.grey
+	const color = theme === Themes.DARK ? COLORS.grey2 : COLORS.blue5
 	const brand = theme === Themes.DARK ? COLORS.altBrand : COLORS.brand
 	return(
 		<Text

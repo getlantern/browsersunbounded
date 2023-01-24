@@ -97,7 +97,7 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
    data-branding="true"
    style='width: 100%;'
 ></broflake>
-<script defer="defer" src="https://devblog.getlantern.org/broflake/static/js/main.js"></script>
+<script defer="defer" src="https://embed.lantern.io/static/js/main.js"></script>
 ```
 
 | Data-set  | Description                             |
@@ -112,13 +112,13 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 | editor    | boolean to include debug dataset editor |
 | branding  | boolean to include logos                |
 
-[Github pages live demo](https://devblog.getlantern.org/broflake)
+[Github pages live demo](https://embed.lantern.io)
 
 1. Work from the ui dir: `cd ui`
 
 2. Configure your .env file: `cp .env.example .env` 
    1. Set `REACT_APP_MOCK_DATA=false` to use the wasm widget as data source, or `true` to develop with mock "real-time" data.
-   2. Set `REACT_APP_WIDGET_WASM_URL` to your intended hosted `widget.wasm` file. If you are serving it from `client` in [step #8](#arrow_forward-quickstart-for-devs), use [http://localhost:9000/widget.wasm](http://localhost:9000/widget.wasm). If you ran `./build_web.sh` ([step #7](#arrow_forward-quickstart-for-devs)) you can also use `/broflake/widget.wasm`. To config for prod point to a publicly hosted `widget.wasm` e.g. `https://devblog.getlantern.org/broflake/widget.wasm`. If you know you know, if not, you likely want to use `/broflake/widget.wasm`.
+   2. Set `REACT_APP_WIDGET_WASM_URL` to your intended hosted `widget.wasm` file. If you are serving it from `client` in [step #8](#arrow_forward-quickstart-for-devs), use [http://localhost:9000/widget.wasm](http://localhost:9000/widget.wasm). If you ran `./build_web.sh` ([step #7](#arrow_forward-quickstart-for-devs)) you can also use `/widget.wasm`. To config for prod point to a publicly hosted `widget.wasm` e.g. `https://embed.lantern.io/widget.wasm`. If you know you know, if not, you likely want to use `/broflake/widget.wasm`.
    3. Set `REACT_APP_GEO_LOOKUP` to your intended geo lookup service. Most likely `https://geo.getiantem.org/lookup` or `http://localhost:<PORT>/lookup` if testing geo lookups locally
 
 3. Install the dependencies: `yarn`
