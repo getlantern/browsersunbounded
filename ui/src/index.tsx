@@ -90,7 +90,7 @@ const init = (embeds: NodeListOf<HTMLElement>) => {
 	})
 }
 
-const getEmbeds = () => document.querySelectorAll('broflake') as NodeListOf<HTMLElement>
+const getEmbeds = () => document.querySelectorAll('lantern-network') as NodeListOf<HTMLElement>
 
 // try to load embeds immediately
 const embeds = getEmbeds()
