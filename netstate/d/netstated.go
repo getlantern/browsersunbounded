@@ -80,7 +80,7 @@ func (g *multigraph) delEdge(v vertex, id string) {
 	}
 }
 
-// Encode this multigraph using Graphviz syntax using the 'neato' layout
+// Encode this multigraph as a Graphviz graph using the 'neato' layout
 func (g *multigraph) toGraphvizNeato() string {
 	gv := "graph G {\n"
 	gv += "\tlayout=neato\n"
@@ -99,13 +99,16 @@ func (g *multigraph) toGraphvizNeato() string {
 
 var world multigraph
 
-func handleRoot(w http.ResponseWriter, r *http.Request) {
+// GET /neato
+// Fetch a Graphviz encoded representation of the global network topology, 'neato' layout
+func handleNeato(w http.ResponseWriter, r *http.Request) {
 	g := world.toGraphvizNeato()
-
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(g))
 }
 
+// POST /exec
+// Execute a state change
 func handleExec(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -157,8 +160,9 @@ func main() {
 		WriteTimeout: 30 * time.Second,
 		Addr:         fmt.Sprintf(":%v", port),
 	}
-	http.HandleFunc("/", handleRoot)
+	http.Handle("/", http.FileServer(http.Dir("./webclients/gv/public")))
 	http.HandleFunc("/exec", handleExec)
+	http.HandleFunc("/neato", handleNeato)
 	log.Printf("netstated listening on %v\n\n", srv.Addr)
 	err := srv.ListenAndServe()
 	if err != nil {
