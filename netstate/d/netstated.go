@@ -15,6 +15,8 @@ import (
 
 type vertex string
 
+// Parallel edges possess the same label but must have different IDs
+// don't create multiple edges of vertex v with the same ID!
 type edge struct {
 	label vertex
 	id    string
@@ -48,16 +50,14 @@ func (g *multigraph) delVertex(v vertex) {
 	delete(g.data, v)
 }
 
-// Get the degree of vertex v
-// TODO: this is unsafe
+// Get the degree of vertex v, returns 0 if v does not exist
 func (g *multigraph) degree(v vertex) int {
 	g.RLock()
 	defer g.RUnlock()
 	return len(g.data[v])
 }
 
-// Add an edge
-// TODO: this is safe, but inefficient
+// Add an edge e to vertex v, if v does not exist it will be created
 func (g *multigraph) addEdge(v vertex, e edge) {
 	g.addVertex(v)
 	g.Lock()
@@ -65,11 +65,14 @@ func (g *multigraph) addEdge(v vertex, e edge) {
 	g.data[v] = append(g.data[v], e)
 }
 
-// Delete an instance of a potentially parallel edge by id
-// TODO: this is unsafe
+// Delete a single instance of a potentially parallel edge of vertex v by ID
 func (g *multigraph) delEdge(v vertex, id string) {
 	g.Lock()
 	defer g.Unlock()
+
+	if _, ok := g.data[v]; !ok {
+		return
+	}
 
 	for i, ee := range g.data[v] {
 		if ee.id == id {
