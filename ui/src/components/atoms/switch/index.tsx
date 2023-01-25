@@ -20,8 +20,9 @@ const Switch = ({onToggle, checked, disabled}: Props) => {
 						onToggle(e.currentTarget.checked)
 					}
 					checked={checked}
-					aria-label={'metric'}
+					aria-label={'connect'}
 					disabled={disabled}
+					name={'lantern-network-connect'}
 				/>
 				<Slider
 					checked={checked}
