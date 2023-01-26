@@ -18,6 +18,7 @@ import {Themes} from '../../../index'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
 import {sharingEmitter} from '../../../utils/wasmInterface'
 import {countries} from "../../../utils/countries";
+import InteractAnim from './interactAnim'
 
 const Globe = () => {
 	const sharing = useEmitterState(sharingEmitter)
@@ -31,6 +32,7 @@ const Globe = () => {
 	const {arcs, points, country} = useGeo()
 	const [altitude, setAltitude] = useState(14)
 	const lastAnimation = useRef(0)
+	const [interacted, setInteracted] = useState(false)
 
 	useEffect(() => {
 		const now = Date.now()
@@ -92,6 +94,8 @@ const Globe = () => {
 			ref={container}
 			size={size}
 			active={!!arc}
+			onMouseDown={() => setInteracted(true)}
+			onTouchStart={() => setInteracted(true)}
 		>
 			<Shadow
 				scale={1/(altitude/2)} // altitude is 2-14
@@ -134,6 +138,11 @@ const Globe = () => {
 				show={!!arc}
 				container={container}
 			/>
+			{
+				isSetup && !interacted && (
+					<InteractAnim />
+				)
+			}
 		</Container>
 	)
 }
