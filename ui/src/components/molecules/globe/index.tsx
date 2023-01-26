@@ -8,7 +8,7 @@
  ***/
 import GlobeComponent from 'react-globe.gl' // @todo lazy load
 import {Container} from './styles'
-import {useContext, useEffect, useRef, useState} from 'react'
+import {useContext, useEffect, useMemo, useRef, useState} from 'react'
 import {AppContext} from '../../../context'
 import {BREAKPOINT, COLORS, UV_MAP_PATH_DARK, UV_MAP_PATH_LIGHT} from '../../../constants'
 import Shadow from './shadow'
@@ -33,6 +33,14 @@ const Globe = () => {
 	const [altitude, setAltitude] = useState(14)
 	const lastAnimation = useRef(0)
 	const [interacted, setInteracted] = useState(false)
+
+	const ghostArcs = useMemo(() => {
+		if (!arcs) return []
+		return arcs.map(arc => {
+			const {endLat, endLng, startLat, startLng, workerIdxArr, country, iso} = arc
+			return ({endLat, endLng, startLat, startLng, workerIdxArr, country, iso, ghost: true})
+		})
+	}, [arcs])
 
 	useEffect(() => {
 		const now = Date.now()
@@ -72,6 +80,12 @@ const Globe = () => {
 		scene.remove(directionalLight)
 	}
 
+	const setRotateSpeed = (speed) => {
+		if (!globe.current) return
+		const controls = globe.current.controls()
+		controls.autoRotateSpeed = speed
+	}
+
 	// useEffect(() => {
 	// 	const animate = () => {
 	// 		requestAnimationFrame(animate)
@@ -96,6 +110,8 @@ const Globe = () => {
 			active={!!arc}
 			onMouseDown={() => setInteracted(true)}
 			onTouchStart={() => setInteracted(true)}
+			onMouseEnter={() => setRotateSpeed(1)}
+			onMouseLeave={() => setRotateSpeed(1.5)}
 		>
 			<Shadow
 				scale={1/(altitude/2)} // altitude is 2-14
@@ -113,14 +129,14 @@ const Globe = () => {
 				backgroundColor={'rgba(0,0,0,0)'}
 				backgroundImageUrl={null}
 				globeImageUrl={theme === Themes.DARK ? UV_MAP_PATH_DARK : UV_MAP_PATH_LIGHT}
-				arcsData={arcs}
-				arcColor={['rgba(0, 188, 212, 0.75)', 'rgba(255, 193, 7, 0.75)']}
+				arcsData={[...arcs, ...ghostArcs]}
+				arcColor={arc => arc.ghost ? 'rgba(255, 255, 255, 0)' : ['rgba(0, 188, 212, 0.75)', 'rgba(255, 193, 7, 0.75)']}
 				arcDashLength={1}
 				arcDashGap={0.5}
 				arcDashInitialGap={1}
-				arcDashAnimateTime={500}
+				arcDashAnimateTime={arc => arc.ghost ? 0 : 500}
 				arcsTransitionDuration={0}
-				arcStroke={2.5}
+				arcStroke={arc => arc.ghost ? 10 : 2.5}
 				arcAltitudeAutoScale={0.3}
 				onArcHover={setArc}
 				pointsData={points}

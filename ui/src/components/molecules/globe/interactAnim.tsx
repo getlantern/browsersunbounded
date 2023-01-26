@@ -35,6 +35,7 @@ const Container = styled.span`
 	align-items: center;
 	z-index: 2;
 	transition: opacity 1000ms ease-in-out;
+	transform: scale(0.65);
 	.interact-anim-cursor {
     position: absolute;
 	}
@@ -44,8 +45,7 @@ const InteractAnim = () => {
 	const color = theme === Themes.DARK ? COLORS.grey1 : COLORS.grey5
 	const tick = useRef(0)
 	const count = useRef(0)
-	const [{start, animate, end}, setState] = useState({
-		start: true,
+	const [{animate, end}, setState] = useState({
 		animate: false,
 		end: false
 	})
@@ -55,24 +55,24 @@ const InteractAnim = () => {
 	useEffect(() => {
 		let interval: ReturnType<typeof setInterval> | null = null
 		let timeout = setTimeout(() => {
-			setHide(false)
 			interval = setInterval(() => {
-				if (count.current === 4 && interval) {
-					// after 4 animations we stop and hide
+				// initial fade in
+				if (tick.current === 1 && count.current === 0) setHide(false)
+				const animate = tick.current >= 2 && tick.current <= 4
+				const end = tick.current > 4
+				setState({animate, end})
+				if (animate && count.current === 2 && interval) {
+					// after 3 animations we stop and hide
 					clearInterval(interval)
 					setHide(true)
 				}
-				const start = tick.current <= 2 || tick.current > 4 // restart overlaps with end
-				const animate = tick.current > 2 && tick.current <= 4
-				const end = tick.current > 4
-				setState({start, animate, end})
 				tick.current = tick.current + 1
 				if (tick.current % 6 === 0) {
 					count.current = count.current + 1
 					tick.current = 0
 				}
 			}, 500)
-		}, 1000)
+		}, 1000) // delayed start on initial load
 		return () => {
 			// cleanup
 			if (interval) clearInterval(interval)
@@ -106,7 +106,7 @@ const InteractAnim = () => {
 				style={{
 					top: 43,
 					right: 44,
-					opacity: start ? 1 : 0,
+					opacity: !animate ? 1 : 0,
 					transition: !animate ? 'opacity 600ms ease-in-out' : 'none'
 				}}
 				color={color}
