@@ -46,8 +46,8 @@ require (
 	nhooyr.io/websocket v1.8.7 // indirect
 )
 
-replace github.com/getlantern/broflake/common => ../../common
+replace github.com/getlantern/broflake/common => ../common
 
-replace github.com/getlantern/broflake/clientcore => ../../clientcore
+replace github.com/getlantern/broflake/clientcore => ../clientcore
 
-replace github.com/getlantern/broflake/netstate/client => ../../netstate/client
+replace github.com/getlantern/broflake/netstate/client => ../netstate/client

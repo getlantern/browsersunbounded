@@ -39,6 +39,10 @@ var pRouter clientcore.TableRouter
 var wgReady sync.WaitGroup
 
 func main() {
+	if clientType != "desktop" && clientType != "widget" {
+		log.Fatal("Invalid clientType '%v'\n", clientType)
+	}
+
 	netstated := os.Getenv("NETSTATED")
 	tag := os.Getenv("TAG")
 	proxyport := os.Getenv("PORT")
@@ -48,14 +52,6 @@ func main() {
 
 	log.Printf("Welcome to Broflake\n")
 	log.Printf("type: %v, netstated: %v, tag: %v, proxyport: %v", clientType, netstated, tag, proxyport)
-
-	// TODO: bus construction has been separated from the rest of client construction because we need
-	// to wait until netstated and tag can be plucked from the environment, but we can prob make this cleaner
-	var bus = clientcore.NewIpcObserver(
-		busBufferSz,
-		clientcore.UpstreamUIHandler(ui, netstated, tag),
-		clientcore.DownstreamUIHandler(ui, netstated, tag),
-	)
 
 	webrtcOptions := &clientcore.WebRTCOptions{
 		DiscoverySrv:   "https://broflake-freddie-xdy27ofj3a-ue.a.run.app",
@@ -101,6 +97,13 @@ func main() {
 		ConnectTimeout: 5 * time.Second,
 	}
 
+	// The boot DAG:
+	// build cTable/pTable -> build the Broflake struct -> run ui.Init -> set up the bus and bind
+	// the upstream/downstream handlers -> build cRouter/pRouter -> start the bus, init the routers,
+	// call onStartup and onReady. This dependency graph currently requires us to implement two
+	// switches on clientType during the boot process, which can probably be improved upon.
+
+	// Step 1: Build consumer table and producer table
 	switch clientType {
 	case "desktop":
 		// Desktop peers don't share connectivity for the MVP, so the consumer table only gets one
@@ -108,7 +111,6 @@ func main() {
 		var producerUserStream *clientcore.WorkerFSM
 		bfconn, producerUserStream = clientcore.NewProducerUserStream(&wgReady)
 		cTable = clientcore.NewWorkerTable([]clientcore.WorkerFSM{*producerUserStream})
-		cRouter = clientcore.NewConsumerRouter(bus.Downstream, cTable)
 
 		// Desktop peers consume connectivity over WebRTC
 		var pfsms []clientcore.WorkerFSM
@@ -116,7 +118,6 @@ func main() {
 			pfsms = append(pfsms, *clientcore.NewConsumerWebRTC(webrtcOptions, &wgReady))
 		}
 		pTable = clientcore.NewWorkerTable(pfsms)
-		pRouter = clientcore.NewProducerSerialRouter(bus.Upstream, pTable, cTable.Size())
 	case "widget":
 		// Widget peers share connectivity over WebRTC
 		var cfsms []clientcore.WorkerFSM
@@ -124,7 +125,6 @@ func main() {
 			cfsms = append(cfsms, *clientcore.NewProducerWebRTC(webrtcOptions, &wgReady))
 		}
 		cTable = clientcore.NewWorkerTable(cfsms)
-		cRouter = clientcore.NewConsumerRouter(bus.Downstream, cTable)
 
 		// Widget peers consume connectivity from an egress server over WebSocket
 		var pfsms []clientcore.WorkerFSM
@@ -132,14 +132,32 @@ func main() {
 			pfsms = append(pfsms, *clientcore.NewEgressConsumerWebSocket(egressOptions, &wgReady))
 		}
 		pTable = clientcore.NewWorkerTable(pfsms)
-		pRouter = clientcore.NewProducerPoolRouter(bus.Upstream, pTable)
-	default:
-		log.Printf("Invalid clientType '%v'\n", clientType)
-		os.Exit(1)
 	}
 
+	// Step 2: Build Broflake
 	broflake := clientcore.NewBroflake(cTable, pTable, &ui, &wgReady)
+
+	// Step 3: Init the UI (this constructs and exposes the JavaScript API as required)
 	ui.Init(broflake)
+
+	// Step 4: Set up the bus, bind upstream and downstream UI handlers
+	var bus = clientcore.NewIpcObserver(
+		busBufferSz,
+		clientcore.UpstreamUIHandler(ui, netstated, tag),
+		clientcore.DownstreamUIHandler(ui, netstated, tag),
+	)
+
+	// Step 5: Build consumer router and producer router
+	switch clientType {
+	case "desktop":
+		cRouter = clientcore.NewConsumerRouter(bus.Downstream, cTable)
+		pRouter = clientcore.NewProducerSerialRouter(bus.Upstream, pTable, cTable.Size())
+	case "widget":
+		cRouter = clientcore.NewConsumerRouter(bus.Downstream, cTable)
+		pRouter = clientcore.NewProducerPoolRouter(bus.Upstream, pTable)
+	}
+
+	// Step 6: Start the bus, init the routers, fire our UI events to announce that we're ready
 	bus.Start()
 	cRouter.Init()
 	pRouter.Init()
