@@ -2,6 +2,7 @@
 package clientcore
 
 import (
+	"log"
 	"net"
 	"strconv"
 	"sync/atomic"
@@ -85,7 +86,7 @@ func UpstreamUIHandler(ui UIImpl, netstated, tag string) func(msg IPCMsg) {
 				)
 
 				if err != nil {
-					// TODO: handle err
+					log.Printf("netstatecl.Exec error: %v\n", err)
 				}
 			}
 		}

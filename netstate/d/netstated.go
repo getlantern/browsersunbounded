@@ -114,6 +114,13 @@ func handleNeato(w http.ResponseWriter, r *http.Request) {
 // Execute a state change
 func handleExec(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
+
+	// Handle preflight requests
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("Error: %v\n", err)
@@ -156,6 +163,13 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 // TODO: delete me and replace with a real CORS strategy!
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Credentials", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT")
+	(*w).Header().Set(
+		"Access-Control-Allow-Headers",
+		"Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, "+
+			"Access-Control-Request-Method, Access-Control-Request-Headers",
+	)
 }
 
 func main() {

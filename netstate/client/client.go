@@ -25,11 +25,7 @@ func Exec(netstated string, inst *Instruction) error {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", netstated, bytes.NewBuffer(serialized))
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
-	client := &http.Client{}
-	res, err := client.Do(req)
+	res, err := http.Post(netstated, "application/json; charset=UTF-8", bytes.NewBuffer(serialized))
 	defer res.Body.Close()
 	return err
 }
