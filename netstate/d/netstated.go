@@ -113,8 +113,10 @@ func handleNeato(w http.ResponseWriter, r *http.Request) {
 // POST /exec
 // Execute a state change
 func handleExec(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		log.Printf("Error: %v\n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400\n"))
 		return
@@ -123,6 +125,7 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 	inst := netstatecl.Instruction{}
 	err = json.Unmarshal(b, &inst)
 	if err != nil {
+		log.Printf("Error: %v\n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400\n"))
 		return
@@ -148,6 +151,11 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 
 	log.Println(world.data)
 	w.WriteHeader(http.StatusOK)
+}
+
+// TODO: delete me and replace with a real CORS strategy!
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func main() {

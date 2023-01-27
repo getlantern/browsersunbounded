@@ -16,7 +16,7 @@ const (
 )
 
 type UI interface {
-	Init(bf *Broflake)
+	Init(bf *BroflakeEngine)
 
 	Start()
 

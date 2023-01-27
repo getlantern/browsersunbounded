@@ -13,51 +13,51 @@ import (
 
 type UIImpl struct {
 	UI
-	Broflake *Broflake
-	id       string
+	BroflakeEngine *BroflakeEngine
+	ID             string
 }
 
-func (ui *UIImpl) Init(bf *Broflake) {
-	ui.Broflake = bf
+func (ui *UIImpl) Init(bf *BroflakeEngine) {
+	ui.BroflakeEngine = bf
 
-	// The notion of 'id' exists solely to avoid collisions in the JS namespace
-	ui.id = strings.Replace("L4NT3RN"+uuid.NewString(), "-", "", -1)
+	// The notion of 'ID' exists solely to avoID collisions in the JS namespace
+	ui.ID = strings.Replace("L4NT3RN"+uuid.NewString(), "-", "", -1)
 
 	// Construct the JavaScript API for this Broflake instance
-	js.Global().Set(ui.id, js.Global().Get("EventTarget").New())
+	js.Global().Set(ui.ID, js.Global().Get("EventTarget").New())
 
-	js.Global().Get(ui.id).Set(
+	js.Global().Get(ui.ID).Set(
 		"start",
 		js.FuncOf(func(this js.Value, args []js.Value) interface{} { ui.Start(); return nil }),
 	)
 
-	js.Global().Get(ui.id).Set(
+	js.Global().Get(ui.ID).Set(
 		"stop",
 		js.FuncOf(func(this js.Value, args []js.Value) interface{} { ui.Stop(); return nil }),
 	)
 
-	js.Global().Get(ui.id).Set(
+	js.Global().Get(ui.ID).Set(
 		"debug",
 		js.FuncOf(func(this js.Value, args []js.Value) interface{} { ui.Debug(); return nil }),
 	)
 }
 
 func (ui UIImpl) Start() {
-	ui.Broflake.start()
+	ui.BroflakeEngine.start()
 }
 
 func (ui UIImpl) Stop() {
-	ui.Broflake.stop()
+	ui.BroflakeEngine.stop()
 }
 
 func (ui UIImpl) Debug() {
-	ui.Broflake.debug()
+	ui.BroflakeEngine.debug()
 }
 
 func (ui UIImpl) fireEvent(eventName string, detail map[string]interface{}) {
 	options := map[string]interface{}{"detail": js.ValueOf(detail)}
 
-	js.Global().Get(ui.id).Call(
+	js.Global().Get(ui.ID).Call(
 		"dispatchEvent",
 		js.Global().Get("CustomEvent").New(js.ValueOf(eventName), js.ValueOf(options)),
 	)
@@ -81,7 +81,7 @@ func (ui UIImpl) OnDownstreamChunk(size int, workerIdx int) {
 }
 
 // 'downstreamThroughput' fires N times per second, where N is determined by the uiRefreshHz
-// hyperparameter. 'bytesPerSec is the current systemwide inbound throughput
+// hyperparameter. 'bytesPerSec is the current systemwIDe inbound throughput
 func (ui UIImpl) OnDownstreamThroughput(bytesPerSec int) {
 	detail := map[string]interface{}{"bytesPerSec": bytesPerSec}
 	ui.fireEvent("downstreamThroughput", detail)
