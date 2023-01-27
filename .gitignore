@@ -1,7 +1,6 @@
 # wasm
-client/dist/bin/*
-client/dist/public/bindings.js
-client/dist/public/*.wasm
+cmd/dist/bin/*
+cmd/dist/public/*.wasm
 
 # misc
 .DS_Store
