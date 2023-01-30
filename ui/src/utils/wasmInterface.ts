@@ -38,13 +38,13 @@ interface WasmClient extends EventTarget {
 		type: K,
 		listener: (e: WasmClientEventMap[K]) => void,
 		options?: boolean | AddEventListenerOptions
-	): void;
+	): void
 
 	addEventListener(
 		type: string,
 		callback: EventListenerOrEventListenerObject | null,
 		options?: EventListenerOptions | boolean
-	): void;
+	): void
 
 	removeEventListener<K extends keyof WasmClientEventMap>(
 		type: K,
