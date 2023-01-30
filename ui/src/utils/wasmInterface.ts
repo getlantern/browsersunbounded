@@ -72,7 +72,7 @@ class WasmInterface {
 			this.go.run(this.instance)
 			this.wasmClient = globalThis.newBroflake("widget", 5, 5, 4096, "", "")
 			this.initListeners()
-			this.ready = true
+			this.handleReady()
 		}
 		return this.instance
 	}
