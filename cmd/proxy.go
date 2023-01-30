@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/broflake/common"
-	"github.com/getlantern/broflake/clientcore"
 	"github.com/elazarl/goproxy"
+	"github.com/getlantern/broflake/clientcore"
+	"github.com/getlantern/broflake/common"
 	"github.com/lucas-clemente/quic-go"
 )
 

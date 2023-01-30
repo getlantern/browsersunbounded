@@ -53,15 +53,15 @@ func NewBroflake(bfOpt *BroflakeOptions, rtcOpt *WebRTCOptions, egOpt *EgressOpt
 	var wgReady sync.WaitGroup
 
 	if bfOpt == nil {
-		bfOpt = &DefaultBroflakeOptions
+		bfOpt = NewDefaultBroflakeOptions()
 	}
 
 	if rtcOpt == nil {
-		rtcOpt = &DefaultWebRTCOptions
+		rtcOpt = NewDefaultWebRTCOptions()
 	}
 
 	if egOpt == nil {
-		egOpt = &DefaultEgressOptions
+		egOpt = NewDefaultEgressOptions()
 	}
 
 	// The boot DAG:

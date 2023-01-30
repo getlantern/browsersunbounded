@@ -25,16 +25,16 @@ func main() {
 	log.Printf("Welcome to Broflake\n")
 	log.Printf("type: %v, netstated: %v, tag: %v, proxyport: %v", clientType, netstated, tag, proxyport)
 
-	bfOpt := clientcore.DefaultBroflakeOptions
+	bfOpt := clientcore.NewDefaultBroflakeOptions()
 	bfOpt.ClientType = clientType
 	bfOpt.Netstated = netstated
 
-	rtcOpt := clientcore.DefaultWebRTCOptions
+	rtcOpt := clientcore.NewDefaultWebRTCOptions()
 	rtcOpt.Tag = tag
 
-	egOpt := clientcore.DefaultEgressOptions
+	egOpt := clientcore.NewDefaultEgressOptions()
 
-	bfconn, _, err := clientcore.NewBroflake(&bfOpt, &rtcOpt, &egOpt)
+	bfconn, _, err := clientcore.NewBroflake(bfOpt, rtcOpt, egOpt)
 	if err != nil {
 		log.Fatal(err)
 	}
