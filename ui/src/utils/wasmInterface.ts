@@ -8,11 +8,13 @@ export interface Chunk {
 	size: number
 	workerIdx: number
 }
+
 export interface Connection {
 	state: 1 | -1
 	workerIdx: number
 	addr: string
 }
+
 export interface Throughput {
 	bytesPerSec: number
 }
@@ -23,25 +25,66 @@ export const lifetimeConnectionsEmitter = new StateEmitter<number>(0)
 export const readyEmitter = new StateEmitter<boolean>(false)
 export const sharingEmitter = new StateEmitter<boolean>(false)
 
+
+interface WasmClientEventMap {
+	'ready': CustomEvent;
+	'downstreamChunk': { detail: Chunk };
+	'downstreamThroughput': { detail: Throughput };
+	'consumerConnectionChange': { detail: Connection };
+}
+
+interface WasmClient extends EventTarget {
+	addEventListener<K extends keyof WasmClientEventMap>(
+		type: K,
+		listener: (e: WasmClientEventMap[K]) => void,
+		options?: boolean | AddEventListenerOptions
+	): void;
+
+	addEventListener(
+		type: string,
+		callback: EventListenerOrEventListenerObject | null,
+		options?: EventListenerOptions | boolean
+	): void;
+
+	removeEventListener<K extends keyof WasmClientEventMap>(
+		type: K,
+		listener: (e: WasmClientEventMap[K]) => void,
+		options?: boolean | AddEventListenerOptions
+	): void
+
+	removeEventListener(
+		type: string,
+		callback: EventListenerOrEventListenerObject | null,
+		options?: EventListenerOptions | boolean
+	): void
+
+	start(): void
+
+	stop(): void
+
+	debug(): void
+}
+
+
 // bind the client constructor
 declare global {
 	function newBroflake(
-		type: string, 
-		cTableSz: number, 
-		pTableSz: number, 
-		busBufSz: number, 
-		netstated: string, 
+		type: string,
+		cTableSz: number,
+		pTableSz: number,
+		busBufSz: number,
+		netstated: string,
 		tag: string
-	): any
+	): WasmClient
 }
 
 class WasmInterface {
 	go: typeof go
-	wasmClient: any | undefined
+	wasmClient: WasmClient | undefined
 	instance: WebAssemblyInstance | undefined
 	// raw data
-	chunkMap: {[key: number]: Chunk}
-	connectionMap: {[key: number]: Connection}
+	chunkMap: { [key: number]: Chunk }
+	connectionMap: { [key: number]: Connection }
 	throughput: Throughput
 	// smoothed and agg data
 	movingAverageThroughput: number
@@ -55,7 +98,7 @@ class WasmInterface {
 		this.ready = false
 		this.chunkMap = {}
 		this.connectionMap = {}
-		this.throughput = { bytesPerSec: 0 }
+		this.throughput = {bytesPerSec: 0}
 		this.movingAverageThroughput = 0
 		this.lifetimeConnections = 0
 		this.chunks = []
@@ -70,7 +113,7 @@ class WasmInterface {
 			)
 			this.instance = res.instance
 			this.go.run(this.instance)
-			this.wasmClient = globalThis.newBroflake("widget", 5, 5, 4096, "", "")
+			this.wasmClient = globalThis.newBroflake('widget', 5, 5, 4096, '', '')
 			this.initListeners()
 			this.handleReady()
 		}
@@ -78,21 +121,21 @@ class WasmInterface {
 	}
 
 	start = () => {
-		if (!this.ready) console.warn('Wasm client is not in ready state, aborting start')
-		else {
-			this.wasmClient.start()
-			sharingEmitter.update(true)
-		}
+		if (!this.ready) return console.warn('Wasm client is not in ready state, aborting start')
+		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting start')
+		this.wasmClient.start()
+		sharingEmitter.update(true)
 	}
 
 	stop = () => {
+		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting stop')
 		this.ready = false
 		readyEmitter.update(this.ready)
 		this.wasmClient.stop()
 		sharingEmitter.update(false)
 	}
 
-	idxMapToArr = (map: {[key: number]: any}) => {
+	idxMapToArr = (map: { [key: number]: any }) => {
 		return Object.keys(map).map(idx => map[parseInt(idx)])
 	}
 
@@ -134,6 +177,7 @@ class WasmInterface {
 	}
 
 	initListeners = () => {
+		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting listener init')
 		// rm listeners in case they exist (hot reload)
 		this.wasmClient.removeEventListener('downstreamChunk', this.handleChunk)
 		this.wasmClient.removeEventListener('downstreamThroughput', this.handleThroughput)
