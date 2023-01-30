@@ -1,5 +1,4 @@
 import go from './goWasmExec'
-import wasmClient from './wasmBinding'
 import {MockWasmInterface} from '../mocks/mockWasmInterface'
 import {StateEmitter} from '../hooks/useStateEmitter'
 
@@ -24,9 +23,21 @@ export const lifetimeConnectionsEmitter = new StateEmitter<number>(0)
 export const readyEmitter = new StateEmitter<boolean>(false)
 export const sharingEmitter = new StateEmitter<boolean>(false)
 
+// bind the client constructor
+declare global {
+	function newBroflake(
+		type: string, 
+		cTableSz: number, 
+		pTableSz: number, 
+		busBufSz: number, 
+		netstated: string, 
+		tag: string
+	): any
+}
+
 class WasmInterface {
 	go: typeof go
-	wasmClient: typeof wasmClient
+	wasmClient: any | undefined
 	instance: WebAssemblyInstance | undefined
 	// raw data
 	chunkMap: {[key: number]: Chunk}
@@ -50,7 +61,6 @@ class WasmInterface {
 		this.chunks = []
 		this.connections = []
 		this.go = go
-		this.wasmClient = wasmClient
 	}
 
 	initialize = async (): Promise<WebAssemblyInstance> => {
@@ -59,8 +69,9 @@ class WasmInterface {
 				fetch(process.env.REACT_APP_WIDGET_WASM_URL!), this.go.importObject
 			)
 			this.instance = res.instance
+			this.go.run(this.instance)
+			this.wasmClient = globalThis.newBroflake("widget", 5, 5, 4096, "", "")
 			this.initListeners()
-			await this.go.run(this.instance)
 			this.ready = true
 		}
 		return this.instance

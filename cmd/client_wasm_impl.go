@@ -11,6 +11,8 @@ import (
 )
 
 func main() {
+	log.Printf("wasm client started...")
+
 	// exposed to JS: newBroflake(clientType, cTableSize, pTableSize, busBufferSz, netstated, tag)
 	// returns a reference to a Broflake JS API impl (defined in ui_wasm_impl.go)
 	js.Global().Set(
