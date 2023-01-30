@@ -60,15 +60,13 @@ class WasmInterface {
 			)
 			this.instance = res.instance
 			this.initListeners()
-			await this.go.run(this.instance)
-			this.ready = true
+			this.go.run(this.instance) // do not await this is blocking till the exit promise is resolved
 		}
 		return this.instance
 	}
 
 	mockInitialize = async () => {
 		this.initListeners()
-		this.ready = true
 		mockWasmClient.ready()
 	}
 
