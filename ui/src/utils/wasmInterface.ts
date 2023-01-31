@@ -1,5 +1,4 @@
 import go from './goWasmExec'
-import wasmClient from './wasmBinding'
 import {StateEmitter} from '../hooks/useStateEmitter'
 import mockWasmClient from '../mocks/mockWasmClient'
 
