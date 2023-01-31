@@ -1,5 +1,5 @@
 import {Body, BodyWrapper, Container, Header, HeaderWrapper, Item} from './styles'
-import {Logo} from '../../atoms/icons'
+import {LogoLeft} from '../../atoms/icons'
 import Control from '../../molecules/control'
 import React, {useContext, useState, lazy, Suspense, useEffect} from 'react'
 import {Settings, Themes} from '../../../index'
@@ -36,7 +36,7 @@ const Banner = ({settings}: Props) => {
 				}}
 			>
 				<Header>
-					<Logo/>
+					{ settings.branding && <LogoLeft /> }
 					{
 						!expanded && width > 650 && (
 							<Item
@@ -110,6 +110,11 @@ const Banner = ({settings}: Props) => {
 								)
 							}
 							<Col>
+								<div
+									style={{marginBottom: 24}}
+								>
+									<About/>
+								</div>
 								<Row
 									borderTop
 									borderBottom
@@ -119,12 +124,7 @@ const Banner = ({settings}: Props) => {
 								</Row>
 								<Stats/>
 								<div
-									style={{margin: '24px 0'}}
-								>
-									<About/>
-								</div>
-								<div
-									style={{paddingLeft: 8, paddingRight: 8}}
+									style={{paddingLeft: 8, paddingRight: 8, marginTop: 24}}
 								>
 									<Footer
 										social={true}

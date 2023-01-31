@@ -8,7 +8,7 @@ const StyledText = styled.p`
   font-weight: 400;
   font-size: 14px;
   line-height: 23px;
-  color: ${({theme}: { theme: Themes }) => theme === Themes.DARK ? COLORS.grey2 : COLORS.grey5};
+  color: ${({theme}: { theme: Themes }) => theme === Themes.DARK ? COLORS.grey2 : COLORS.blue5};
   padding: 0;
   margin: 0;
 `

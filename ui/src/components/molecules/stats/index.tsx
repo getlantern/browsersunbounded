@@ -1,13 +1,20 @@
 import {Text} from '../../atoms/typography'
 import Row from '../../atoms/row'
-import {useStats} from '../../../hooks/useStats'
 import React, {useContext} from 'react'
 import {AppContext} from '../../../context'
 import {BREAKPOINT} from '../../../constants'
 import {formatBytes, getIndex} from '../../../hooks/useBytesFormatLatch'
+import {useEmitterState} from '../../../hooks/useStateEmitter'
+import {
+	averageThroughputEmitter,
+	connectionsEmitter,
+	lifetimeChunksEmitter,
+	lifetimeConnectionsEmitter
+} from '../../../utils/wasmInterface'
+import useSample from '../../../hooks/useSample'
 
 export const Connections = () => {
-	const {connections} = useStats({sampleMs: 500})
+	const connections = useEmitterState(connectionsEmitter)
 	const currentConnections = connections.filter(c => c.state === 1).length
 	return (
 		<>
@@ -24,10 +31,13 @@ export const Connections = () => {
 
 const Stats = () => {
 	const {width} = useContext(AppContext)
-	const {connections, lifetimeConnections, throughput, chunks} = useStats({sampleMs: 500})
-	const formattedThroughput = formatBytes(throughput, getIndex(throughput))
+	const connections = useEmitterState(connectionsEmitter)
+	const lifetimeConnections = useEmitterState(lifetimeConnectionsEmitter)
+	const sampledThroughput = useSample({emitter: averageThroughputEmitter, ms: 500})
+	const sampledLifetimeChunks = useSample({emitter: lifetimeChunksEmitter, ms: 500})
+	const formattedThroughput = formatBytes(sampledThroughput, getIndex(sampledThroughput))
 	const currentConnections = connections.filter(c => c.state === 1).length
-	const totalChunks = chunks.map(c => c.size).reduce((p, c) => p + c, 0)
+	const totalChunks = sampledLifetimeChunks.map(c => c.size).reduce((p, c) => p + c, 0)
 	const formattedTotalChunks = formatBytes(totalChunks, getIndex(totalChunks))
 
 	return (

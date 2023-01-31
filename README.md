@@ -82,10 +82,10 @@ webRTC -> web widget executing in Chrome -> WebSocket -> egress server -> remote
 
 ### :nail_care::art: UI quickstart for devs
 
-The UI is bootstrapped with [Create React App](https://github.com/facebook/create-react-app). Then "re-wired" to build one single js bundle using [rewire](https://www.npmjs.com/package/rewire). The React app will bind to a custom `broflake` DOM el and render based on settings passed to the `data-features` attribute via stringified JSON:
+The UI is bootstrapped with [Create React App](https://github.com/facebook/create-react-app). Then "re-wired" to build one single js bundle entry using [rewire](https://www.npmjs.com/package/rewire). The React app will bind to a custom `<lantern-network>` DOM el and render based on settings passed to the [dataset](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/dataset):
 
 ```html
-<broflake
+<lantern-network
    data-layout="banner"
    data-theme="dark"
    data-globe="true"
@@ -94,34 +94,38 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
    data-mobile-bg="false"
    data-desktop-bg="true"
    data-editor="false"
+   data-branding="true"
    style='width: 100%;'
-></broflake>
-<script defer="defer" src="https://devblog.getlantern.org/broflake/static/js/main.js"></script>
+></lantern-network>
+<script defer="defer" src="https://embed.lantern.io/static/js/main.js"></script>
 ```
 
-| Data-set  | Description                             |
-|-----------|-----------------------------------------|
-| layout    | string "banner" or "panel" layout       |
-| theme     | string "dark" or "light" theme          |
-| globe     | boolean to include webgl globe          |
-| exit      | boolean to include toast on exit intent |
-| donate    | boolean to include donate link          |
-| mobile-bg | boolean to run on mobile background     |
-| mobile-bg | boolean to run on desktop background    |
-| editor    | boolean to include debug dataset editor |
+| Data-set  | Description                             | Default |
+|-----------|-----------------------------------------|---------|
+| layout    | string "banner" or "panel" layout       | banner  |
+| theme     | string "dark" or "light" theme          | light   |
+| globe     | boolean to include webgl globe          | true    |
+| exit      | boolean to include toast on exit intent | true    |
+| donate    | boolean to include donate link          | true    |
+| mobile-bg | boolean to run on mobile background     | false   |
+| mobile-bg | boolean to run on desktop background    | true    |
+| editor    | boolean to include debug dataset editor | false   |
+| branding  | boolean to include logos                | true    |
 
-[Github pages live demo](https://devblog.getlantern.org/broflake)
+[Github pages sandbox](https://embed.lantern.io)
+[Lantern Network website](https://network.lantern.io)
 
 1. Work from the ui dir: `cd ui`
 
 2. Configure your .env file: `cp .env.example .env` 
    1. Set `REACT_APP_MOCK_DATA=false` to use the wasm widget as data source, or `true` to develop with mock "real-time" data.
-   2. Set `REACT_APP_WIDGET_WASM_URL` to your intended hosted `widget.wasm` file. If you are serving it from `client` in [step #8](#arrow_forward-quickstart-for-devs), use [http://localhost:9000/widget.wasm](http://localhost:9000/widget.wasm). If you ran `./build_web.sh` ([step #7](#arrow_forward-quickstart-for-devs)) you can also use `/broflake/widget.wasm`. To config for prod point to a publicly hosted `widget.wasm` e.g. `https://devblog.getlantern.org/broflake/widget.wasm`. If you know you know, if not, you likely want to use `/broflake/widget.wasm`.
+   2. Set `REACT_APP_WIDGET_WASM_URL` to your intended hosted `widget.wasm` file. If you are serving it from `client` in [step #8](#arrow_forward-quickstart-for-devs), use [http://localhost:9000/widget.wasm](http://localhost:9000/widget.wasm). If you ran `./build_web.sh` ([step #7](#arrow_forward-quickstart-for-devs)) you can also use `/widget.wasm`. To config for prod point to a publicly hosted `widget.wasm` e.g. `https://embed.lantern.io/widget.wasm`. If you know you know, if not, you likely want to use `/widget.wasm`.
    3. Set `REACT_APP_GEO_LOOKUP` to your intended geo lookup service. Most likely `https://geo.getiantem.org/lookup` or `http://localhost:<PORT>/lookup` if testing geo lookups locally
+   4. Set `REACT_APP_IFRAME_SRC` to your intended iframe html for local storage of widget state and analytics. Most likely `https://embed.lantern.io/iframe.html` or `/iframe.html` if testing locally
 
 3. Install the dependencies: `yarn`
 
-4. To start in developer mode with hot-refresh server (degraded performance): run `yarn start` and visit [http://localhost:3000/broflake](http://localhost:3000/broflake)
+4. To start in developer mode with hot-refresh server (degraded performance): run `yarn start` and visit [http://localhost:3000](http://localhost:3000)
 
 5. To build optimized for best performance run: `PUBLIC_URL=/ yarn build`
 

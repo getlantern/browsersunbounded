@@ -24,6 +24,7 @@ export interface Settings {
 	editor: boolean
 	donate: boolean
 	collapse: boolean
+	branding: boolean
 }
 
 export const defaultSettings: Settings = {
@@ -35,7 +36,8 @@ export const defaultSettings: Settings = {
 	theme: Themes.LIGHT,
 	editor: false,
 	donate: true,
-	collapse: true
+	collapse: true,
+	branding: true
 }
 
 export const settingsEmitter = new StateEmitter<{ [key: number]: Settings }>({})
@@ -88,7 +90,7 @@ const init = (embeds: NodeListOf<HTMLElement>) => {
 	})
 }
 
-const getEmbeds = () => document.querySelectorAll('broflake') as NodeListOf<HTMLElement>
+const getEmbeds = () => document.querySelectorAll('lantern-network') as NodeListOf<HTMLElement>
 
 // try to load embeds immediately
 const embeds = getEmbeds()
