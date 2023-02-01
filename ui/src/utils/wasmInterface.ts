@@ -2,8 +2,6 @@ import go from './goWasmExec'
 import {StateEmitter} from '../hooks/useStateEmitter'
 import MockWasmClient from '../mocks/mockWasmClient'
 
-const MOCK_DATA = process.env.REACT_APP_MOCK_DATA === 'true'
-
 type WebAssemblyInstance = InstanceType<typeof WebAssembly.Instance>
 
 export interface Chunk {
@@ -93,18 +91,28 @@ export class WasmInterface {
 	connections: Connection[]
 	// states
 	ready: boolean
+	initializing: boolean
 
 	constructor() {
 		this.ready = false
+		this.initializing = false
 		this.connectionMap = {}
 		this.throughput = {bytesPerSec: 0}
 		this.connections = []
 		this.go = go
 	}
 
+
 	initialize = async (mock = false): Promise<WebAssemblyInstance | undefined> => {
+		// this dumb state is needed to prevent multiple calls to initialize from react hot reload dev server 🥵
+		if (this.initializing || this.instance) { // already initialized or initializing
+			console.warn('Wasm client has already been initialized or is initializing, aborting init.')
+			return
+		}
+		this.initializing = true
 		if (mock) { // fake it till you make it
 			this.wasmClient = new MockWasmClient(this)
+			this.instance = {} as WebAssemblyInstance
 		} else { // the real deal (wasm)
 			const res = await WebAssembly.instantiateStreaming(
 				fetch(process.env.REACT_APP_WIDGET_WASM_URL!), this.go.importObject
@@ -122,18 +130,19 @@ export class WasmInterface {
 			this.initListeners()
 		}
 		this.handleReady()
+		this.initializing = false
 		return this.instance
 	}
 
 	start = () => {
 		if (!this.ready) return console.warn('Wasm client is not in ready state, aborting start')
-		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting start')
+		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting start.')
 		this.wasmClient.start()
 		sharingEmitter.update(true)
 	}
 
 	stop = () => {
-		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting stop')
+		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting stop.')
 		this.ready = false
 		readyEmitter.update(this.ready)
 		this.wasmClient.stop()
@@ -184,7 +193,7 @@ export class WasmInterface {
 	}
 
 	initListeners = () => {
-		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting listener init')
+		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting listener init.')
 		// rm listeners in case they exist (hot reload)
 		this.wasmClient.removeEventListener('downstreamChunk', this.handleChunk)
 		this.wasmClient.removeEventListener('downstreamThroughput', this.handleThroughput)
@@ -199,5 +208,3 @@ export class WasmInterface {
 }
 
 export const wasmInterface = new WasmInterface()
-
-wasmInterface.initialize(MOCK_DATA).then(() => console.log(`p2p ${MOCK_DATA ? '"wasm"' : 'wasm'} initialized!`))
