@@ -20,51 +20,38 @@ proxying across the entire Lantern network.
 Put another way, Broflake is a common language which enables Lantern users to describe, exchange,
 and share the resource of internet access across network boundaries and runtime environments.
 
-
 ### :floppy_disk: System components
 ![system](https://user-images.githubusercontent.com/21117002/176231832-1c558546-8933-4e25-b8df-f60edb4ed6d5.png)
 
-Broflake is a suite of several software applications. We have deployed some tricks to make 
-Broflake's codebase as small as possible, and so the mapping between applications and modules isn't
-perfectly straightforward.
+Broflake is a suite of several software applications:
 
-| Module     | Description                                                                    |
-|------------|--------------------------------------------------------------------------------|
-| clientcore | core code for Broflake clients                                                 |
-| client     | executable binaries for desktop, mobile and web that use clientcore            |
-| common     | shared code between different Broflake components (e.g., egress, freddie, etc) |
-| egress     | egress server                                                                  |
-| freddie    | discovery server + signaling & matchmaking logic                               |
-| ui         | embeddable web user interface                                                  |
-
+| Module     | Description                                                                         |
+|------------|-------------------------------------------------------------------------------------|
+| clientcore | library exposing Broflake's high level client API                                   |
+| cmd        | driver code for operationalizing Broflake outside of a controlling process          |   
+| common     | data structures and functionality shared across Broflake modules                    |
+| egress     | egress server                                                                       |
+| freddie    | discovery, signaling, and matchmaking server                                        |
+| netstate   | network topology observability tool                                                 |
+| ui         | embeddable web user interface                                                       |
 
 ### :arrow_forward: Quickstart for devs
-Just a heads up: these instructions were designed for the prototype as of November 5, 2022. If 
-something's not working and it's been a while since 11/5, you might want to check with nelson.
+Instructions last updated February 1, 2023. If something's not working and it's been a while since 
+2/1, you might want to check with nelson.
 
 1. Clone this repo.
 
-2. You need access to a STUN server that's not on your LAN and which you are sure will not rate
-limit you. (While developing Broflake, your computer will generate more STUN requests more quickly 
-than most public STUN servers seem comfortable with). nelson has written a zero-dependency 
-[STUN server](https://github.com/noahlevenson/ministun) that you can get running with 10 lines of JavaScript.  
-
-3. You need to configure Broflake to use your STUN server. Currently, this requires you to modify
-Broflake's source code. We're going to fix that. For now, though, open `client/go/client.go`, grep 
-`stunSrv`, and swap in your server's address, making sure to include the port and preserve the
-leading "stun:".
-
-4. Configure **Mozilla Firefox** to use a local HTTP proxy. In settings, search "proxy". Select 
+2. Configure **Mozilla Firefox** to use a local HTTP proxy. In settings, search "proxy". Select 
 *Manual proxy configuration*. Enter address `127.0.0.1`, port `1080`, and check the box labeled 
 *Also use this proxy for HTTPS*.
 
-5. Build the native binary desktop client: `cd client && ./build.sh desktop`
+5. Build the native binary desktop client: `cd cmd && ./build.sh desktop`
 
-6. Build the native binary widget: `cd client && ./build.sh widget`
+6. Build the native binary widget: `cd cmd && ./build.sh widget`
 
-7. Build the browser widget: `cd client && ./build_web.sh`
+7. Build the browser widget: `cd cmd && ./build_web.sh`
 
-8. Serve the browser widget with a permissive CORS policy: `cd client && ./serve.py`
+8. Serve the browser widget with a permissive CORS policy: `cd cmd && ./serve.py`
 
 9. Start Freddie: `cd freddie && go run freddie.go`
 
