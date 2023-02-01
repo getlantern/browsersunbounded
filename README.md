@@ -92,7 +92,7 @@ TAG=Bob FREDDIE=http://localhost:9000 egress=http://localhost:8000 ./desktop`
 signaling process and establish connection(s) to one another, you should see the network you have
 created. You must refresh the page to update the visualization.
 
-### :nail_care::art: UI quickstart for edvs
+### :nail_care::art: UI quickstart for devs
 The UI is bootstrapped with [Create React App](https://github.com/facebook/create-react-app). Then "re-wired" to build one single js bundle entry using [rewire](https://www.npmjs.com/package/rewire). The React app will bind to a custom `<lantern-network>` DOM el and render based on settings passed to the [dataset](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/dataset):
 
 ```html
