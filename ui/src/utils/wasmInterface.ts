@@ -1,8 +1,8 @@
 import go from './goWasmExec'
 import {StateEmitter} from '../hooks/useStateEmitter'
-import mockWasmClient from '../mocks/mockWasmClient'
+import MockWasmClient from '../mocks/mockWasmClient'
 
-const MOCK_CLIENT = process.env.REACT_APP_MOCK_DATA === 'true'
+const MOCK_DATA = process.env.REACT_APP_MOCK_DATA === 'true'
 
 type WebAssemblyInstance = InstanceType<typeof WebAssembly.Instance>
 
@@ -30,14 +30,14 @@ export const readyEmitter = new StateEmitter<boolean>(false)
 export const sharingEmitter = new StateEmitter<boolean>(false)
 
 
-interface WasmClientEventMap {
+export interface WasmClientEventMap {
 	'ready': CustomEvent;
 	'downstreamChunk': { detail: Chunk };
 	'downstreamThroughput': { detail: Throughput };
 	'consumerConnectionChange': { detail: Connection };
 }
 
-interface WasmClient extends EventTarget {
+export interface WasmClient extends EventTarget {
 	addEventListener<K extends keyof WasmClientEventMap>(
 		type: K,
 		listener: (e: WasmClientEventMap[K]) => void,
@@ -82,12 +82,13 @@ declare global {
 	): WasmClient
 }
 
-class WasmInterface {
+export class WasmInterface {
+	// public handleChunk: ({ detail }: {detail: Chunk}) => void
 	go: typeof go
 	wasmClient: WasmClient | undefined
 	instance: WebAssemblyInstance | undefined
 	// raw data
-	connectionMap: {[key: number]: Connection}
+	connectionMap: { [key: number]: Connection }
 	throughput: Throughput
 	// smoothed and agg data
 	connections: Connection[]
@@ -97,32 +98,32 @@ class WasmInterface {
 	constructor() {
 		this.ready = false
 		this.connectionMap = {}
-		this.throughput = { bytesPerSec: 0 }
+		this.throughput = {bytesPerSec: 0}
 		this.connections = []
 		this.go = go
 	}
 
 	initialize = async (mock = false): Promise<WebAssemblyInstance | undefined> => {
-		if (mock) {
-			await this.mockInitialize()
-			return // if mocking data, skip wasm init mock client does not return an instance
-		}
-		if (!this.instance) {
+		if (mock) { // fake it till you make it
+			this.wasmClient = new MockWasmClient(this)
+		} else { // the real deal (wasm)
 			const res = await WebAssembly.instantiateStreaming(
 				fetch(process.env.REACT_APP_WIDGET_WASM_URL!), this.go.importObject
 			)
 			this.instance = res.instance
 			this.go.run(this.instance)
-			this.wasmClient = globalThis.newBroflake('widget', 5, 5, 4096, '', '')
+			this.wasmClient = globalThis.newBroflake(
+				'widget',
+				5,
+				5,
+				4096,
+				'',
+				''
+			)
 			this.initListeners()
-			this.handleReady()
 		}
+		this.handleReady()
 		return this.instance
-	}
-
-	mockInitialize = async () => {
-		this.initListeners()
-		mockWasmClient.ready()
 	}
 
 	start = () => {
@@ -200,4 +201,4 @@ class WasmInterface {
 
 export const wasmInterface = new WasmInterface()
 
-wasmInterface.initialize(MOCK_CLIENT).then(() => console.log('p2p wasm initialized!'))
+wasmInterface.initialize(MOCK_DATA).then(() => console.log(`p2p ${MOCK_DATA ? '"wasm"' : 'wasm'} initialized!`))

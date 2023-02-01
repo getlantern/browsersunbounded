@@ -1,7 +1,9 @@
-import wasmClient from '../utils/wasmBinding'
 import {mockAddr, mockRandomInt} from './mockData'
 import {
-	Connection
+	Connection,
+	WasmClient,
+	WasmClientEventMap,
+	WasmInterface
 } from '../utils/wasmInterface'
 
 /***
@@ -15,12 +17,14 @@ const defaultConnections: Connection[] = [...Array(5)].map((_, i) => (
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-class MockWasmClient {
+class MockWasmClient implements WasmClient {
 	connections: Connection[]
 	tick: number
 	interval: NodeJS.Timer | undefined
+	wasmInterface: WasmInterface
 
-	constructor() {
+	constructor(wasmInterface: WasmInterface) {
+		this.wasmInterface = wasmInterface
 		this.tick = 0
 		this.connections = defaultConnections
 	}
@@ -38,17 +42,17 @@ class MockWasmClient {
 			// fire fake chunk events
 			chunks.forEach(chunk => {
 				throughput += chunk.size
-				wasmClient._fire('downstreamChunk', chunk)
+				this.wasmInterface.handleChunk({detail: chunk})
 			})
 			// fire fake throughput events
-			wasmClient._fire('downstreamThroughput', {bytesPerSec: throughput})
+			this.wasmInterface.handleThroughput({detail: {bytesPerSec: throughput}})
 			if ((this.tick === 0 || this.tick % 10 === 0) && active.length !== 5) {
 				this.connections = this.connections.map((_, i) => (
 					{state: i === active.length ? 1 : this.connections[i].state, addr: mockAddr[i], workerIdx: i}
 				))
 				const connection = this.connections[active.length]
 				// fire fake connection event
-				wasmClient._fire('consumerConnectionChange', connection)
+				this.wasmInterface.handleConnection({detail: connection})
 			}
 			this.tick += 1
 		}, 250)
@@ -57,17 +61,31 @@ class MockWasmClient {
 	stop = async () => {
 		clearInterval(this.interval)
 		this.connections = defaultConnections
-		this.connections.forEach(connection => wasmClient._fire('consumerConnectionChange', connection))
+		this.connections.forEach(connection => this.wasmInterface.handleConnection({detail: connection}))
 		for (let i = 0; i < 50; i++) {
 			await sleep(50)
-			wasmClient._fire('downstreamThroughput', {bytesPerSec: 0})
+			this.wasmInterface.handleThroughput({detail: {bytesPerSec: 0}})
 		}
-		this.ready()
+		this.wasmInterface.handleReady()
 	}
-	ready = () => {
-		wasmClient._fire('ready', {})
-	}
+
+	// these are just dumb stubs to satisfy the interface
+	removeEventListener<K extends keyof WasmClientEventMap>(
+		type: K,
+		listener: (e: WasmClientEventMap[K]) => void,
+		options?: boolean | AddEventListenerOptions
+	): void
+	removeEventListener() {}
+	addEventListener<K extends keyof WasmClientEventMap>(
+		type: K,
+		listener: (e: WasmClientEventMap[K]) => void,
+		options?: boolean | AddEventListenerOptions
+	): void
+	addEventListener() {}
+	debug() {}
+	ready() {}
+	dispatchEvent(event: Event) { return false }
+
 }
 
-const mockWasmClient = new MockWasmClient()
-export default mockWasmClient
+export default MockWasmClient
