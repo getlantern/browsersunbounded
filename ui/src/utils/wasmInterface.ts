@@ -83,7 +83,6 @@ declare global {
 }
 
 export class WasmInterface {
-	// public handleChunk: ({ detail }: {detail: Chunk}) => void
 	go: typeof go
 	wasmClient: WasmClient | undefined
 	instance: WebAssemblyInstance | undefined
