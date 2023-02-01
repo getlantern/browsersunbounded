@@ -12,6 +12,8 @@ import Editor from './components/organisms/editor'
 import Floating from "./components/organisms/floating";
 import Iframe from './components/molecules/iframe'
 
+const MOCK_DATA = process.env.REACT_APP_MOCK_DATA === 'true'
+
 interface Props {
   appId: number
   embed: HTMLElement
@@ -22,6 +24,16 @@ const App = ({appId, embed}: Props) => {
   const sharing = useEmitterState(sharingEmitter)
   const settings = useEmitterState(settingsEmitter)[appId]
   const [mobileBg, desktopBg] = [settings.mobileBg, settings.desktopBg]
+
+  useEffect(() => {
+    if (wasmInterface.instance || wasmInterface.initializing) return // already initialized
+    wasmInterface.initialize(MOCK_DATA).then(instance => {
+        if (!instance) return
+        console.log(`p2p ${MOCK_DATA ? '"wasm"' : 'wasm'} initialized!`)
+        console.log('instance: ', instance)
+      }
+    )
+  }, [])
 
   useEffect(() => {
     // If settings for running in bg are disabled, we will stop the wasm when page is not visible
