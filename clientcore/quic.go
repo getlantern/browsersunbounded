@@ -42,6 +42,7 @@ func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICOptions) (*quicLayer, error) {
 			InsecureSkipVerify: qopt.InsecureSkipVerify,
 			NextProtos:         []string{"broflake"},
 		},
+		waitForConn: newWaitForConn(),
 	}
 
 	go q.maintainQuicConnection()
@@ -50,23 +51,26 @@ func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICOptions) (*quicLayer, error) {
 }
 
 type quicLayer struct {
-	bfconn    *BroflakeConn
-	tlsConfig *tls.Config
-	qconn     quic.Connection
-	mx        sync.RWMutex
+	bfconn      *BroflakeConn
+	tlsConfig   *tls.Config
+	waitForConn *waitForConn
+	mx          sync.RWMutex
 }
 
 func (c *quicLayer) DialContext(ctx context.Context) (net.Conn, error) {
 	c.mx.RLock()
-	defer c.mx.RUnlock()
-	stream, err := c.qconn.OpenStreamSync(ctx)
-	return common.QUICStreamNetConn{Stream: stream}, err
-}
+	waiter := c.waitForConn
+	c.mx.RUnlock()
 
-func (c *quicLayer) setConn(conn quic.Connection) {
-	c.mx.Lock()
-	defer c.mx.Unlock()
-	c.qconn = conn
+	qconn, err := waiter.get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	stream, err := qconn.OpenStreamSync(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return common.QUICStreamNetConn{Stream: stream}, nil
 }
 
 func (c *quicLayer) maintainQuicConnection() {
@@ -84,8 +88,10 @@ func (c *quicLayer) maintainQuicConnection() {
 			break
 		}
 
+		c.mx.Lock()
+		c.waitForConn.set(conn)
+		c.mx.Unlock()
 		log.Println("QUIC connection established, ready to proxy!")
-		c.setConn(conn)
 
 		// The egress server doesn't actually open streams to us, this is just how we detect a half open
 		_, err := conn.AcceptStream(context.Background())
@@ -93,8 +99,39 @@ func (c *quicLayer) maintainQuicConnection() {
 			log.Printf("QUIC connection error (%v), closing!\n", err)
 			conn.CloseWithError(42069, "")
 		}
+
+		// any new connections after this will attempt to wait for re-establishment
+		// (up to the context limit) rather than using the closed connection.
+		c.mx.Lock()
+		c.waitForConn = newWaitForConn()
+		c.mx.Unlock()
 	}
 }
 
 // quicLayer is a ReliableStreamLayer
 var _ ReliableStreamLayer = &quicLayer{}
+
+func newWaitForConn() *waitForConn {
+	return &waitForConn{
+		ready: make(chan struct{}, 0),
+	}
+}
+
+type waitForConn struct {
+	conn  quic.Connection
+	ready chan struct{}
+}
+
+func (w *waitForConn) get(ctx context.Context) (quic.Connection, error) {
+	select {
+	case <-w.ready:
+		return w.conn, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+}
+
+func (w *waitForConn) set(conn quic.Connection) {
+	w.conn = conn
+	close(w.ready)
+}
