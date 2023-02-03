@@ -75,17 +75,18 @@ visualizes network topology, labeling each Broflake node with an arbitrary, user
 may be injected at runtime.
 
 `netstated` is a distributed state machine which collects and processes state changes from Broflake
-clients. It serves a network visualization on port 8080.
+clients. It serves a network visualization at `GET /`. The `gv` visualizer client looks for a 
+`netstated` instance at `localhost:8080`.
 
 In the example below, we assume that Freddie is at `http://localhost:9000` and the egress server
 is at `http://localhost:8000`:
 
-1. Start `netstated`: `cd netstate/d && PORT=7000 go run netstated.go`
+1. Start `netstated`: `cd netstate/d && go run netstated.go`
 
-2. Start a widget as user Alice: `cd cmd/dist/bin && NETSTATED=http://localhost:7000/exec TAG=Alice
+2. Start a widget as user Alice: `cd cmd/dist/bin && NETSTATED=http://localhost:8080/exec TAG=Alice
 FREDDIE=http://localhost:9000 EGRESS=http://localhost:8000 ./widget`
 
-3. Start a desktop client as user Bob: `cd cmd/dist/bin && NETSTATED=http://localhost:7000/exec 
+3. Start a desktop client as user Bob: `cd cmd/dist/bin && NETSTATED=http://localhost:8080/exec 
 TAG=Bob FREDDIE=http://localhost:9000 EGRESS=http://localhost:8000 ./desktop`
 
 4. Open a web browser and navigate to `http://localhost:8080`. As Alice and Bob complete the 
