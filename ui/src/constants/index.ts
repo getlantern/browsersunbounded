@@ -11,6 +11,7 @@ export const COLORS = {
 	grey5: '#1B1C1D',
 	grey6: '#040404',
 	grey: '#707070',
+	blue5: '#012D2D',
 	brand: 'rgba(0, 122, 124, 1)',
 	altBrand: '#00BCD4',
 	transparent: 'transparent'
@@ -19,8 +20,8 @@ export const SHADOWS = {
 	light: '0 4px 32px rgba(0, 97, 99, 0.1)',
 	dark: '0px 2px 2px rgba(0, 0, 0, 0.16)'
 }
-export const UV_MAP_PATH_LIGHT = 'https://devblog.getlantern.org/broflake/uv-map.png'
-export const UV_MAP_PATH_DARK = 'https://devblog.getlantern.org/broflake/uv-map-dark.png'
+export const UV_MAP_PATH_LIGHT = 'https://embed.lantern.io/uv-map.png'
+export const UV_MAP_PATH_DARK = 'https://embed.lantern.io/uv-map-dark.png'
 export const GOOGLE_FONT_LINKS = [
 	{href: 'https://fonts.googleapis.com', rel: 'preconnect'},
 	{href: 'https://fonts.gstatic.com', rel: 'preconnect'},

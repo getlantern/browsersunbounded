@@ -136,14 +136,14 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				// block here that continues the for loop if this genesis message is unsuitable)
 
 				// We like the genesis message, let's create an offer to signal back in the next step!
-				offer, err := peerConnection.CreateOffer(nil)
+				sdp, err := peerConnection.CreateOffer(nil)
 				if err != nil {
 					log.Printf("Error creating offer SDP: %v", err)
 					// TODO: is it more desirable to restart the state instead of continuing the loop here?
 					continue
 				}
 
-				return 2, []interface{}{peerConnection, replyTo, offer, connectionEstablished, connectionChange, connectionClosed}
+				return 2, []interface{}{peerConnection, replyTo, sdp, connectionEstablished, connectionChange, connectionClosed}
 			}
 
 			// We listened as long as we could, but we never heard a suitable genesis message
@@ -159,13 +159,13 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// input[5]: chan struct{}
 			peerConnection := input[0].(*webrtc.PeerConnection)
 			replyTo := input[1].(string)
-			offer := input[2].(webrtc.SessionDescription)
+			sdp := input[2].(webrtc.SessionDescription)
 			connectionEstablished := input[3].(chan *webrtc.DataChannel)
 			connectionChange := input[4].(chan webrtc.PeerConnectionState)
 			connectionClosed := input[5].(chan struct{})
 			log.Printf("Consumer state 2...\n")
 
-			offerJSON, err := json.Marshal(offer)
+			offerJSON, err := json.Marshal(common.OfferMsg{SDP: sdp, Tag: options.Tag})
 			if err != nil {
 				log.Printf("Error marshaling JSON: %v\n", err)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
@@ -224,7 +224,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			})
 
 			// This kicks off ICE candidate gathering
-			err = peerConnection.SetLocalDescription(offer)
+			err = peerConnection.SetLocalDescription(sdp)
 			if err != nil {
 				log.Printf("Error setting local description: %v\n", err)
 				// Borked!

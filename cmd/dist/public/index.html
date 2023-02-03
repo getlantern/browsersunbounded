@@ -2,7 +2,6 @@
 <head>
   <meta charset="utf-8"/>
   <script src="wasm_exec.js"></script>
-  <script src="bindings.js"></script>
   <script>
     const go = new Go();
     WebAssembly.instantiateStreaming(fetch("widget.wasm"), go.importObject)

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/elazarl/goproxy"
+	"github.com/getlantern/broflake/clientcore"
 	"github.com/getlantern/broflake/common"
 	"github.com/lucas-clemente/quic-go"
 )
@@ -53,7 +54,7 @@ func newQUICGoproxyRoundTripper() *QUICGoproxyRoundTripper {
 	return &q
 }
 
-func runLocalProxy(port string) {
+func runLocalProxy(port string, bfconn *clientcore.BroflakeConn) {
 	// TODO: this is just to prevent a race with client boot processes, it's not worth getting too
 	// fancy with an event-driven solution because the local proxy is all mocked functionality anyway
 	<-time.After(2 * time.Second)

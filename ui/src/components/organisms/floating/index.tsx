@@ -9,7 +9,7 @@ import Row from '../../atoms/row'
 import Control from '../../molecules/control'
 import Stats, {Connections} from '../../molecules/stats'
 import Footer from '../../molecules/footer'
-import {Logo} from '../../atoms/icons'
+import {LogoLeft} from '../../atoms/icons'
 import ExpandCollapse from '../../atoms/expandCollapse'
 import {useLatch} from '../../../hooks/useLatch'
 import useWindowSize from '../../../hooks/useWindowSize'
@@ -45,7 +45,7 @@ const Floating = ({settings}: Props) => {
 							paddingBottom: !expanded ? 8 : 0
 						}}
 					>
-						<Logo/>
+						{ settings.branding ? <LogoLeft /> : <div /> }
 						{
 							settings.collapse && (
 								<ExpandCollapse
@@ -58,15 +58,17 @@ const Floating = ({settings}: Props) => {
 					</Header>
 					{
 						!expanded && (
-							<Item
-								style={{backgroundColor: settings.theme === Themes.LIGHT ? COLORS.white : COLORS.grey6}}
-								theme={settings.theme}
-							>
-								<Control
-									onToggle={onToggle}
-									info
-								/>
-							</Item>
+							<Col>
+								<Item
+									style={{backgroundColor: settings.theme === Themes.LIGHT ? COLORS.white : COLORS.grey6}}
+									theme={settings.theme}
+								>
+									<Control
+										onToggle={onToggle}
+										info
+									/>
+								</Item>
+							</Col>
 						)
 					}
 					{
