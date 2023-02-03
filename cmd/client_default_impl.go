@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/anacrolix/envpprof"
 	"github.com/getlantern/broflake/clientcore"
 )
 
@@ -15,6 +16,7 @@ var (
 )
 
 func main() {
+	defer envpprof.Stop()
 	freddie := os.Getenv("FREDDIE")
 	egress := os.Getenv("EGRESS")
 	netstated := os.Getenv("NETSTATED")

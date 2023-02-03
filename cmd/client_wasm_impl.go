@@ -7,10 +7,12 @@ import (
 	"log"
 	"syscall/js"
 
+	"github.com/anacrolix/envpprof"
 	"github.com/getlantern/broflake/clientcore"
 )
 
 func main() {
+	defer envpprof.Stop()
 	log.Printf("wasm client started...")
 
 	// exposed to JS: newBroflake(clientType, cTableSize, pTableSize, busBufferSz, netstated, tag)
