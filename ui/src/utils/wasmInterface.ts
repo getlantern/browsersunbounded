@@ -1,9 +1,6 @@
 import go from './goWasmExec'
-import wasmClient from './wasmBinding'
 import {StateEmitter} from '../hooks/useStateEmitter'
-import mockWasmClient from '../mocks/mockWasmClient'
-
-const MOCK_CLIENT = process.env.REACT_APP_MOCK_DATA === 'true'
+import MockWasmClient from '../mocks/mockWasmClient'
 
 type WebAssemblyInstance = InstanceType<typeof WebAssembly.Instance>
 
@@ -11,11 +8,13 @@ export interface Chunk {
 	size: number
 	workerIdx: number
 }
+
 export interface Connection {
 	state: 1 | -1
 	workerIdx: number
 	addr: string
 }
+
 export interface Throughput {
 	bytesPerSec: number
 }
@@ -28,64 +27,129 @@ export const lifetimeChunksEmitter = new StateEmitter<Chunk[]>([])
 export const readyEmitter = new StateEmitter<boolean>(false)
 export const sharingEmitter = new StateEmitter<boolean>(false)
 
-class WasmInterface {
+
+export interface WasmClientEventMap {
+	'ready': CustomEvent;
+	'downstreamChunk': { detail: Chunk };
+	'downstreamThroughput': { detail: Throughput };
+	'consumerConnectionChange': { detail: Connection };
+}
+
+export interface WasmClient extends EventTarget {
+	addEventListener<K extends keyof WasmClientEventMap>(
+		type: K,
+		listener: (e: WasmClientEventMap[K]) => void,
+		options?: boolean | AddEventListenerOptions
+	): void
+
+	addEventListener(
+		type: string,
+		callback: EventListenerOrEventListenerObject | null,
+		options?: EventListenerOptions | boolean
+	): void
+
+	removeEventListener<K extends keyof WasmClientEventMap>(
+		type: K,
+		listener: (e: WasmClientEventMap[K]) => void,
+		options?: boolean | AddEventListenerOptions
+	): void
+
+	removeEventListener(
+		type: string,
+		callback: EventListenerOrEventListenerObject | null,
+		options?: EventListenerOptions | boolean
+	): void
+
+	start(): void
+
+	stop(): void
+
+	debug(): void
+}
+
+
+// bind the client constructor
+declare global {
+	function newBroflake(
+		type: string,
+		cTableSz: number,
+		pTableSz: number,
+		busBufSz: number,
+		netstated: string,
+		tag: string
+	): WasmClient
+}
+
+export class WasmInterface {
 	go: typeof go
-	wasmClient: typeof wasmClient
+	wasmClient: WasmClient | undefined
 	instance: WebAssemblyInstance | undefined
 	// raw data
-	connectionMap: {[key: number]: Connection}
+	connectionMap: { [key: number]: Connection }
 	throughput: Throughput
 	// smoothed and agg data
 	connections: Connection[]
 	// states
 	ready: boolean
+	initializing: boolean
 
 	constructor() {
 		this.ready = false
+		this.initializing = false
 		this.connectionMap = {}
-		this.throughput = { bytesPerSec: 0 }
+		this.throughput = {bytesPerSec: 0}
 		this.connections = []
 		this.go = go
-		this.wasmClient = wasmClient
 	}
 
+
 	initialize = async (mock = false): Promise<WebAssemblyInstance | undefined> => {
-		if (mock) {
-			await this.mockInitialize()
-			return // if mocking data, skip wasm init mock client does not return an instance
+		// this dumb state is needed to prevent multiple calls to initialize from react hot reload dev server 🥵
+		if (this.initializing || this.instance) { // already initialized or initializing
+			console.warn('Wasm client has already been initialized or is initializing, aborting init.')
+			return
 		}
-		if (!this.instance) {
+		this.initializing = true
+		if (mock) { // fake it till you make it
+			this.wasmClient = new MockWasmClient(this)
+			this.instance = {} as WebAssemblyInstance
+		} else { // the real deal (wasm)
 			const res = await WebAssembly.instantiateStreaming(
 				fetch(process.env.REACT_APP_WIDGET_WASM_URL!), this.go.importObject
 			)
 			this.instance = res.instance
+			this.go.run(this.instance)
+			this.wasmClient = globalThis.newBroflake(
+				'widget',
+				5,
+				5,
+				4096,
+				'',
+				''
+			)
 			this.initListeners()
-			this.go.run(this.instance) // do not await this is blocking till the exit promise is resolved
 		}
+		this.handleReady()
+		this.initializing = false
 		return this.instance
 	}
 
-	mockInitialize = async () => {
-		this.initListeners()
-		mockWasmClient.ready()
-	}
-
 	start = () => {
-		if (!this.ready) console.warn('Wasm client is not in ready state, aborting start')
-		else {
-			this.wasmClient.start()
-			sharingEmitter.update(true)
-		}
+		if (!this.ready) return console.warn('Wasm client is not in ready state, aborting start')
+		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting start.')
+		this.wasmClient.start()
+		sharingEmitter.update(true)
 	}
 
 	stop = () => {
+		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting stop.')
 		this.ready = false
 		readyEmitter.update(this.ready)
 		this.wasmClient.stop()
 		sharingEmitter.update(false)
 	}
 
-	idxMapToArr = (map: {[key: number]: any}) => {
+	idxMapToArr = (map: { [key: number]: any }) => {
 		return Object.keys(map).map(idx => map[parseInt(idx)])
 	}
 
@@ -129,6 +193,7 @@ class WasmInterface {
 	}
 
 	initListeners = () => {
+		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting listener init.')
 		// rm listeners in case they exist (hot reload)
 		this.wasmClient.removeEventListener('downstreamChunk', this.handleChunk)
 		this.wasmClient.removeEventListener('downstreamThroughput', this.handleThroughput)
@@ -143,5 +208,3 @@ class WasmInterface {
 }
 
 export const wasmInterface = new WasmInterface()
-
-wasmInterface.initialize(MOCK_CLIENT).then(() => console.log('p2p wasm initialized!'))

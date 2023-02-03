@@ -2,11 +2,14 @@
 package clientcore
 
 import (
+	"log"
 	"net"
+	"strconv"
 	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/broflake/common"
+	"github.com/getlantern/broflake/netstate/client"
 )
 
 const (
@@ -14,7 +17,7 @@ const (
 )
 
 type UI interface {
-	Init(bf *Broflake)
+	Init(bf *BroflakeEngine)
 
 	Start()
 
@@ -33,7 +36,7 @@ type UI interface {
 	OnConsumerConnectionChange(state int, workerIdx int, addr net.IP)
 }
 
-func DownstreamUIHandler(ui UIImpl) func(msg IPCMsg) {
+func DownstreamUIHandler(ui UIImpl, netstated, tag string) func(msg IPCMsg) {
 	var bytesPerSec int64
 	var tick uint
 	tickMs := time.Duration(1000 / uiRefreshHz)
@@ -59,7 +62,7 @@ func DownstreamUIHandler(ui UIImpl) func(msg IPCMsg) {
 	}
 }
 
-func UpstreamUIHandler(ui UIImpl) func(msg IPCMsg) {
+func UpstreamUIHandler(ui UIImpl, netstated, tag string) func(msg IPCMsg) {
 	return func(msg IPCMsg) {
 		switch msg.IpcType {
 		case ConsumerInfoIPC:
@@ -68,7 +71,24 @@ func UpstreamUIHandler(ui UIImpl) func(msg IPCMsg) {
 			if ci.Nil() {
 				state = -1
 			}
+
+			// TODO: surface the rest of the ConsumerInfo fields to the UI?
 			ui.OnConsumerConnectionChange(state, int(msg.Wid), ci.Addr)
+
+			if netstated != "" {
+				err := netstatecl.Exec(
+					netstated,
+					&netstatecl.Instruction{
+						Op:   netstatecl.OpConsumerConnectionChange,
+						Args: []string{strconv.Itoa(state), strconv.Itoa(int(msg.Wid)), ci.Addr.String(), ci.Tag},
+						Tag:  tag,
+					},
+				)
+
+				if err != nil {
+					log.Printf("netstatecl.Exec error: %v\n", err)
+				}
+			}
 		}
 	}
 }

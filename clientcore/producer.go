@@ -183,13 +183,13 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// State 3
 			// input[0]: *webrtc.PeerConnection
 			// input[1]: string (replyTo)
-			// input[2]: webrtc.SessionDescription (remote offer)
+			// input[2]: common.OfferMsg (remote offer)
 			// input[3]: chan *webrtc.DataChannel
 			// input[4]: chan webrtc.PeerConnectionState
 			// input[5]: chan struct{}
 			peerConnection := input[0].(*webrtc.PeerConnection)
 			replyTo := input[1].(string)
-			offer := input[2].(webrtc.SessionDescription)
+			offer := input[2].(common.OfferMsg)
 			connectionEstablished := input[3].(chan *webrtc.DataChannel)
 			connectionChange := input[4].(chan webrtc.PeerConnectionState)
 			connectionClosed := input[5].(chan struct{})
@@ -199,7 +199,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			gatherComplete := webrtc.GatheringCompletePromise(peerConnection)
 
 			// Assign the offer to our connection
-			err := peerConnection.SetRemoteDescription(offer)
+			err := peerConnection.SetRemoteDescription(offer.SDP)
 			if err != nil {
 				log.Printf("Error setting remote description: %v\n", err)
 				// Borked!
@@ -317,7 +317,14 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				}
 			}
 
-			return 4, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed, remoteAddr}
+			return 4, []interface{}{
+				peerConnection,
+				connectionEstablished,
+				connectionChange,
+				connectionClosed,
+				remoteAddr,
+				offer,
+			}
 		}),
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 4
@@ -326,17 +333,26 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// input[2]: chan webrtc.PeerConnectionState
 			// input[3]: chan struct{}
 			// input[4]: net.IP
+			// input[5]: common.OfferMsg
 			peerConnection := input[0].(*webrtc.PeerConnection)
 			connectionEstablished := input[1].(chan *webrtc.DataChannel)
 			connectionChange := input[2].(chan webrtc.PeerConnectionState)
 			connectionClosed := input[3].(chan struct{})
 			remoteAddr := input[4].(net.IP)
+			offer := input[5].(common.OfferMsg)
 			log.Printf("Producer state 4, signaling complete!\n")
 
 			select {
 			case d := <-connectionEstablished:
 				log.Printf("A WebRTC connection has been established!\n")
-				return 5, []interface{}{peerConnection, d, connectionChange, connectionClosed, remoteAddr}
+				return 5, []interface{}{
+					peerConnection,
+					d,
+					connectionChange,
+					connectionClosed,
+					remoteAddr,
+					offer,
+				}
 			case <-time.After(options.NATFailTimeout):
 				log.Printf("NAT failure, aborting!\n")
 				// Borked!
@@ -350,16 +366,21 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// input[1]: *webrtc.DataChannel
 			// input[2]: chan webrtc.PeerConnectionState
 			// input[3]: chan struct{}
-			// input[4]: net.Ip
+			// input[4]: net.IP
+			// input[5]: common.OfferMsg
 			peerConnection := input[0].(*webrtc.PeerConnection)
 			d := input[1].(*webrtc.DataChannel)
 			connectionChange := input[2].(chan webrtc.PeerConnectionState)
 			connectionClosed := input[3].(chan struct{})
 			remoteAddr := input[4].(net.IP)
+			offer := input[5].(common.OfferMsg)
 			log.Printf("Producer state 5...\n")
 
 			// Announce the new connectivity situation for this slot
-			com.tx <- IPCMsg{IpcType: ConsumerInfoIPC, Data: common.ConsumerInfo{Addr: remoteAddr}}
+			com.tx <- IPCMsg{
+				IpcType: ConsumerInfoIPC,
+				Data:    common.ConsumerInfo{Addr: remoteAddr, Tag: offer.Tag},
+			}
 
 			// Inbound from datachannel:
 			d.OnMessage(func(msg webrtc.DataChannelMessage) {

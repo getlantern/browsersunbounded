@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>netstated (gv client)</title>
+  </head>
+
+  <body>
+    <script src="viz.js"></script>
+    <script src="full.render.js"></script>
+    <script>
+      let viz = new Viz();
+      
+      fetch("http://localhost:8080/neato")
+        .then(response => response.text())
+        .then(text => viz.renderSVGElement(text))
+        .then(function(element) {
+          document.body.appendChild(element);
+        })
+        .catch(error => {
+          viz = new Viz();
+          console.error(error);
+        });
+    </script>
+  </body>
+</html>

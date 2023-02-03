@@ -5,6 +5,7 @@
 * [What is Broflake?](#question-what-is-broflake)
 * [System components](#floppy_disk-system-components)
 * [Quickstart for devs](#arrow_forward-quickstart-for-devs)
+* [Observing networks with netstate](#spider_web)
 * [UI quickstart for devs](#nail_careart-ui-quickstart-for-devs)
 
 ### :skull: Warning
@@ -20,68 +21,78 @@ proxying across the entire Lantern network.
 Put another way, Broflake is a common language which enables Lantern users to describe, exchange,
 and share the resource of internet access across network boundaries and runtime environments.
 
-
 ### :floppy_disk: System components
 ![system](https://user-images.githubusercontent.com/21117002/176231832-1c558546-8933-4e25-b8df-f60edb4ed6d5.png)
 
-Broflake is a suite of several software applications. We have deployed some tricks to make 
-Broflake's codebase as small as possible, and so the mapping between applications and modules isn't
-perfectly straightforward.
-
-| Module     | Description                                                                    |
-|------------|--------------------------------------------------------------------------------|
-| clientcore | core code for Broflake clients                                                 |
-| client     | executable binaries for desktop, mobile and web that use clientcore            |
-| common     | shared code between different Broflake components (e.g., egress, freddie, etc) |
-| egress     | egress server                                                                  |
-| freddie    | discovery server + signaling & matchmaking logic                               |
-| ui         | embeddable web user interface                                                  |
-
+| Module     | Description                                                                         |
+|------------|-------------------------------------------------------------------------------------|
+| clientcore | library exposing Broflake's high level client API                                   |
+| cmd        | driver code for operationalizing Broflake outside of a controlling process          |   
+| common     | data structures and functionality shared across Broflake modules                    |
+| egress     | egress server                                                                       |
+| freddie    | discovery, signaling, and matchmaking server                                        |
+| netstate   | network topology observability tool                                                 |
+| ui         | embeddable web user interface                                                       |
 
 ### :arrow_forward: Quickstart for devs
-Just a heads up: these instructions were designed for the prototype as of November 5, 2022. If 
-something's not working and it's been a while since 11/5, you might want to check with nelson.
+Instructions last updated February 1, 2023. If something's not working and it's been a while since 
+2/1, you might want to check with nelson.
 
 1. Clone this repo.
 
-2. You need access to a STUN server that's not on your LAN and which you are sure will not rate
-limit you. (While developing Broflake, your computer will generate more STUN requests more quickly 
-than most public STUN servers seem comfortable with). nelson has written a zero-dependency 
-[STUN server](https://github.com/noahlevenson/ministun) that you can get running with 10 lines of JavaScript.  
-
-3. You need to configure Broflake to use your STUN server. Currently, this requires you to modify
-Broflake's source code. We're going to fix that. For now, though, open `client/go/client.go`, grep 
-`stunSrv`, and swap in your server's address, making sure to include the port and preserve the
-leading "stun:".
-
-4. Configure **Mozilla Firefox** to use a local HTTP proxy. In settings, search "proxy". Select 
+2. Configure **Mozilla Firefox** to use a local HTTP proxy. In settings, search "proxy". Select 
 *Manual proxy configuration*. Enter address `127.0.0.1`, port `1080`, and check the box labeled 
 *Also use this proxy for HTTPS*.
 
-5. Build the native binary desktop client: `cd client && ./build.sh desktop`
+3. Build the native binary desktop client: `cd cmd && ./build.sh desktop`
 
-6. Build the native binary widget: `cd client && ./build.sh widget`
+4. Build the native binary widget: `cd cmd && ./build.sh widget`
 
-7. Build the browser widget: `cd client && ./build_web.sh`
+5. Build the browser widget: `cd cmd && ./build_web.sh`
 
-8. Serve the browser widget with a permissive CORS policy: `cd client && ./serve.py`
+6. Start Freddie: `cd freddie && PORT=9000 go run freddie.go`
 
-9. Start Freddie: `cd freddie && go run freddie.go`
+7. Start the egress server: `cd egress && PORT=8000 go run egress.go`
 
-10. Start the egress server: `cd egress && go run egress.go`
+8. Start a desktop client: `cd cmd/dist/bin && FREDDIE=http://localhost:9000 
+EGRESS=http://localhost:8000 ./desktop`
 
-11. Start the desktop client: `cd client/dist/bin && ./desktop`
+9. Decision point: do you want to run a **native binary** widget or a **browser** widget? To start 
+a native binary widget: `cd cmd/dist/bin && FREDDIE=http://localhost:9000 EGRESS=http://localhost:8000 
+./widget`. Alternatively, to start a browser widget, follow the 
+[UI quickstart](#nail_careart-ui-quickstart-for-devs).
 
-12. To start the wasm client in "headless" mode (no [embed ui](#nail_careart-ui-quickstart-for-devs)): Start **Google Chrome**. Navigate to `localhost:9000`. The web widget loads, accesses Freddie, 
-finds your desktop client, signals, and establishes several WebRTC connections. Pop open the console
-and you'll see all the things going on. Alternatively, to start the wasm client wrapped in the embed ui, follow the [UI quickstart](#nail_careart-ui-quickstart-for-devs).
+_The widget and desktop client find each other via the discovery server, execute a signaling step,
+and establish several WebRTC connections._
 
-13. Start **Mozilla Firefox**. Use the browser as you normally would, visiting all your favorite
+10. Start **Mozilla Firefox**. Use the browser as you normally would, visiting all your favorite
 websites. Your traffic is proxied in a chain: Firefox -> local HTTP proxy -> desktop client -> 
-webRTC -> web widget executing in Chrome -> WebSocket -> egress server -> remote HTTP proxy -> the internet. 
+webRTC -> widget -> WebSocket -> egress server -> remote HTTP proxy -> the internet. 
+
+### :spider_web: Observing networks with netstate
+The netstate module is a work-in-progress tool for observing Broflake networks. netstate currently 
+visualizes network topology, labeling each Broflake node with an arbitrary, user-defined "tag" which
+may be injected at runtime.
+
+`netstated` is a distributed state machine which collects and processes state changes from Broflake
+clients. It serves a network visualization on port 8080.
+
+In the example below, we assume that Freddie is at `http://localhost:9000` and the egress server
+is at `http://localhost:8000`:
+
+1. Start `netstated`: `cd netstate/d && PORT=7000 go run netstated.go`
+
+2. Start a widget as user Alice: `cd cmd/dist/bin && NETSTATED=http://localhost:7000/exec TAG=Alice
+FREDDIE=http://localhost:9000 egress=http://localhost:8000 ./widget`
+
+3. Start a desktop client as user Bob: `cd cmd/dist/bin && NETSTATED=http://localhost:7000/exec 
+TAG=Bob FREDDIE=http://localhost:9000 egress=http://localhost:8000 ./desktop`
+
+4. Open a web browser and navigate to `http://localhost:8080`. As Alice and Bob complete the 
+signaling process and establish connection(s) to one another, you should see the network you have
+created. You must refresh the page to update the visualization.
 
 ### :nail_care::art: UI quickstart for devs
-
 The UI is bootstrapped with [Create React App](https://github.com/facebook/create-react-app). Then "re-wired" to build one single js bundle entry using [rewire](https://www.npmjs.com/package/rewire). The React app will bind to a custom `<lantern-network>` DOM el and render based on settings passed to the [dataset](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/dataset):
 
 ```html
