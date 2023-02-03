@@ -83,10 +83,10 @@ is at `http://localhost:8000`:
 1. Start `netstated`: `cd netstate/d && PORT=7000 go run netstated.go`
 
 2. Start a widget as user Alice: `cd cmd/dist/bin && NETSTATED=http://localhost:7000/exec TAG=Alice
-FREDDIE=http://localhost:9000 egress=http://localhost:8000 ./widget`
+FREDDIE=http://localhost:9000 EGRESS=http://localhost:8000 ./widget`
 
 3. Start a desktop client as user Bob: `cd cmd/dist/bin && NETSTATED=http://localhost:7000/exec 
-TAG=Bob FREDDIE=http://localhost:9000 egress=http://localhost:8000 ./desktop`
+TAG=Bob FREDDIE=http://localhost:9000 EGRESS=http://localhost:8000 ./desktop`
 
 4. Open a web browser and navigate to `http://localhost:8080`. As Alice and Bob complete the 
 signaling process and establish connection(s) to one another, you should see the network you have
