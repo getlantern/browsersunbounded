@@ -28,13 +28,13 @@ func CreateHTTPTransport(c ReliableStreamLayer) *http.Transport {
 	}
 }
 
-type QUICOptions struct {
+type QUICLayerOptions struct {
 	ServerName         string
 	InsecureSkipVerify bool
 }
 
 // Maintains an end to end quic connection with egress server over a BroflakeConn
-func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICOptions) (*quicLayer, error) {
+func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICLayerOptions) (*quicLayer, error) {
 	q := &quicLayer{
 		bfconn: bfconn,
 		tlsConfig: &tls.Config{
@@ -42,24 +42,24 @@ func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICOptions) (*quicLayer, error) {
 			InsecureSkipVerify: qopt.InsecureSkipVerify,
 			NextProtos:         []string{"broflake"},
 		},
-		waitForConn: newWaitForConn(),
+		eventualConn: newEventualConn(),
 	}
 
-	go q.maintainQuicConnection()
+	go q.maintainQUICConnection()
 
 	return q, nil
 }
 
 type quicLayer struct {
-	bfconn      *BroflakeConn
-	tlsConfig   *tls.Config
-	waitForConn *waitForConn
-	mx          sync.RWMutex
+	bfconn       *BroflakeConn
+	tlsConfig    *tls.Config
+	eventualConn *eventualConn
+	mx           sync.RWMutex
 }
 
 func (c *quicLayer) DialContext(ctx context.Context) (net.Conn, error) {
 	c.mx.RLock()
-	waiter := c.waitForConn
+	waiter := c.eventualConn
 	c.mx.RUnlock()
 
 	qconn, err := waiter.get(ctx)
@@ -73,7 +73,7 @@ func (c *quicLayer) DialContext(ctx context.Context) (net.Conn, error) {
 	return common.QUICStreamNetConn{Stream: stream}, nil
 }
 
-func (c *quicLayer) maintainQuicConnection() {
+func (c *quicLayer) maintainQUICConnection() {
 	for {
 		var conn quic.Connection
 
@@ -89,7 +89,7 @@ func (c *quicLayer) maintainQuicConnection() {
 		}
 
 		c.mx.Lock()
-		c.waitForConn.set(conn)
+		c.eventualConn.set(conn)
 		c.mx.Unlock()
 		log.Println("QUIC connection established, ready to proxy!")
 
@@ -100,10 +100,11 @@ func (c *quicLayer) maintainQuicConnection() {
 			conn.CloseWithError(42069, "")
 		}
 
-		// any new connections after this will attempt to wait for re-establishment
-		// (up to the context limit) rather than using the closed connection.
+		// If we've hit this path, our QUIC connection has terminated, so we start trying to
+		// acquire a new one. If there's a process that's using this quicLayer for communication,
+		// they'll block on their next call to DialContext until a new QUIC connection is acquired.
 		c.mx.Lock()
-		c.waitForConn = newWaitForConn()
+		c.eventualConn = newEventualConn()
 		c.mx.Unlock()
 	}
 }
@@ -111,18 +112,18 @@ func (c *quicLayer) maintainQuicConnection() {
 // quicLayer is a ReliableStreamLayer
 var _ ReliableStreamLayer = &quicLayer{}
 
-func newWaitForConn() *waitForConn {
-	return &waitForConn{
+func newEventualConn() *eventualConn {
+	return &eventualConn{
 		ready: make(chan struct{}, 0),
 	}
 }
 
-type waitForConn struct {
+type eventualConn struct {
 	conn  quic.Connection
 	ready chan struct{}
 }
 
-func (w *waitForConn) get(ctx context.Context) (quic.Connection, error) {
+func (w *eventualConn) get(ctx context.Context) (quic.Connection, error) {
 	select {
 	case <-w.ready:
 		return w.conn, nil
@@ -131,7 +132,7 @@ func (w *waitForConn) get(ctx context.Context) (quic.Connection, error) {
 	}
 }
 
-func (w *waitForConn) set(conn quic.Connection) {
+func (w *eventualConn) set(conn quic.Connection) {
 	w.conn = conn
 	close(w.ready)
 }

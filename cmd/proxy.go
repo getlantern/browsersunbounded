@@ -23,7 +23,7 @@ func runLocalProxy(port string, bfconn *clientcore.BroflakeConn) {
 	// This tells goproxy to wrap the dial function in a chained CONNECT request
 	proxy.ConnectDial = proxy.NewConnectDialToProxy("http://i.do.nothing")
 
-	ql, err := clientcore.NewQUICLayer(bfconn, &clientcore.QUICOptions{InsecureSkipVerify: true})
+	ql, err := clientcore.NewQUICLayer(bfconn, &clientcore.QUICLayerOptions{InsecureSkipVerify: true})
 	if err != nil {
 		log.Printf("Cannot start local HTTP proxy: failed to create QUIC layer: %v", err)
 		return
