@@ -23,7 +23,7 @@ func CreateHTTPTransport(c ReliableStreamLayer) *http.Transport {
 			return url.Parse("http://i.do.nothing")
 		},
 		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return c.DialContext(context.Background())
+			return c.DialContext(ctx)
 		},
 	}
 }
