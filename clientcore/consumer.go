@@ -157,8 +157,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 						continue
 					}
 
-					// TODO: post-MVP, evaluate the genesis message for suitability! (Add a conditional
-					// block here that continues the for loop if this genesis message is unsuitable)
+					// TODO: post-MVP, evaluate the genesis message for suitability!
 
 					genesisCandidates = append(genesisCandidates, rt)
 
