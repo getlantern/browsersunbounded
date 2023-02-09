@@ -183,7 +183,6 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 
 			// Pick a random genesis candidate and try our luck with them!
-			rand.Seed(time.Now().UnixNano())
 			idx := rand.Intn(len(genesisCandidates))
 			replyTo := genesisCandidates[idx]
 
