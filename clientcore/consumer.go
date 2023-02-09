@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -118,36 +119,82 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 			defer res.Body.Close()
 
-			reader := bufio.NewReader(res.Body)
+			scanner := bufio.NewScanner(res.Body)
+			genesisCandidates := []string{}
+			patienceExpired := make(<-chan time.Time)
+
+			// We make a long-lived HTTP request to Freddie. Freddie streams newline-terminated genesis
+			// messages to us as they become available. We wait until we hear one genesis message, then
+			// continue listening for a tunable amount of time ("patience") to see if we might hear a few
+			// more messages to select from. If we never hear any genesis messages, Freddie will eventually
+			// timeout our request and we must open a new request to continue. A patience value of 0 means
+			// we'll always make an offer for the first genesis message we hear.
+
+		listenLoop:
 			for {
-				rawMsg, err := reader.ReadBytes('\n')
-				if err != nil {
-					// TODO: what does this error mean? Should we be returning to state 1?
-					return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
-				}
+				scannedChan := make(chan bool)
 
-				replyTo, _, err := common.DecodeSignalMsg(rawMsg)
-				if err != nil {
-					log.Printf("Error decoding signal message: %v", err)
-					// TODO: is it more desirable to restart the state instead of continuing the loop here?
-					continue
-				}
-				// TODO: post-MVP, evaluate the genesis message for suitability! (Add a conditional
-				// block here that continues the for loop if this genesis message is unsuitable)
+				go func() {
+					scannedChan <- scanner.Scan()
+				}()
 
-				// We like the genesis message, let's create an offer to signal back in the next step!
-				sdp, err := peerConnection.CreateOffer(nil)
-				if err != nil {
-					log.Printf("Error creating offer SDP: %v", err)
-					// TODO: is it more desirable to restart the state instead of continuing the loop here?
-					continue
-				}
+				select {
+				case requestStillOpen := <-scannedChan:
+					if !requestStillOpen {
+						break listenLoop
+					}
 
-				return 2, []interface{}{peerConnection, replyTo, sdp, connectionEstablished, connectionChange, connectionClosed}
+					rawMsg := scanner.Bytes()
+					if err := scanner.Err(); err != nil {
+						// TODO: what does this error mean? Should we be returning to state 1?
+						return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+					}
+
+					rt, _, err := common.DecodeSignalMsg(rawMsg)
+					if err != nil {
+						log.Printf("Error decoding signal message: %v", err)
+						// Ignore the error, keep listening to our existing subscription to the genesis stream
+						continue
+					}
+
+					// TODO: post-MVP, evaluate the genesis message for suitability! (Add a conditional
+					// block here that continues the for loop if this genesis message is unsuitable)
+
+					genesisCandidates = append(genesisCandidates, rt)
+
+					if len(genesisCandidates) == 1 {
+						patienceExpired = time.After(options.Patience)
+					}
+				case <-patienceExpired:
+					break listenLoop
+				}
 			}
 
-			// We listened as long as we could, but we never heard a suitable genesis message
-			return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			if len(genesisCandidates) == 0 {
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			}
+
+			// Create an offer SDP to send when we shoot our shot
+			sdp, err := peerConnection.CreateOffer(nil)
+			if err != nil {
+				// An error creating the offer is troubling, so let's start fresh by resetting the state
+				log.Printf("Error creating offer SDP: %v", err)
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			}
+
+			// Pick a random genesis candidate and try our luck with them!
+			rand.Seed(time.Now().UnixNano())
+			idx := rand.Intn(len(genesisCandidates))
+			replyTo := genesisCandidates[idx]
+
+			log.Printf(
+				"Sending offer for genesis message %v/%v (patience: %v)",
+				idx+1,
+				len(genesisCandidates),
+				options.Patience,
+			)
+
+			return 2, []interface{}{peerConnection, replyTo, sdp, connectionEstablished, connectionChange, connectionClosed}
 		}),
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 2

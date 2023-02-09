@@ -87,12 +87,22 @@ func handleSignalGet(w http.ResponseWriter, r *http.Request) {
 	// select slices of consumers in O(1) based on some deterministic function
 	w.WriteHeader(http.StatusOK)
 
-	select {
-	case msg := <-consumerChan:
-		w.Write([]byte(fmt.Sprintf("%v\n", msg)))
-		w.(http.Flusher).Flush()
-	case <-time.After(consumerTTL * time.Second):
-		log.Printf("Consumer %v timeout, bye bye!\n", consumerID)
+	timeoutChan := make(chan struct{})
+
+	go func() {
+		<-time.After(consumerTTL * time.Second)
+		timeoutChan <- struct{}{}
+	}()
+
+	for {
+		select {
+		case msg := <-consumerChan:
+			w.Write([]byte(fmt.Sprintf("%v\n", msg)))
+			w.(http.Flusher).Flush()
+		case <-timeoutChan:
+			log.Printf("Consumer %v timeout, bye bye!\n", consumerID)
+			return
+		}
 	}
 }
 
