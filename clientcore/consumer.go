@@ -119,31 +119,37 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 			defer res.Body.Close()
 
-			scanner := bufio.NewScanner(res.Body)
-			genesisCandidates := []string{}
-			patienceExpired := make(<-chan time.Time)
-
 			// We make a long-lived HTTP request to Freddie. Freddie streams newline-terminated genesis
-			// messages to us as they become available. We wait until we hear one genesis message, then
-			// continue listening for a tunable amount of time ("patience") to see if we might hear a few
-			// more messages to select from. If we never hear any genesis messages, Freddie will eventually
-			// timeout our request and we must open a new request to continue. A patience value of 0 means
-			// we'll always make an offer for the first genesis message we hear.
+			// messages as they become available. We wait until we hear one genesis message, then continue
+			// listening for a tunable amount of time ("patience") to see if we might hear a few more
+			// messages to select from. When either our patience expires or our HTTP request times out, we
+			// pick a random message from the set we've collected and make an offer for it.
+			scanner := bufio.NewScanner(res.Body)
+			genesisMsg := make(chan struct{})
+			reqTimeout := make(chan struct{})
+			patienceExpired := make(<-chan time.Time)
+			doneListening := make(chan struct{}, 1)
+			genesisCandidates := []string{}
 
 		listenLoop:
 			for {
-				scannedChan := make(chan bool)
-
 				go func() {
-					scannedChan <- scanner.Scan()
+					isReqOpen := scanner.Scan()
+
+					if len(doneListening) > 0 {
+						return
+					}
+
+					if isReqOpen {
+						genesisMsg <- struct{}{}
+						return
+					}
+
+					reqTimeout <- struct{}{}
 				}()
 
 				select {
-				case requestStillOpen := <-scannedChan:
-					if !requestStillOpen {
-						break listenLoop
-					}
-
+				case <-genesisMsg:
 					rawMsg := scanner.Bytes()
 					if err := scanner.Err(); err != nil {
 						// TODO: what does this error mean? Should we be returning to state 1?
@@ -153,27 +159,30 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 					rt, _, err := common.DecodeSignalMsg(rawMsg)
 					if err != nil {
 						log.Printf("Error decoding signal message: %v", err)
-						// Ignore the error, keep listening to our existing subscription to the genesis stream
+						// Take the error in stride, continue listening to our existing HTTP request stream
 						continue
 					}
 
 					// TODO: post-MVP, evaluate the genesis message for suitability!
-
 					genesisCandidates = append(genesisCandidates, rt)
-
 					if len(genesisCandidates) == 1 {
 						patienceExpired = time.After(options.Patience)
 					}
+				case <-reqTimeout:
+					break listenLoop
 				case <-patienceExpired:
 					break listenLoop
 				}
 			}
 
+			doneListening <- struct{}{}
+
+			// Endgame case 1: we never heard any suitable genesis messages, so just restart this state
 			if len(genesisCandidates) == 0 {
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
 
-			// Create an offer SDP to send when we shoot our shot
+			// Endgame case 2: create an offer SDP, pick a random genesis candidate, and shoot our shot
 			sdp, err := peerConnection.CreateOffer(nil)
 			if err != nil {
 				// An error creating the offer is troubling, so let's start fresh by resetting the state
@@ -181,7 +190,6 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
 
-			// Pick a random genesis candidate and try our luck with them!
 			idx := rand.Intn(len(genesisCandidates))
 			replyTo := genesisCandidates[idx]
 
@@ -192,7 +200,14 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				options.Patience,
 			)
 
-			return 2, []interface{}{peerConnection, replyTo, sdp, connectionEstablished, connectionChange, connectionClosed}
+			return 2, []interface{}{
+				peerConnection,
+				replyTo,
+				sdp,
+				connectionEstablished,
+				connectionChange,
+				connectionClosed,
+			}
 		}),
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 2
