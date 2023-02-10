@@ -86,13 +86,7 @@ func handleSignalGet(w http.ResponseWriter, r *http.Request) {
 	// to, and you've implemented matchmaking!) If consumerTable was an indexed datastore, we could
 	// select slices of consumers in O(1) based on some deterministic function
 	w.WriteHeader(http.StatusOK)
-
-	timeoutChan := make(chan struct{})
-
-	go func() {
-		<-time.After(consumerTTL * time.Second)
-		timeoutChan <- struct{}{}
-	}()
+	timeoutChan := time.After(consumerTTL * time.Second)
 
 	for {
 		select {
