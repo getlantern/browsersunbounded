@@ -208,3 +208,6 @@ export class WasmInterface {
 }
 
 export const wasmInterface = new WasmInterface()
+
+// @ts-ignore
+globalThis.wasmInterface = wasmInterface

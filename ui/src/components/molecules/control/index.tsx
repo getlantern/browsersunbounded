@@ -15,6 +15,10 @@ const Control = ({onToggle, info = false}: Props) => {
 	const sharing = useEmitterState(sharingEmitter)
 
 	const _onToggle = (share: boolean) => {
+		if (share && process.env.REACT_APP_TARGET === 'chrome') {
+			// @ts-ignore
+			chrome.runtime.sendMessage('start')
+		}
 		if (share) wasmInterface.start()
 		if (!share) wasmInterface.stop()
 		if (onToggle) onToggle(share)
