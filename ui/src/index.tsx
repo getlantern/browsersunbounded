@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import {StateEmitter} from './hooks/useStateEmitter'
+import {Targets} from './utils/wasmInterface'
 
 export enum Layouts {
 	'BANNER' = 'banner',
@@ -25,6 +26,7 @@ export interface Settings {
 	donate: boolean
 	collapse: boolean
 	branding: boolean
+	target: Targets
 }
 
 export const defaultSettings: Settings = {
@@ -37,7 +39,8 @@ export const defaultSettings: Settings = {
 	editor: false,
 	donate: true,
 	collapse: true,
-	branding: true
+	branding: true,
+	target: Targets.WEB
 }
 
 export const settingsEmitter = new StateEmitter<{ [key: number]: Settings }>({})

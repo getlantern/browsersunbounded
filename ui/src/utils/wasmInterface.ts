@@ -2,6 +2,12 @@ import go from './goWasmExec'
 import {StateEmitter} from '../hooks/useStateEmitter'
 import MockWasmClient from '../mocks/mockWasmClient'
 
+export enum Targets {
+	'WEB' = 'web',
+	'CHROME_EXTENSION_HEAD' = 'chrome-extension-head',
+	'CHROME_EXTENSION_HEADLESS' = 'chrome-extension-headless',
+}
+
 type WebAssemblyInstance = InstanceType<typeof WebAssembly.Instance>
 
 export interface Chunk {
@@ -80,6 +86,11 @@ declare global {
 	): WasmClient
 }
 
+interface Config {
+	mock: boolean
+	target: Targets
+}
+
 export class WasmInterface {
 	go: typeof go
 	wasmClient: WasmClient | undefined
@@ -92,6 +103,7 @@ export class WasmInterface {
 	// states
 	ready: boolean
 	initializing: boolean
+	target: Targets
 
 	constructor() {
 		this.ready = false
@@ -100,16 +112,18 @@ export class WasmInterface {
 		this.throughput = {bytesPerSec: 0}
 		this.connections = []
 		this.go = go
+		this.target = Targets.WEB
 	}
 
 
-	initialize = async (mock = false): Promise<WebAssemblyInstance | undefined> => {
+	initialize = async ({mock, target}: Config): Promise<WebAssemblyInstance | undefined> => {
 		// this dumb state is needed to prevent multiple calls to initialize from react hot reload dev server 🥵
 		if (this.initializing || this.instance) { // already initialized or initializing
 			console.warn('Wasm client has already been initialized or is initializing, aborting init.')
 			return
 		}
 		this.initializing = true
+		this.target = target
 		if (mock) { // fake it till you make it
 			this.wasmClient = new MockWasmClient(this)
 			this.instance = {} as WebAssemblyInstance
@@ -127,8 +141,8 @@ export class WasmInterface {
 				'',
 				''
 			)
-			this.initListeners()
 		}
+		this.initListeners()
 		this.handleReady()
 		this.initializing = false
 		return this.instance
@@ -137,16 +151,22 @@ export class WasmInterface {
 	start = () => {
 		if (!this.ready) return console.warn('Wasm client is not in ready state, aborting start')
 		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting start.')
-		this.wasmClient.start()
-		sharingEmitter.update(true)
+		if (this.target === Targets.CHROME_EXTENSION_HEAD) chrome.runtime.sendMessage('start', () => null)
+		else {
+			this.wasmClient.start()
+			sharingEmitter.update(true)
+		}
 	}
 
 	stop = () => {
 		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting stop.')
-		this.ready = false
-		readyEmitter.update(this.ready)
-		this.wasmClient.stop()
-		sharingEmitter.update(false)
+		if (this.target === Targets.CHROME_EXTENSION_HEAD) chrome.runtime.sendMessage('stop', () => null)
+		else {
+			this.ready = false
+			readyEmitter.update(this.ready)
+			this.wasmClient.stop()
+			sharingEmitter.update(false)
+		}
 	}
 
 	idxMapToArr = (map: { [key: number]: any }) => {
@@ -194,6 +214,14 @@ export class WasmInterface {
 
 	initListeners = () => {
 		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting listener init.')
+
+		if (this.target === Targets.CHROME_EXTENSION_HEADLESS) {
+			chrome.runtime.onMessage.addListener(request => {
+				if (request === 'start') this.start()
+				if (request === 'stop') this.stop()
+			})
+		}
+
 		// rm listeners in case they exist (hot reload)
 		this.wasmClient.removeEventListener('downstreamChunk', this.handleChunk)
 		this.wasmClient.removeEventListener('downstreamThroughput', this.handleThroughput)
@@ -208,6 +236,3 @@ export class WasmInterface {
 }
 
 export const wasmInterface = new WasmInterface()
-
-// @ts-ignore
-globalThis.wasmInterface = wasmInterface

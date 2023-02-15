@@ -11,6 +11,7 @@ import {isMobile} from './utils/isMobile'
 import Editor from './components/organisms/editor'
 import Floating from "./components/organisms/floating";
 import Iframe from './components/molecules/iframe'
+import useMessaging from './hooks/useMessaging'
 
 const MOCK_DATA = process.env.REACT_APP_MOCK_DATA === 'true'
 
@@ -23,11 +24,12 @@ const App = ({appId, embed}: Props) => {
   const isVisible = usePageVisibility()
   const sharing = useEmitterState(sharingEmitter)
   const settings = useEmitterState(settingsEmitter)[appId]
+  useMessaging(settings.target)
   const [mobileBg, desktopBg] = [settings.mobileBg, settings.desktopBg]
 
   useEffect(() => {
     if (wasmInterface.instance || wasmInterface.initializing) return // already initialized
-    wasmInterface.initialize(MOCK_DATA).then(instance => {
+    wasmInterface.initialize({mock: MOCK_DATA, target: settings.target}).then(instance => {
         if (!instance) return
         console.log(`p2p ${MOCK_DATA ? '"wasm"' : 'wasm'} initialized!`)
         console.log('instance: ', instance)
