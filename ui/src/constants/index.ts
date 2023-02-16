@@ -27,3 +27,19 @@ export const GOOGLE_FONT_LINKS = [
 	{href: 'https://fonts.gstatic.com', rel: 'preconnect'},
 	{href: 'https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500&display=swap', rel: 'stylesheet'}
 ]
+
+export const SIGNATURE = 'lanternNetwork'
+export enum MessageTypes {
+	STORAGE_GET = 'storageGet',
+	STORAGE_SET = 'storageSet',
+	WASM_START = 'wasmStart',
+	WASM_STOP = 'wasmStop',
+	HYDRATE_STATE = 'hydrateState',
+	STATE_UPDATE = 'stateUpdate',
+}
+
+export enum Targets {
+	WEB = 'web',
+	EXTENSION_POPUP = 'extension-popup',
+	EXTENSION_OFFSCREEN = 'extension-offscreen',
+}

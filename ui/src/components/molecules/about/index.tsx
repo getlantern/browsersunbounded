@@ -16,7 +16,7 @@ const About = ({style = {}}: Props) => {
 		<Text
 			style={{color, margin: 0, ...style}}
 		>
-			Sharing your connection enables people living with internet censorship to access the open internet using <a style={{color: brand}} href={'https://lantern.io'} target={'_blank'} rel={'noreferrer'}>Lantern</a>. Keep this site open to continue sharing your connection.
+			Sharing your connection enables people living with internet censorship to access the open internet using <a style={{color: brand}} href={'https://lantern.io'} target={'_blank'} rel={'noreferrer'}>Lantern</a>. Keep this site open to continue sharing your connection .
 		</Text>
 	)
 }

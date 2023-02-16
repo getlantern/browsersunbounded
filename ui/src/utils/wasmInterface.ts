@@ -1,12 +1,7 @@
 import go from './goWasmExec'
 import {StateEmitter} from '../hooks/useStateEmitter'
 import MockWasmClient from '../mocks/mockWasmClient'
-
-export enum Targets {
-	'WEB' = 'web',
-	'CHROME_EXTENSION_HEAD' = 'chrome-extension-head',
-	'CHROME_EXTENSION_HEADLESS' = 'chrome-extension-headless',
-}
+import {MessageTypes, SIGNATURE, Targets} from '../constants'
 
 type WebAssemblyInstance = InstanceType<typeof WebAssembly.Instance>
 
@@ -151,7 +146,14 @@ export class WasmInterface {
 	start = () => {
 		if (!this.ready) return console.warn('Wasm client is not in ready state, aborting start')
 		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting start.')
-		if (this.target === Targets.CHROME_EXTENSION_HEAD) chrome.runtime.sendMessage('start', () => null)
+		// if the widget is running in an extension popup window, send message to the offscreen window
+		if (this.target === Targets.EXTENSION_POPUP) {
+			window.parent.postMessage({
+				type: MessageTypes.WASM_START,
+				[SIGNATURE]: true,
+				data: {}
+			}, '*')
+		}
 		else {
 			this.wasmClient.start()
 			sharingEmitter.update(true)
@@ -160,7 +162,14 @@ export class WasmInterface {
 
 	stop = () => {
 		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting stop.')
-		if (this.target === Targets.CHROME_EXTENSION_HEAD) chrome.runtime.sendMessage('stop', () => null)
+		// if the widget is running in an extension popup window, send message to the offscreen window
+		if (this.target === Targets.EXTENSION_POPUP) {
+			window.parent.postMessage({
+				type: MessageTypes.WASM_STOP,
+				[SIGNATURE]: true,
+				data: {}
+			}, '*')
+		}
 		else {
 			this.ready = false
 			readyEmitter.update(this.ready)
@@ -212,21 +221,25 @@ export class WasmInterface {
 		readyEmitter.update(this.ready)
 	}
 
+	onMessage = (event: MessageEvent) => {
+		const message = event.data
+		if (typeof message !== 'object' || message === null || !message.hasOwnProperty(SIGNATURE)) return
+		switch (message.type) {
+			case MessageTypes.WASM_START:
+				this.start()
+				break
+			case MessageTypes.WASM_STOP:
+				this.stop()
+				break
+		}
+	}
+
 	initListeners = () => {
 		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting listener init.')
 
-		if (this.target === Targets.CHROME_EXTENSION_HEADLESS) {
-			chrome.runtime.onMessage.addListener(request => {
-				if (request === 'start') this.start()
-				if (request === 'stop') this.stop()
-			})
-		}
+		// if the widget is running in an extension offscreen window, listen for messages from the popup (start/stop)
+		if (this.target === Targets.EXTENSION_OFFSCREEN) window.addEventListener('message', this.onMessage)
 
-		// rm listeners in case they exist (hot reload)
-		this.wasmClient.removeEventListener('downstreamChunk', this.handleChunk)
-		this.wasmClient.removeEventListener('downstreamThroughput', this.handleThroughput)
-		this.wasmClient.removeEventListener('consumerConnectionChange', this.handleConnection)
-		this.wasmClient.removeEventListener('ready', this.handleReady)
 		// register listeners
 		this.wasmClient.addEventListener('downstreamChunk', this.handleChunk)
 		this.wasmClient.addEventListener('downstreamThroughput', this.handleThroughput)

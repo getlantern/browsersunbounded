@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import {StateEmitter} from './hooks/useStateEmitter'
-import {Targets} from './utils/wasmInterface'
+import {Targets} from './constants'
 
 export enum Layouts {
 	'BANNER' = 'banner',

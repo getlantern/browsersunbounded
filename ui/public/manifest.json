@@ -1,24 +1,8 @@
 {
-  "name": "Lantern Network",
-  "description": "Use your internet connection to fight censorship.",
-  "version": "1.0",
-  "manifest_version": 3,
-  "action": {
-    "default_popup": "popup.html"
-  },
-  "permissions": [
-    "scripting",
-    "offscreen"
-  ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; worker-src 'self';"
-  },
-  "background": {
-    "service_worker": "./static/js/serviceWorker.js"
-  },
-  "icons": {
-    "16": "logo16.png",
-    "48": "logo48.png",
-    "128": "logo128.png"
-  }
+  "short_name": "p2p web proxy",
+  "name": "lantern p2p web proxy",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
 }

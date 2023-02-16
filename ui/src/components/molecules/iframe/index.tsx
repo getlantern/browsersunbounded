@@ -1,6 +1,8 @@
 import React, {useCallback, useEffect, useRef} from 'react'
 import {Chunk, lifetimeChunksEmitter, lifetimeConnectionsEmitter, wasmInterface} from '../../../utils/wasmInterface'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
+import {SIGNATURE, MessageTypes} from '../../../constants'
+import {messageCheck} from '../../../utils/messages'
 
 /***
 	Since the widget can be embeded in any website, this iframe is used to
@@ -13,13 +15,6 @@ enum StorageKeys {
 	LIFETIME_CHUNKS = 'lifetimeChunks',
 }
 
-enum MessageTypes {
-	STORAGE_GET = 'storageGet',
-	STORAGE_SET = 'storageSet',
-}
-
-const SIGNATURE = 'lanternNetwork'
-
 const Iframe = () => {
 	const synced = useRef({[StorageKeys.LIFETIME_CONNECTIONS]: false, [StorageKeys.LIFETIME_CHUNKS]: false})
 	const iframe = useRef<HTMLIFrameElement>(null)
@@ -28,7 +23,7 @@ const Iframe = () => {
 
 	const onMessage = useCallback((event: MessageEvent) => {
 		const message = event.data
-		if (typeof message !== 'object' || message === null || !message.hasOwnProperty(SIGNATURE)) return
+		if (!messageCheck(message)) return
 		switch (message.type) {
 			case MessageTypes.STORAGE_GET:
 				const keys = Object.keys(message.data)

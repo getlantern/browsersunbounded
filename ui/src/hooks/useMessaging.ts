@@ -1,3 +1,5 @@
+import { useEffect} from 'react'
+import {MessageTypes, SIGNATURE, Targets} from '../constants'
 import {
 	averageThroughputEmitter,
 	connectionsEmitter,
@@ -5,68 +7,79 @@ import {
 	lifetimeConnectionsEmitter,
 	readyEmitter,
 	sharingEmitter,
-	Targets,
-	Chunk,
-	Connection
 } from '../utils/wasmInterface'
-import {Dispatch, SetStateAction, useEffect} from 'react'
+import {messageCheck} from '../utils/messages'
 
 const emitterMap = {
-	'sharing': sharingEmitter,
-	'connections': connectionsEmitter,
-	'lifetimeConnections': lifetimeConnectionsEmitter,
-	'averageThroughput': averageThroughputEmitter,
-	'lifetimeChunks': lifetimeChunksEmitter,
-	'ready': readyEmitter
+	sharingEmitter,
+	connectionsEmitter,
+	lifetimeConnectionsEmitter,
+	averageThroughputEmitter,
+	lifetimeChunksEmitter,
+	readyEmitter
 }
+
+type EmitterKey = keyof typeof emitterMap
+
+let callbacksMap = {} as any
 
 const useMessaging = (target: Targets) => {
 	useEffect(() => {
-		const handleReady = (value: boolean) => chrome.runtime.sendMessage({type: 'ready', value}, () => null)
-		const handleSharing = (value: boolean) => chrome.runtime.sendMessage({type: 'sharing', value}, () => null)
-		const handleConnections = (value: Connection[]) => chrome.runtime.sendMessage({type: 'connections', value}, () => null)
-		const handleLifetimeConnections = (value: number) => chrome.runtime.sendMessage({type: 'lifetimeConnections', value}, () => null)
-		const handleAverageThroughput = (value: number) => chrome.runtime.sendMessage({type: 'averageThroughput', value}, () => null)
-		const handleLifetimeChunks = (value: Chunk[]) => chrome.runtime.sendMessage({type: 'lifetimeChunks', value}, () => null)
+		const handler = (value: any, emitter: EmitterKey) => window.parent.postMessage({
+			type: MessageTypes.STATE_UPDATE,
+			[SIGNATURE]: true,
+			data: {
+				emitter,
+				value
+			}
+		}, '*')
 
-		if (target === Targets.CHROME_EXTENSION_HEAD) {
-			chrome.runtime.onMessage.addListener((message) => {
-				const type = message?.type as keyof typeof emitterMap | undefined
-				// @ts-ignore
-				if (type && emitterMap[type]) emitterMap[type].update(message.value)
+		const onOffscreenMessage = (event: MessageEvent) => {
+			const message = event.data
+			if (!messageCheck(message)) return
+			if (message.type !== MessageTypes.HYDRATE_STATE) return
+			Object.keys(emitterMap).forEach(emitter => {
+				handler(emitterMap[emitter as EmitterKey].state, emitter as EmitterKey)
 			})
-			chrome.runtime.sendMessage('hydrate', () => null)
 		}
-		else if (target === Targets.CHROME_EXTENSION_HEADLESS) {
-			sharingEmitter.on(handleSharing as Dispatch<SetStateAction<boolean>>)
-			connectionsEmitter.on(handleConnections as Dispatch<SetStateAction<Connection[]>>)
-			lifetimeConnectionsEmitter.on(handleLifetimeConnections as Dispatch<SetStateAction<number>>)
-			averageThroughputEmitter.on(handleAverageThroughput as Dispatch<SetStateAction<number>>)
-			lifetimeChunksEmitter.on(handleLifetimeChunks as Dispatch<SetStateAction<Chunk[]>>)
-			readyEmitter.on(handleReady as Dispatch<SetStateAction<boolean>>)
 
-			chrome.runtime.onMessage.addListener((message) => {
-				if (message === 'hydrate') {
-					handleSharing(sharingEmitter.state)
-					handleConnections(connectionsEmitter.state)
-					handleLifetimeConnections(lifetimeConnectionsEmitter.state)
-					handleAverageThroughput(averageThroughputEmitter.state)
-					handleLifetimeChunks(lifetimeChunksEmitter.state)
-					handleReady(readyEmitter.state)
-				}
+		const onPopupMessage = (event: MessageEvent) => {
+			const message = event.data
+			if (!messageCheck(message)) return
+			if (message.type !== MessageTypes.STATE_UPDATE) return
+			const emitters = Object.keys(emitterMap)
+			if (emitters.includes(message.data.emitter)) {
+				const emitter = emitterMap[message.data.emitter as EmitterKey]
+				// @ts-ignore
+				emitter.update(message.data.value)
+			}
+		}
+
+		if (target === Targets.EXTENSION_POPUP) {
+			window.addEventListener('message', onPopupMessage)
+			window.parent.postMessage({
+				type: MessageTypes.HYDRATE_STATE,
+				[SIGNATURE]: true,
+				data: {}
+			}, '*')
+		}
+		else if (target === Targets.EXTENSION_OFFSCREEN) {
+			Object.keys(emitterMap).forEach(key => {
+				const emitter = emitterMap[key as EmitterKey]
+				const callback = (value: any) => handler(value, key as EmitterKey)
+				callbacksMap[key] = callback
+				emitter.on(callback)
 			})
+			window.addEventListener('message', onOffscreenMessage)
 		}
 		return () => {
-			if (target === Targets.CHROME_EXTENSION_HEAD) {
-				chrome.runtime.onMessage.removeListener(() => null)
-			}
-			else if (target === Targets.CHROME_EXTENSION_HEADLESS) {
-				sharingEmitter.off(handleSharing as Dispatch<SetStateAction<boolean>>)
-				connectionsEmitter.off(handleConnections as Dispatch<SetStateAction<Connection[]>>)
-				lifetimeConnectionsEmitter.off(handleLifetimeConnections as Dispatch<SetStateAction<number>>)
-				averageThroughputEmitter.off(handleAverageThroughput as Dispatch<SetStateAction<number>>)
-				lifetimeChunksEmitter.off(handleLifetimeChunks as Dispatch<SetStateAction<Chunk[]>>)
-				readyEmitter.off(handleReady as Dispatch<SetStateAction<boolean>>)
+			if (target === Targets.EXTENSION_POPUP) window.removeEventListener('message', onPopupMessage)
+			else if (target === Targets.EXTENSION_OFFSCREEN) {
+				window.removeEventListener('message', onOffscreenMessage)
+				Object.keys(callbacksMap).forEach(key => {
+					const emitter = emitterMap[key as EmitterKey]
+					emitter.off(callbacksMap[key])
+				})
 			}
 		}
 	}, [target])

@@ -14,13 +14,13 @@ console.log('building network embed');
 // Move runtime into bundle instead of separate file
 // config.optimization.runtimeChunk = false;
 
-if (process.env.REACT_APP_TARGET === 'chrome') {
-	config.entry = {
-		main: config.entry,
-		serviceWorker:  './src/scripts/serviceWorker.ts',
-		offscreen:  './src/scripts/offscreen.ts'
-	}
-}
+// if (process.env.REACT_APP_TARGET === 'chrome-extension') {
+// 	config.entry = {
+// 		main: config.entry,
+// 		serviceWorker:  './src/scripts/serviceWorker.ts',
+// 		offscreen:  './src/scripts/offscreen.ts'
+// 	}
+// }
 
 // JS
 config.output.filename = 'static/js/[name].js';
