@@ -15,15 +15,15 @@
     <script defer data-domain="embed.lantern.io" src="https://plausible.io/js/script.js"></script>
     <!-- the iframe subscribes to messages posted from the widget to set and get data from localstorage -->
     <script>
+        var SIGNATURE = 'lanternNetwork'
         window.addEventListener('message', function (event) {
             var message = event.data
-            var signature = 'lanternNetwork'
-            if (typeof message !== 'object' || message === null || !message.hasOwnProperty(signature)) return
+            if (typeof message !== 'object' || message === null || !message.hasOwnProperty(SIGNATURE)) return
             switch (message.type) {
                 case 'storageGet':
                     window.parent.postMessage({
                         type: 'storageGet',
-                        [signature]: true,
+                        [SIGNATURE]: true,
                         data: {
                             [message.data.key]: localStorage.getItem(message.data.key),
                         }
