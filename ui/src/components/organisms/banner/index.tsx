@@ -104,7 +104,7 @@ const Banner = ({settings}: Props) => {
 								settings.globe && (
 									<Col>
 										<Suspense fallback={<GlobeSuspense />}>
-											<Globe/>
+											<Globe target={settings.target}/>
 										</Suspense>
 									</Col>
 								)

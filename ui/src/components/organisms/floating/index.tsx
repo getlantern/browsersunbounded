@@ -75,7 +75,7 @@ const Floating = ({settings}: Props) => {
 						settings.globe && expanded && (
 							<Col>
 								<Suspense fallback={<GlobeSuspense/>}>
-									<Globe/>
+									<Globe target={settings.target}/>
 								</Suspense>
 							</Col>
 						)

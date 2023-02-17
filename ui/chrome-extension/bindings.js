@@ -10,6 +10,7 @@ const bind = () => {
         if (port.name === POPUP) port.onDisconnect.addListener(() => {
             popupOpen = false
         })
+        return false
     })
     const iframe = document.getElementsByTagName('iframe')[0]
     chrome.runtime.onMessage.addListener((message) => {
@@ -17,6 +18,7 @@ const bind = () => {
         if (message.type === 'popupOpened') return popupOpen = true
         // console.log('message from chrome, forwarding to iframe: ', message)
         iframe.contentWindow.postMessage(message, '*')
+        return false
     })
     if (isPopup) chrome.runtime.sendMessage({
         type: 'popupOpened',
