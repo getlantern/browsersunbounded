@@ -6,9 +6,13 @@ import {useEmitterState} from '../../../hooks/useStateEmitter'
 import {sharingEmitter} from '../../../utils/wasmInterface'
 import {AppContext} from '../../../context'
 import {Themes} from '../../../index'
-import {COLORS} from '../../../constants'
+import {COLORS, Targets} from '../../../constants'
 
-const Toast = ({exit}: {exit: boolean}) => {
+interface Props {
+	exit: boolean
+	target: Targets
+}
+const Toast = ({exit, target}: Props) => {
 	const sharing = useEmitterState(sharingEmitter)
 	const {theme} = useContext(AppContext)
 	const [show, setShow] = useState(sharing)
@@ -24,8 +28,9 @@ const Toast = ({exit}: {exit: boolean}) => {
 	}, [sharing])
 
 	useEffect(() => {
+		if (target === Targets.EXTENSION_POPUP) return // disable toast on extension popup
 		toggleShow()
-	}, [sharing, toggleShow])
+	}, [sharing, toggleShow, target])
 
 	useExitIntent(exit ? toggleShow : () => null)
 

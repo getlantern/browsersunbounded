@@ -10,7 +10,7 @@ import GlobeComponent from 'react-globe.gl' // @todo lazy load
 import {Container} from './styles'
 import {useContext, useEffect, useMemo, useRef, useState} from 'react'
 import {AppContext} from '../../../context'
-import {BREAKPOINT, COLORS, UV_MAP_PATH_DARK, UV_MAP_PATH_LIGHT} from '../../../constants'
+import {BREAKPOINT, COLORS, Targets, UV_MAP_PATH_DARK, UV_MAP_PATH_LIGHT} from '../../../constants'
 import Shadow from './shadow'
 import ToolTip from '../toolTip'
 import {useGeo} from '../../../hooks/useGeo'
@@ -20,7 +20,11 @@ import {sharingEmitter} from '../../../utils/wasmInterface'
 import {countries} from "../../../utils/countries";
 import InteractAnim from './interactAnim'
 
-const Globe = () => {
+interface Props {
+	target: Targets
+}
+
+const Globe = ({target}: Props) => {
 	const sharing = useEmitterState(sharingEmitter)
 	const {width, theme} = useContext(AppContext)
 	const size = width < BREAKPOINT ? 250 : 400
@@ -43,6 +47,7 @@ const Globe = () => {
 	}, [arcs])
 
 	useEffect(() => {
+		if (!globe.current) return
 		const now = Date.now()
 		if (sharing && country && (now - lastAnimation.current) > 5000) {
 			const userLoc = countries[country]
@@ -57,16 +62,18 @@ const Globe = () => {
 	}, [sharing, country, points])
 
 	useEffect(() => {
+		if (!globe.current) return
 		const controls = globe.current.controls()
 		controls.autoRotate = !arc
 	}, [arc])
 
 	const setUp = () => {
-		if (isSetup.current) return
+		if (isSetup.current || !globe.current) return
 		isSetup.current = true
 		const controls = globe.current.controls()
 		const camera = globe.current.camera()
 		const scene = globe.current.scene()
+		controls.enableZoom = target !== Targets.EXTENSION_POPUP // disable zoom on extension popup
 		controls.autoRotate = true
 		controls.maxDistance = 1500
 		controls.minDistance = 300

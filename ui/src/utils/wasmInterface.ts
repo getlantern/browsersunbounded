@@ -1,6 +1,7 @@
 import go from './goWasmExec'
 import {StateEmitter} from '../hooks/useStateEmitter'
 import MockWasmClient from '../mocks/mockWasmClient'
+import {MessageTypes, SIGNATURE, Targets} from '../constants'
 
 type WebAssemblyInstance = InstanceType<typeof WebAssembly.Instance>
 
@@ -80,6 +81,11 @@ declare global {
 	): WasmClient
 }
 
+interface Config {
+	mock: boolean
+	target: Targets
+}
+
 export class WasmInterface {
 	go: typeof go
 	wasmClient: WasmClient | undefined
@@ -92,6 +98,7 @@ export class WasmInterface {
 	// states
 	ready: boolean
 	initializing: boolean
+	target: Targets
 
 	constructor() {
 		this.ready = false
@@ -100,16 +107,18 @@ export class WasmInterface {
 		this.throughput = {bytesPerSec: 0}
 		this.connections = []
 		this.go = go
+		this.target = Targets.WEB
 	}
 
 
-	initialize = async (mock = false): Promise<WebAssemblyInstance | undefined> => {
+	initialize = async ({mock, target}: Config): Promise<WebAssemblyInstance | undefined> => {
 		// this dumb state is needed to prevent multiple calls to initialize from react hot reload dev server 🥵
 		if (this.initializing || this.instance) { // already initialized or initializing
 			console.warn('Wasm client has already been initialized or is initializing, aborting init.')
 			return
 		}
 		this.initializing = true
+		this.target = target
 		if (mock) { // fake it till you make it
 			this.wasmClient = new MockWasmClient(this)
 			this.instance = {} as WebAssemblyInstance
@@ -127,8 +136,8 @@ export class WasmInterface {
 				'',
 				''
 			)
-			this.initListeners()
 		}
+		this.initListeners()
 		this.handleReady()
 		this.initializing = false
 		return this.instance
@@ -137,16 +146,36 @@ export class WasmInterface {
 	start = () => {
 		if (!this.ready) return console.warn('Wasm client is not in ready state, aborting start')
 		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting start.')
-		this.wasmClient.start()
-		sharingEmitter.update(true)
+		// if the widget is running in an extension popup window, send message to the offscreen window
+		if (this.target === Targets.EXTENSION_POPUP) {
+			window.parent.postMessage({
+				type: MessageTypes.WASM_START,
+				[SIGNATURE]: true,
+				data: {}
+			}, '*')
+		}
+		else {
+			this.wasmClient.start()
+			sharingEmitter.update(true)
+		}
 	}
 
 	stop = () => {
 		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting stop.')
-		this.ready = false
-		readyEmitter.update(this.ready)
-		this.wasmClient.stop()
-		sharingEmitter.update(false)
+		// if the widget is running in an extension popup window, send message to the offscreen window
+		if (this.target === Targets.EXTENSION_POPUP) {
+			window.parent.postMessage({
+				type: MessageTypes.WASM_STOP,
+				[SIGNATURE]: true,
+				data: {}
+			}, '*')
+		}
+		else {
+			this.ready = false
+			readyEmitter.update(this.ready)
+			this.wasmClient.stop()
+			sharingEmitter.update(false)
+		}
 	}
 
 	idxMapToArr = (map: { [key: number]: any }) => {
@@ -192,13 +221,25 @@ export class WasmInterface {
 		readyEmitter.update(this.ready)
 	}
 
+	onMessage = (event: MessageEvent) => {
+		const message = event.data
+		if (typeof message !== 'object' || message === null || !message.hasOwnProperty(SIGNATURE)) return
+		switch (message.type) {
+			case MessageTypes.WASM_START:
+				this.start()
+				break
+			case MessageTypes.WASM_STOP:
+				this.stop()
+				break
+		}
+	}
+
 	initListeners = () => {
 		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting listener init.')
-		// rm listeners in case they exist (hot reload)
-		this.wasmClient.removeEventListener('downstreamChunk', this.handleChunk)
-		this.wasmClient.removeEventListener('downstreamThroughput', this.handleThroughput)
-		this.wasmClient.removeEventListener('consumerConnectionChange', this.handleConnection)
-		this.wasmClient.removeEventListener('ready', this.handleReady)
+
+		// if the widget is running in an extension offscreen window, listen for messages from the popup (start/stop)
+		if (this.target === Targets.EXTENSION_OFFSCREEN) window.addEventListener('message', this.onMessage)
+
 		// register listeners
 		this.wasmClient.addEventListener('downstreamChunk', this.handleChunk)
 		this.wasmClient.addEventListener('downstreamThroughput', this.handleThroughput)

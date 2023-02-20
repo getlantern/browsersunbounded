@@ -125,6 +125,7 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 | branding  | boolean to include logos                | true    |
 
 [Github pages sandbox](https://embed.lantern.io)
+
 [Lantern Network website](https://network.lantern.io)
 
 1. Work from the ui dir: `cd ui`
@@ -148,3 +149,26 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 7. To deploy to Github pages: `yarn deploy`
 
 8. Coming soon to a repo near you: `yarn test`
+
+#### Browser extension UI
+
+1. Work from the ui/extension dir: `cd ui/extension`
+
+2. Install the dependencies: `yarn`
+
+3. To start in developer mode with hot-refresh server:
+```
+yarn dev chrome
+yarn dev firefox 
+yarn dev opera
+yarn dev edge
+```
+
+4. To build for production:
+```
+yarn build chrome
+yarn build firefox 
+yarn build opera
+yarn build edge
+```
+
