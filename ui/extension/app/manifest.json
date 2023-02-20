@@ -1,0 +1,29 @@
+{
+  "name": "__MSG_appName__",
+  "short_name": "__MSG_appShortName__",
+  "description": "__MSG_appDescription__",
+  "version": "0.0.0",
+  "manifest_version": 3,
+  "default_locale": "en",
+  "icons": {
+    "16": "images/logo16.png",
+    "48": "images/logo48.png",
+    "128": "images/logo128.png"
+  },
+  "permissions": [
+    "scripting",
+    "offscreen"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; worker-src 'self';"
+  },
+  "__chrome__background": {
+    "service_worker": "scripts/serviceWorker.js"
+  },
+  "__firefox__background": {
+    "page": "pages/offscreen.html"
+  },
+  "action": {
+    "default_popup": "pages/popup.html"
+  }
+}

@@ -1,9 +1,15 @@
 const SIGNATURE = 'lanternNetwork'
 const POPUP = 'popup'
 let popupOpen = false
-const messageCheck = (message) => (typeof message === 'object' && message !== null && message.hasOwnProperty(SIGNATURE))
+
+interface Message {
+    type: string
+    data: {}
+    signature: string
+}
+const messageCheck = (message: Message) => (typeof message === 'object' && message !== null && message.hasOwnProperty(SIGNATURE))
 const bind = () => {
-    const id = document.getElementById('window-id').dataset.id
+    const id = document.getElementById('window-id')?.dataset?.id
     const isPopup = id === POPUP
     if (isPopup) chrome.runtime.connect({'name': id})
     else chrome.runtime.onConnect.addListener((port) => {
@@ -17,7 +23,7 @@ const bind = () => {
         if (!messageCheck(message)) return
         if (message.type === 'popupOpened') return popupOpen = true
         // console.log('message from chrome, forwarding to iframe: ', message)
-        iframe.contentWindow.postMessage(message, '*')
+        iframe.contentWindow?.postMessage(message, '*')
         return false
     })
     if (isPopup) chrome.runtime.sendMessage({
