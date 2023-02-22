@@ -164,7 +164,9 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// We use this wrapped listener to enable our local HTTP proxy to listen for WebSocket connections
+  go testMetrics()
+
+  // We use this wrapped listener to enable our local HTTP proxy to listen for WebSocket connections
 	l := proxyListener{
 		Listener:    &net.TCPListener{},
 		connections: make(chan net.Conn, 2048),
