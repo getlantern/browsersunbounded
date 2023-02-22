@@ -6,9 +6,10 @@
   "manifest_version": 3,
   "default_locale": "en",
   "icons": {
-    "16": "images/logo16.png",
-    "48": "images/logo48.png",
-    "128": "images/logo128.png"
+    "16": "/images/logo16.png",
+    "32": "/images/logo32.png",
+    "48": "/images/logo48.png",
+    "128": "/images/logo128.png"
   },
   "permissions": [
     "scripting",
@@ -24,6 +25,12 @@
     "page": "pages/offscreen.html"
   },
   "action": {
-    "default_popup": "pages/popup.html"
+    "default_popup": "pages/popup.html",
+    "default_title": "__MSG_appName__",
+    "default_icon": {
+      "16": "/images/logo16_off.png",
+      "48": "/images/logo48_off.png",
+      "128": "/images/logo128_off.png"
+    }
   }
 }
