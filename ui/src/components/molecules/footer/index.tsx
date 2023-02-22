@@ -3,8 +3,7 @@ import {Heart, Lantern, Twitter} from '../../atoms/icons'
 import {Container, Divider, LanternLink} from './styles'
 import {useContext} from 'react'
 import {AppContext} from '../../../context'
-import {BREAKPOINT, COLORS} from '../../../constants'
-import {Themes} from '../../../index'
+import {BREAKPOINT, COLORS, Themes} from '../../../constants'
 
 const SPACER = 24
 
@@ -14,7 +13,8 @@ interface Props {
 }
 
 const Footer = ({social, donate}: Props) => {
-	const {width, theme} = useContext(AppContext)
+	const {width, settings} = useContext(AppContext)
+	const {theme} = settings
 	const color = theme === Themes.DARK ? COLORS.grey1 : COLORS.grey5
 
 	return (

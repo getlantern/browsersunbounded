@@ -5,16 +5,12 @@ import useExitIntent from '../../../hooks/useExitIntent'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
 import {sharingEmitter} from '../../../utils/wasmInterface'
 import {AppContext} from '../../../context'
-import {Themes} from '../../../index'
-import {COLORS, Targets} from '../../../constants'
+import {COLORS, Targets, Themes} from '../../../constants'
 
-interface Props {
-	exit: boolean
-	target: Targets
-}
-const Toast = ({exit, target}: Props) => {
+const Toast = () => {
+	const {exit, target} = useContext(AppContext).settings
 	const sharing = useEmitterState(sharingEmitter)
-	const {theme} = useContext(AppContext)
+	const {theme} = useContext(AppContext).settings
 	const [show, setShow] = useState(sharing)
 	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 

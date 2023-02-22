@@ -9,7 +9,7 @@ interface Props {
 }
 
 const Switch = ({onToggle, checked, disabled}: Props) => {
-	const {theme} = useContext(AppContext)
+	const {theme} = useContext(AppContext).settings
 
 	return (
 		<Container>

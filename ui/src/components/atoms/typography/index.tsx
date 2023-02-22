@@ -2,7 +2,7 @@ import styled from 'styled-components'
 import {COLORS} from '../../../constants'
 import {useContext} from 'react'
 import {AppContext} from '../../../context'
-import {Themes} from '../../../index'
+import {Themes} from '../../../constants'
 
 const StyledText = styled.p`
   font-weight: 400;
@@ -14,7 +14,7 @@ const StyledText = styled.p`
 `
 
 const Text = (props: any) => {
-	const {theme} = useContext(AppContext)
+	const {theme} = useContext(AppContext).settings
 	return <StyledText theme={theme} {...props} />
 }
 

@@ -1,6 +1,5 @@
 import styled from 'styled-components'
-import {COLORS, MAX_WIDTH} from '../../../constants'
-import {Themes} from '../../../index'
+import {COLORS, MAX_WIDTH, Themes} from '../../../constants'
 
 export const Container = styled.div`
   box-sizing: border-box;

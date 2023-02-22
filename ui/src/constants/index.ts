@@ -43,3 +43,44 @@ export enum Targets {
 	EXTENSION_POPUP = 'extension-popup',
 	EXTENSION_OFFSCREEN = 'extension-offscreen',
 }
+
+export enum Layouts {
+	'BANNER' = 'banner',
+	'PANEL' = 'panel',
+	'FLOATING' = 'floating',
+}
+
+export enum Themes {
+	'DARK' = 'dark',
+	'LIGHT' = 'light'
+}
+
+export interface Settings {
+	globe: boolean
+	exit: boolean
+	mobileBg: boolean
+	desktopBg: boolean
+	layout: Layouts
+	theme: Themes
+	editor: boolean
+	donate: boolean
+	collapse: boolean
+	branding: boolean
+	target: Targets
+	mock: boolean
+}
+
+export const defaultSettings: Settings = {
+	mobileBg: true,
+	desktopBg: true,
+	exit: true,
+	globe: true,
+	layout: Layouts.BANNER,
+	theme: Themes.LIGHT,
+	editor: false,
+	donate: true,
+	collapse: true,
+	branding: true,
+	target: Targets.WEB,
+	mock: false
+}

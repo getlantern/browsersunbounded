@@ -1,6 +1,5 @@
 import styled from 'styled-components'
-import {COLORS, SHADOWS} from '../../../constants'
-import {Themes} from '../../../index'
+import {COLORS, SHADOWS, Themes} from '../../../constants'
 
 const Container = styled.div`
   position: fixed;

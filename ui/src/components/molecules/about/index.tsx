@@ -1,15 +1,14 @@
 import {Text} from './styles'
 import {useContext, CSSProperties} from 'react'
 import {AppContext} from '../../../context'
-import {Themes} from '../../../index'
-import {COLORS} from '../../../constants'
+import {COLORS, Themes} from '../../../constants'
 
 interface Props {
 	style?: CSSProperties
 }
 
 const About = ({style = {}}: Props) => {
-	const {theme} = useContext(AppContext)
+	const {theme} = useContext(AppContext).settings
 	const color = theme === Themes.DARK ? COLORS.grey2 : COLORS.blue5
 	const brand = theme === Themes.DARK ? COLORS.altBrand : COLORS.brand
 	return(

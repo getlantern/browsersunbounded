@@ -2,11 +2,10 @@ import {Body, BodyWrapper, Container, Header, HeaderWrapper, Item} from './style
 import {LogoLeft} from '../../atoms/icons'
 import Control from '../../molecules/control'
 import React, {useContext, useState, lazy, Suspense, useEffect} from 'react'
-import {Settings, Themes} from '../../../index'
 import Col from '../../atoms/col'
 import GlobeSuspense from '../../molecules/globe/suspense'
 import Row from '../../atoms/row'
-import {BREAKPOINT, COLORS} from '../../../constants'
+import {BREAKPOINT, COLORS, Themes} from '../../../constants'
 import Stats, {Connections} from '../../molecules/stats'
 import About from '../../molecules/about'
 import Footer from '../../molecules/footer'
@@ -16,12 +15,9 @@ import ExpandCollapse from '../../atoms/expandCollapse'
 
 const Globe = lazy(() => import('../../molecules/globe'))
 
-interface Props {
-	settings: Settings
-}
 
-const Banner = ({settings}: Props) => {
-	const {width} = useContext(AppContext)
+const Banner = () => {
+	const {width, settings} = useContext(AppContext)
 	const [expanded, setExpanded] = useState(!settings.collapse)
 	const interacted = useLatch(expanded)
 	const onToggle = (share: boolean) => !interacted && share ? setExpanded(share) : null
@@ -120,7 +116,9 @@ const Banner = ({settings}: Props) => {
 									borderBottom
 									backgroundColor={settings.theme === Themes.DARK ? COLORS.grey6 : COLORS.white}
 								>
-									<Control/>
+									<Control
+										onToggle={onToggle}
+									/>
 								</Row>
 								<Stats/>
 								<div

@@ -1,6 +1,5 @@
 import styled from 'styled-components'
-import {COLORS} from '../constants'
-import {Layouts, Themes} from '../index'
+import {COLORS, Layouts, Themes} from '../constants'
 
 const AppWrapper = styled.section`
   font-family: 'Urbanist', sans-serif;

@@ -2,6 +2,7 @@ import go from './goWasmExec'
 import {StateEmitter} from '../hooks/useStateEmitter'
 import MockWasmClient from '../mocks/mockWasmClient'
 import {MessageTypes, SIGNATURE, Targets} from '../constants'
+import {messageCheck} from './messages'
 
 type WebAssemblyInstance = InstanceType<typeof WebAssembly.Instance>
 
@@ -223,7 +224,7 @@ export class WasmInterface {
 
 	onMessage = (event: MessageEvent) => {
 		const message = event.data
-		if (typeof message !== 'object' || message === null || !message.hasOwnProperty(SIGNATURE)) return
+		if (!messageCheck(message)) return
 		switch (message.type) {
 			case MessageTypes.WASM_START:
 				this.start()
@@ -247,5 +248,3 @@ export class WasmInterface {
 		this.wasmClient.addEventListener('ready', this.handleReady)
 	}
 }
-
-export const wasmInterface = new WasmInterface()

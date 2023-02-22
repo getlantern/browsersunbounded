@@ -1,12 +1,13 @@
-import {useEffect, useState} from 'react'
-import {Layouts, Settings, Themes} from '../../../index'
+import {useContext, useEffect, useState} from 'react'
+import {Layouts, Themes} from '../../../constants'
 import {StyledEditor} from './styles'
+import {AppContext} from '../../../context'
 
 interface Props {
-	settings: Settings
 	embed: HTMLElement
 }
-const Editor = ({settings, embed}: Props) => {
+const Editor = ({embed}: Props) => {
+	const {settings} = useContext(AppContext)
 	const [state, setState] = useState(settings)
 
 	useEffect(() => {

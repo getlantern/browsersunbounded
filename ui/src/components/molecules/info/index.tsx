@@ -6,7 +6,7 @@ import { Popover } from 'react-tiny-popover'
 import {AppContext} from '../../../context'
 
 const Info = () => {
-	const {theme} = useContext(AppContext)
+	const {theme} = useContext(AppContext).settings
 	const [active, setActive] = useState(false)
 	return (
 		<>

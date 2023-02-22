@@ -1,11 +1,10 @@
 import styled from 'styled-components'
 import {useContext} from 'react'
 import {AppContext} from '../../../context'
-import {Themes} from '../../../index'
-import {COLORS} from '../../../constants'
+import {COLORS, Themes} from '../../../constants'
 
 const Twitter = () => {
-	const {theme} = useContext(AppContext)
+	const {theme} = useContext(AppContext).settings
 	const color = theme === Themes.DARK ? COLORS.grey1 : COLORS.grey5
 	return (
 		<svg width="22" height="17" viewBox="0 0 22 17" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -17,7 +16,7 @@ const Twitter = () => {
 }
 
 const Github = () => {
-	const {theme} = useContext(AppContext)
+	const {theme} = useContext(AppContext).settings
 	const color = theme === Themes.DARK ? COLORS.grey1 : COLORS.grey5
 	return (
 		<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -29,7 +28,7 @@ const Github = () => {
 }
 
 const Bell = () => {
-	const {theme} = useContext(AppContext)
+	const {theme} = useContext(AppContext).settings
 	const color = theme === Themes.DARK ? COLORS.grey1 : COLORS.grey
 	return (
 		<svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -45,7 +44,7 @@ const Flipper = styled.svg`
 `
 
 const Arrow = ({up}: {up: boolean}) => {
-	const {theme} = useContext(AppContext)
+	const {theme} = useContext(AppContext).settings
 	const color = theme === Themes.DARK ? COLORS.grey2 : COLORS.grey5
 	return (
 		<Flipper
@@ -93,7 +92,7 @@ const Lantern = () => (
 )
 
 const LogoLeft = () => {
-	const {theme} = useContext(AppContext)
+	const {theme} = useContext(AppContext).settings
 	const primary = theme === Themes.DARK ? COLORS.grey1 : COLORS.grey5
 	return (
 		<svg width="251" height="49" viewBox="0 0 251 49" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -161,7 +160,7 @@ const LogoLeft = () => {
 }
 
 const LogoCenter = () => {
-	const {theme} = useContext(AppContext)
+	const {theme} = useContext(AppContext).settings
 	const primary = theme === Themes.DARK ? COLORS.grey1 : COLORS.grey5
 	return (
 		<svg width="251" height="49" viewBox="0 0 251 49" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -238,7 +237,7 @@ const CarrotWrapper = styled.div`
 
 
 const Expand = ({carrot = false}: {carrot?: boolean}) => {
-	const {theme} = useContext(AppContext)
+	const {theme} = useContext(AppContext).settings
 	const color = theme === Themes.DARK ? COLORS.grey1 : COLORS.grey5
 	if (carrot) return (
 		<CarrotWrapper>
@@ -263,7 +262,7 @@ const Expand = ({carrot = false}: {carrot?: boolean}) => {
 }
 
 const Collapse = ({carrot = false}: {carrot?: boolean}) => {
-	const {theme} = useContext(AppContext)
+	const {theme} = useContext(AppContext).settings
 	const color = theme === Themes.DARK ? COLORS.grey1 : COLORS.grey5
 
 	if (carrot) return (

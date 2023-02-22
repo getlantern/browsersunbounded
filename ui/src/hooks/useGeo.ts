@@ -39,7 +39,7 @@ const getCountryFromNavigator = (): ISO => {
 export const geoLookup = async (ip: string | null): Promise<ISO> => {
 	const isSelf = ip === null
 	try {
-		const res = await fetch(`${process.env.REACT_APP_GEO_LOOKUP}/${isSelf ? '' : ip}`);
+		const res = await fetch(`${process.env.REACT_APP_GEO_LOOKUP_URL}/${isSelf ? '' : ip}`);
 		const data = await res.json()
 		return data.Country.IsoCode
 	} catch (e) {

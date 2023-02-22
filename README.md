@@ -112,17 +112,19 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 <script defer="defer" src="https://embed.lantern.io/static/js/main.js"></script>
 ```
 
-| Data-set  | Description                             | Default |
-|-----------|-----------------------------------------|---------|
-| layout    | string "banner" or "panel" layout       | banner  |
-| theme     | string "dark" or "light" theme          | light   |
-| globe     | boolean to include webgl globe          | true    |
-| exit      | boolean to include toast on exit intent | true    |
-| donate    | boolean to include donate link          | true    |
-| mobile-bg | boolean to run on mobile background     | false   |
-| mobile-bg | boolean to run on desktop background    | true    |
-| editor    | boolean to include debug dataset editor | false   |
-| branding  | boolean to include logos                | true    |
+| Data-set  | Description                                              | Default |
+|-----------|----------------------------------------------------------|---------|
+| layout    | string "banner" or "panel" layout                        | banner  |
+| theme     | string "dark" or "light" theme                           | light   |
+| globe     | boolean to include webgl globe                           | true    |
+| exit      | boolean to include toast on exit intent                  | true    |
+| donate    | boolean to include donate link                           | true    |
+| mobile-bg | boolean to run on mobile background                      | false   |
+| mobile-bg | boolean to run on desktop background                     | true    |
+| editor    | boolean to include debug dataset editor                  | false   |
+| branding  | boolean to include logos                                 | true    |
+| mock      | boolean to use the mock wasm client data                 | false   |
+| target    | string "web", "extension-offscreen" or "extension-popup" | web     |
 
 [Github pages sandbox](https://embed.lantern.io)
 
@@ -131,16 +133,15 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 1. Work from the ui dir: `cd ui`
 
 2. Configure your .env file: `cp .env.example .env` 
-   1. Set `REACT_APP_MOCK_DATA=false` to use the wasm widget as data source, or `true` to develop with mock "real-time" data.
-   2. Set `REACT_APP_WIDGET_WASM_URL` to your intended hosted `widget.wasm` file. If you are serving it from `client` in [step #8](#arrow_forward-quickstart-for-devs), use [http://localhost:9000/widget.wasm](http://localhost:9000/widget.wasm). If you ran `./build_web.sh` ([step #7](#arrow_forward-quickstart-for-devs)) you can also use `/widget.wasm`. To config for prod point to a publicly hosted `widget.wasm` e.g. `https://embed.lantern.io/widget.wasm`. If you know you know, if not, you likely want to use `/widget.wasm`.
-   3. Set `REACT_APP_GEO_LOOKUP` to your intended geo lookup service. Most likely `https://geo.getiantem.org/lookup` or `http://localhost:<PORT>/lookup` if testing geo lookups locally
-   4. Set `REACT_APP_IFRAME_SRC` to your intended iframe html for local storage of widget state and analytics. Most likely `https://embed.lantern.io/iframe.html` or `/iframe.html` if testing locally
+   1. Set `REACT_APP_WIDGET_WASM_URL` to your intended hosted `widget.wasm` file. If you are serving it from `client` in [step #8](#arrow_forward-quickstart-for-devs), use [http://localhost:9000/widget.wasm](http://localhost:9000/widget.wasm). If you ran `./build_web.sh` ([step #7](#arrow_forward-quickstart-for-devs)) you can also use `/widget.wasm`. To config for prod point to a publicly hosted `widget.wasm` e.g. `https://embed.lantern.io/widget.wasm`. If you know you know, if not, you likely want to use `/widget.wasm`.
+   2. Set `REACT_APP_GEO_LOOKUP_URL` to your intended geo lookup service. Most likely `https://geo.getiantem.org/lookup` or `http://localhost:<PORT>/lookup` if testing geo lookups locally
+   3. Set `REACT_APP_STORAGE_URL` to your intended iframe html for local storage of widget state and analytics. Most likely `https://embed.lantern.io/storage.html` or `/storage.html` if testing locally
 
 3. Install the dependencies: `yarn`
 
 4. To start in developer mode with hot-refresh server (degraded performance): run `yarn start` and visit [http://localhost:3000](http://localhost:3000)
 
-5. To build optimized for best performance run: `PUBLIC_URL=/ yarn build`
+5. To build optimized for best performance run: `yarn build`
 
 6. To serve a build:
    1. Install a simple server e.g. `npm install -g serve` (or your lightweight http server of choice)
@@ -160,7 +161,6 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 ```
 yarn dev chrome
 yarn dev firefox 
-yarn dev opera
 yarn dev edge
 ```
 
@@ -168,7 +168,6 @@ yarn dev edge
 ```
 yarn build chrome
 yarn build firefox 
-yarn build opera
 yarn build edge
 ```
 

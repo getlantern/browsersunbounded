@@ -1,9 +1,11 @@
 import {Text} from '../../atoms/typography'
 import Switch from '../../atoms/switch'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
-import {readyEmitter, sharingEmitter, wasmInterface} from '../../../utils/wasmInterface'
+import {readyEmitter, sharingEmitter} from '../../../utils/wasmInterface'
 import Info from '../info'
 import {TextInfo} from './styles'
+import {useContext} from 'react'
+import {AppContext} from '../../../context'
 
 interface Props {
 	onToggle?: (s: boolean) => void
@@ -13,6 +15,7 @@ interface Props {
 const Control = ({onToggle, info = false}: Props) => {
 	const ready = useEmitterState(readyEmitter)
 	const sharing = useEmitterState(sharingEmitter)
+	const {wasmInterface} = useContext(AppContext)
 
 	const _onToggle = (share: boolean) => {
 		if (share) wasmInterface.start()

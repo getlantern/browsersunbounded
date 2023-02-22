@@ -14,7 +14,7 @@ import {BREAKPOINT, COLORS, Targets, UV_MAP_PATH_DARK, UV_MAP_PATH_LIGHT} from '
 import Shadow from './shadow'
 import ToolTip from '../toolTip'
 import {useGeo} from '../../../hooks/useGeo'
-import {Themes} from '../../../index'
+import {Themes} from '../../../constants'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
 import {sharingEmitter} from '../../../utils/wasmInterface'
 import {countries} from "../../../utils/countries";
@@ -26,7 +26,8 @@ interface Props {
 
 const Globe = ({target}: Props) => {
 	const sharing = useEmitterState(sharingEmitter)
-	const {width, theme} = useContext(AppContext)
+	const {width, settings} = useContext(AppContext)
+	const {theme} = settings
 	const size = width < BREAKPOINT ? 250 : 400
 	const isSetup = useRef(false)
 	const [arc, setArc] = useState(null)

@@ -1,9 +1,8 @@
 import {useContext} from 'react'
 import {AppContext} from '../../../context'
-import {BREAKPOINT} from '../../../constants'
+import {BREAKPOINT, Themes} from '../../../constants'
 import {Container} from './styles'
 import styled from 'styled-components'
-import {Themes} from '../../../index'
 
 const Loading = styled.div`
   display: flex;
@@ -28,8 +27,8 @@ const Loading = styled.div`
 `
 
 const Suspense = () => {
-	const {theme} = useContext(AppContext)
-	const {width} = useContext(AppContext)
+	const {width, settings} = useContext(AppContext)
+	const {theme} = settings
 	const size = width < BREAKPOINT ? 300 : 400
 	return (
 		<Container

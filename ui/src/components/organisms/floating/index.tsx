@@ -1,8 +1,7 @@
 import {Container, Body, BodyWrapper, Header, Item} from './styles'
 import React, {useContext, useState, lazy, Suspense, useEffect} from 'react'
 import {AppContext} from '../../../context'
-import {Settings, Themes} from '../../../index'
-import {BREAKPOINT, COLORS} from '../../../constants'
+import {BREAKPOINT, COLORS, Themes} from '../../../constants'
 import Col from '../../atoms/col'
 import GlobeSuspense from '../../molecules/globe/suspense'
 import Row from '../../atoms/row'
@@ -16,12 +15,9 @@ import useWindowSize from '../../../hooks/useWindowSize'
 
 const Globe = lazy(() => import('../../molecules/globe'))
 
-interface Props {
-	settings: Settings
-}
-
-const Floating = ({settings}: Props) => {
-	const {theme, width} = useContext(AppContext)
+const Floating = () => {
+	const {width, settings} = useContext(AppContext)
+	const {theme} = settings
 	const {height} = useWindowSize()
 	const [expanded, setExpanded] = useState(!settings.collapse)
 	const interacted = useLatch(expanded)

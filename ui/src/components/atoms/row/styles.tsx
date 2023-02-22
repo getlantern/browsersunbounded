@@ -1,6 +1,5 @@
 import styled from 'styled-components'
-import {COLORS} from '../../../constants'
-import {Themes} from '../../../index'
+import {COLORS, Themes} from '../../../constants'
 
 interface Props {
 	borderBottom: boolean

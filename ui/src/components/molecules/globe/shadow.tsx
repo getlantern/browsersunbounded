@@ -1,6 +1,6 @@
 import {useContext} from 'react'
 import {AppContext} from '../../../context'
-import {Themes} from '../../../index'
+import {Themes} from '../../../constants'
 import styled from 'styled-components'
 
 // mixBlendMode is not supported on svgs in webkit so using css to create shadow instead
@@ -15,7 +15,7 @@ const StyledShadow = styled.span`
 	transition: scale 50ms ease-out;
 `
 const Shadow = ({scale}: {scale: number }) => {
-	const {theme} = useContext(AppContext)
+	const {theme} = useContext(AppContext).settings
 	return (
 		<StyledShadow
 			theme={theme}

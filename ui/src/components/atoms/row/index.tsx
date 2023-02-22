@@ -11,7 +11,7 @@ interface Props {
 }
 
 const Row = ({children, borderTop = false, borderBottom = true, backgroundColor = COLORS.transparent}: Props) => {
-	const {theme} = useContext(AppContext)
+	const {theme} = useContext(AppContext).settings
 	return (
 		<Container
 			borderTop={borderTop}

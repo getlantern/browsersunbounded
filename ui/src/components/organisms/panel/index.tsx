@@ -1,8 +1,7 @@
 import {Container, Body, BodyWrapper, ExpandWrapper} from './styles'
 import React, {useContext, useState, lazy, Suspense, useEffect} from 'react'
 import {AppContext} from '../../../context'
-import {Settings, Themes} from '../../../index'
-import {BREAKPOINT, COLORS} from '../../../constants'
+import {BREAKPOINT, COLORS, Themes} from '../../../constants'
 import Col from '../../atoms/col'
 import GlobeSuspense from '../../molecules/globe/suspense'
 import Row from '../../atoms/row'
@@ -16,12 +15,9 @@ import {useLatch} from '../../../hooks/useLatch'
 
 const Globe = lazy(() => import('../../molecules/globe'))
 
-interface Props {
-	settings: Settings
-}
-
-const Panel = ({settings}: Props) => {
-	const {theme, width} = useContext(AppContext)
+const Panel = () => {
+	const {width, settings} = useContext(AppContext)
+	const {theme} = settings
 	const [expanded, setExpanded] = useState(!settings.collapse)
 	const interacted = useLatch(expanded)
 	const onToggle = (share: boolean) => !interacted && share ? setExpanded(share) : null

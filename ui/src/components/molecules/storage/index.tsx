@@ -1,13 +1,14 @@
-import React, {useCallback, useEffect, useRef} from 'react'
-import {Chunk, lifetimeChunksEmitter, lifetimeConnectionsEmitter, wasmInterface} from '../../../utils/wasmInterface'
+import React, {useCallback, useContext, useEffect, useRef} from 'react'
+import {Chunk, lifetimeChunksEmitter, lifetimeConnectionsEmitter} from '../../../utils/wasmInterface'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
 import {SIGNATURE, MessageTypes} from '../../../constants'
 import {messageCheck} from '../../../utils/messages'
+import {AppContext} from '../../../context'
 
 /***
 	Since the widget can be embeded in any website, this iframe is used to
   store data in the local storage of a lantern domain. We use the iframe
-  messaging API to sync data between the widget and the iframe. See the iframe.html
+  messaging API to sync data between the widget and the iframe. See the storage.html
   file in the public dir for more details.
  ***/
 enum StorageKeys {
@@ -15,7 +16,8 @@ enum StorageKeys {
 	LIFETIME_CHUNKS = 'lifetimeChunks',
 }
 
-const Iframe = () => {
+const Storage = () => {
+	const {wasmInterface} = useContext(AppContext)
 	const synced = useRef({[StorageKeys.LIFETIME_CONNECTIONS]: false, [StorageKeys.LIFETIME_CHUNKS]: false})
 	const iframe = useRef<HTMLIFrameElement>(null)
 	const lifetimeConnections = useEmitterState(lifetimeConnectionsEmitter)
@@ -41,12 +43,13 @@ const Iframe = () => {
 					} catch (e) {
 						console.error(e)
 					}
-					value.forEach((chunk: Chunk) => wasmInterface.handleChunk({detail: chunk}))
+					value.forEach((chunk: Chunk) => wasmInterface && wasmInterface.handleChunk({detail: chunk}))
 					synced.current[StorageKeys.LIFETIME_CHUNKS] = true
 				}
 				break
 		}
-	}, [])
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [!!wasmInterface])
 
 	const onLoad = useCallback(() => {
 		iframe.current?.contentWindow?.postMessage({
@@ -103,7 +106,7 @@ const Iframe = () => {
 
 	return (
 		<iframe
-			src={process.env.REACT_APP_IFRAME_SRC}
+			src={process.env.REACT_APP_STORAGE_URL}
 			style={{display: 'none'}}
 			title={`${SIGNATURE} iframe`}
 			ref={iframe}
@@ -111,4 +114,4 @@ const Iframe = () => {
 	)
 }
 
-export default Iframe
+export default Storage

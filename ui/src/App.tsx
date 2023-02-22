@@ -1,19 +1,19 @@
-import React, {useEffect} from 'react'
-import {Layouts, settingsEmitter} from './index'
+import React, {useEffect, useLayoutEffect, useRef, useState} from 'react'
+import {settingsEmitter} from './index'
 import Layout from './layout'
 import Toast from './components/molecules/toast'
 import Banner from './components/organisms/banner'
 import Panel from './components/organisms/panel'
 import usePageVisibility from './hooks/usePageVisibility'
 import {useEmitterState} from './hooks/useStateEmitter'
-import {sharingEmitter, wasmInterface} from './utils/wasmInterface'
+import {sharingEmitter, WasmInterface} from './utils/wasmInterface'
 import {isMobile} from './utils/isMobile'
 import Editor from './components/organisms/editor'
 import Floating from "./components/organisms/floating";
-import Iframe from './components/molecules/iframe'
+import Storage from './components/molecules/storage'
 import useMessaging from './hooks/useMessaging'
-
-const MOCK_DATA = process.env.REACT_APP_MOCK_DATA === 'true'
+import {Targets, Layouts} from './constants'
+import {AppContextProvider} from './context'
 
 interface Props {
   appId: number
@@ -24,18 +24,23 @@ const App = ({appId, embed}: Props) => {
   const isVisible = usePageVisibility()
   const sharing = useEmitterState(sharingEmitter)
   const settings = useEmitterState(settingsEmitter)[appId]
+  const {mock, target} = settings
   useMessaging(settings.target)
   const [mobileBg, desktopBg] = [settings.mobileBg, settings.desktopBg]
+  const wasmInterface = useRef<WasmInterface>()
+  const [width, setWidth] = useState(0)
 
-  useEffect(() => {
-    if (wasmInterface.instance || wasmInterface.initializing) return // already initialized
-    wasmInterface.initialize({mock: MOCK_DATA, target: settings.target}).then(instance => {
+  useLayoutEffect(() => {
+    if (!mock || !target) return // settings not ready
+    if (wasmInterface.current) return // already initialized or initializing
+    wasmInterface.current = new WasmInterface()
+    wasmInterface.current.initialize({mock, target}).then(instance => {
         if (!instance) return
-        console.log(`p2p ${MOCK_DATA ? '"wasm"' : 'wasm'} initialized!`)
+        console.log(`p2p ${mock ? '"wasm"' : 'wasm'} initialized!`)
         console.log('instance: ', instance)
       }
     )
-  }, [])
+  }, [mock, target])
 
   useEffect(() => {
     // If settings for running in bg are disabled, we will stop the wasm when page is not visible
@@ -45,7 +50,9 @@ const App = ({appId, embed}: Props) => {
     // So we can rely on the timeout to stop wasm, otherwise the OS has already suspended the both the
     // timeout and wasm process.
     let timeout: ReturnType<typeof setTimeout> | null = null
-    const createTimeout = () => timeout = setTimeout(() => wasmInterface.stop(), 1000 * 60)
+    const createTimeout = () => timeout = setTimeout(() => {
+      wasmInterface.current && wasmInterface.current.stop()
+    }, 1000 * 60)
 
     if (!isVisible && sharing) {
       if (isMobile && !mobileBg) createTimeout()
@@ -57,33 +64,23 @@ const App = ({appId, embed}: Props) => {
   }, [isVisible, sharing, mobileBg, desktopBg])
 
   return (
-    <>
-      <Iframe />
-      { settings.editor && <Editor settings={settings} embed={embed} /> }
-      <Layout
-        theme={settings.theme}
-        layout={settings.layout}
-      >
-        <Toast exit={settings.exit} target={settings.target} />
+    <AppContextProvider value={{width, setWidth, settings, wasmInterface: wasmInterface.current!}}>
+      { settings.target !== Targets.EXTENSION_POPUP && <Storage /> }
+      { settings.editor && <Editor embed={embed} /> }
+      <Layout>
+        <Toast />
         { settings.layout === Layouts.BANNER && (
-          <Banner
-            settings={settings}
-          />
+          <Banner />
         )}
         { settings.layout === Layouts.PANEL && (
-          <Panel
-            settings={settings}
-          />
+          <Panel />
         )}
         { settings.layout === Layouts.FLOATING && (
-            <Floating
-                settings={settings}
-            />
+          <Floating />
         )}
       </Layout>
-    </>
-
+    </AppContextProvider>
   );
 }
 
-export default App;
+export default App

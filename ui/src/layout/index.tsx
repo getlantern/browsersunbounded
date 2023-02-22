@@ -1,19 +1,20 @@
 import {AppWrapper} from './styles'
-import {AppContextProvider} from '../context'
+import {AppContext} from '../context'
 import useElementSize from '../hooks/useElementSize'
 import {GOOGLE_FONT_LINKS} from '../constants'
-import {useEffect, useLayoutEffect, useRef} from 'react'
-import {Layouts, Themes} from '../index'
+import {useContext, useEffect, useLayoutEffect, useRef} from 'react'
 
 interface Props {
 	children: (JSX.Element | false)[] | JSX.Element | false
-	theme: Themes
-	layout: Layouts
 }
 
-const Layout = ({children, theme, layout}: Props) => {
-	const [ref, { width}, handleSize] = useElementSize()
+const Layout = ({children}: Props) => {
+	const {setWidth, settings} = useContext(AppContext)
+	const [ref, {width}, handleSize] = useElementSize()
 	const fontLoaded = useRef(false)
+	const {theme, layout} = settings
+
+	useEffect(() => setWidth(width), [width, setWidth])
 
 	useLayoutEffect(() => {
 		// Dynamically add font links to document
@@ -38,15 +39,13 @@ const Layout = ({children, theme, layout}: Props) => {
 	}, [layout])
 
 	return (
-		<AppContextProvider value={{width, theme}}>
-			<AppWrapper
-				layout={layout}
-				theme={theme}
-				ref={ref}
-			>
-				{children}
-			</AppWrapper>
-		</AppContextProvider>
+		<AppWrapper
+			layout={layout}
+			theme={theme}
+			ref={ref}
+		>
+			{children}
+		</AppWrapper>
 	)
 }
 

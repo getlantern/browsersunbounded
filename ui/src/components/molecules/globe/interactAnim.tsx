@@ -1,8 +1,7 @@
 import styled from 'styled-components'
 import {CSSProperties, useContext, useEffect, useRef, useState} from 'react'
 import {AppContext} from '../../../context'
-import {Themes} from '../../../index'
-import {COLORS} from '../../../constants'
+import {COLORS, Themes} from '../../../constants'
 
 interface SvgProps {
 	color: string,
@@ -41,7 +40,7 @@ const Container = styled.span`
 	}
 `
 const InteractAnim = () => {
-	const {theme} = useContext(AppContext)
+	const {theme} = useContext(AppContext).settings
 	const color = theme === Themes.DARK ? COLORS.grey1 : COLORS.grey5
 	const tick = useRef(0)
 	const count = useRef(0)
