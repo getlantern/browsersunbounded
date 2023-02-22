@@ -20,7 +20,7 @@ export const Body = styled.div`
   width: 100%;
   max-width: ${MAX_WIDTH}px;
   flex-direction: ${(props: {mobile: boolean}) => props.mobile ? 'column' : 'row'};
-  align-items: center;
+  //align-items: center;
 `
 
 export const ExpandWrapper = styled.div`

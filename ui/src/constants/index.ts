@@ -12,6 +12,7 @@ export const COLORS = {
 	grey6: '#040404',
 	grey: '#707070',
 	blue5: '#012D2D',
+	error: '#DB1C1C',
 	brand: 'rgba(0, 122, 124, 1)',
 	altBrand: '#00BCD4',
 	transparent: 'transparent'

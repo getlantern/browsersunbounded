@@ -6,6 +6,7 @@ import Info from '../info'
 import {TextInfo} from './styles'
 import {useContext} from 'react'
 import {AppContext} from '../../../context'
+import {COLORS} from '../../../constants'
 
 interface Props {
 	onToggle?: (s: boolean) => void
@@ -26,9 +27,9 @@ const Control = ({onToggle, info = false}: Props) => {
 		<>
 			<TextInfo>
 				<Text
-					style={{minWidth: 160}}
+					style={{minWidth: 160, fontWeight: 'bold'}}
 				>
-					Connection sharing is {sharing ? 'ON' : 'OFF'}
+					Connection sharing: <span style={{color: sharing ? COLORS.green : COLORS.error}}>{sharing ? 'ON' : 'OFF'}</span>
 				</Text>
 				{ info && <Info /> }
 			</TextInfo>

@@ -43,7 +43,7 @@ export const ExpandCollapsePanel = ({expanded, setExpanded}: Props) => {
 					fontSize: 12
 				}}
 			>
-				{`Show ${expanded ? 'less' : 'more'} stats`}
+				{`${expanded ? 'Hide' : 'Show'} Globe`}
 			</Text>
 			<Arrow
 				up={expanded}

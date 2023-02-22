@@ -4,9 +4,10 @@ import {Text} from '../../atoms/typography'
 import {useContext, useState} from 'react'
 import { Popover } from 'react-tiny-popover'
 import {AppContext} from '../../../context'
+import {Targets} from '../../../constants'
 
 const Info = () => {
-	const {theme} = useContext(AppContext).settings
+	const {theme, target} = useContext(AppContext).settings
 	const [active, setActive] = useState(false)
 	return (
 		<>
@@ -19,7 +20,9 @@ const Info = () => {
 						theme={theme}
 					>
 						<Text>
-							Sharing your connection enables people living with censorship to access the open internet using <a href={'https://lantern.io'} target={'_blank'} rel={'noreferrer'}>Lantern</a>. Keep this site open to continue sharing your connection
+							{'Sharing your connection enables people living with censorship to access the open internet using '}
+							<a href={'https://lantern.io'} target={'_blank'} rel={'noreferrer'}>Lantern</a>.
+							{ target !== Targets.EXTENSION_POPUP && ' Keep this site open to continue sharing your connection.' }
 						</Text>
 					</Wrapper>
 				}

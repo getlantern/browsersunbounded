@@ -6,10 +6,10 @@ import Col from '../../atoms/col'
 import GlobeSuspense from '../../molecules/globe/suspense'
 import Row from '../../atoms/row'
 import Control from '../../molecules/control'
-import Stats, {Connections} from '../../molecules/stats'
+import Stats from '../../molecules/stats'
 import About from '../../molecules/about'
 import Footer from '../../molecules/footer'
-import {LogoCenter} from '../../atoms/icons'
+import {LogoLeft} from '../../atoms/icons'
 import {ExpandCollapsePanel} from '../../atoms/expandCollapse'
 import {useLatch} from '../../../hooks/useLatch'
 
@@ -35,7 +35,7 @@ const Panel = () => {
 				<Body
 					mobile={width < BREAKPOINT}
 				>
-					{ settings.branding && <LogoCenter /> }
+					{ settings.branding && <LogoLeft /> }
 					{ !expanded && <About style={{padding: '24px 0'}} /> }
 					{
 						settings.globe && expanded && (
@@ -57,20 +57,7 @@ const Panel = () => {
 								onToggle={onToggle}
 							/>
 						</Row>
-						{
-							!expanded && (
-								<Row
-									borderBottom
-								>
-									<Connections />
-								</Row>
-							)
-						}
-						{
-							expanded && (
-								<Stats />
-							)
-						}
+						<Stats />
 						<div
 							style={{paddingLeft: 8, paddingRight: 8, margin: '24px 0 0'}}
 						>
