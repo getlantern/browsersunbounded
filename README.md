@@ -6,7 +6,7 @@
 * [System components](#floppy_disk-system-components)
 * [Quickstart for devs](#arrow_forward-quickstart-for-devs)
 * [Observing networks with netstate](#spider_web)
-* [UI quickstart for devs](#nail_careart-ui-quickstart-for-devs)
+* [UI quickstart for devs](#art_ui)
 
 ### :skull: Warning
 This is prototype-grade software!
