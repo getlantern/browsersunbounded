@@ -95,6 +95,8 @@ created. You must refresh the page to update the visualization.
 
 ### :art: UI
 
+![ui system](https://user-images.githubusercontent.com/24487544/220998573-0b1f3bd2-66d1-41eb-b256-4da1aa69da76.png)
+
 #### UI settings and configuration
 
 The UI is bootstrapped with [Create React App](https://github.com/facebook/create-react-app). Then "re-wired" to build one single js bundle entry using [rewire](https://www.npmjs.com/package/rewire). 

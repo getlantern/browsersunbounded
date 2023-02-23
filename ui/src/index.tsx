@@ -6,6 +6,14 @@ import {Settings, defaultSettings} from './constants'
 
 export const settingsEmitter = new StateEmitter<{ [key: number]: Settings }>({})
 
+const upperSnakeToCamel = (s: string | undefined) => {
+	if (!s) return s
+	return s.toLowerCase().replace(/([-_][a-z])/ig, ($1) => {
+		return $1.toUpperCase()
+			.replace('-', '')
+			.replace('_', '')
+	})
+}
 const hydrateSettings = (i: number, dataset: Settings) => {
 	const settings = {...defaultSettings}
 	Object.keys(settings).forEach(key => {
@@ -19,13 +27,11 @@ const hydrateSettings = (i: number, dataset: Settings) => {
 	})
 	// optional settings overrides from env vars
 	Object.keys(process.env).filter(key => {
-		const envKey = key.split('REACT_APP_')[1]
-		const settingsKeys = Object.keys(settings).map(k => k.toUpperCase())
+		const settingsKeys = Object.keys(settings)
+		const envKey = upperSnakeToCamel(key.split('REACT_APP_')[1])
 		return envKey && settingsKeys.includes(envKey)
 	}).forEach(key => {
-		const settingsKey = Object.keys(settings).find(k => {
-			return key.split('REACT_APP_')[1] === k.toUpperCase()
-		})
+		const settingsKey = upperSnakeToCamel(key.split('REACT_APP_')[1])
 		try {
 			// @ts-ignore
 			settings[settingsKey] = JSON.parse(process.env[key])
