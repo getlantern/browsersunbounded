@@ -17,6 +17,7 @@ type WebRTCOptions struct {
 	STUNBatch      func(size uint32) (batch []string, err error)
 	STUNBatchSize  uint32
 	Tag            string
+	Patience       time.Duration
 }
 
 func NewDefaultWebRTCOptions() *WebRTCOptions {
@@ -55,7 +56,8 @@ func NewDefaultWebRTCOptions() *WebRTCOptions {
 			return batch, err
 		},
 		STUNBatchSize: 5,
-		Tag:           "Barbara Broflake",
+		Tag:           "",
+		Patience:      500 * time.Millisecond,
 	}
 }
 
