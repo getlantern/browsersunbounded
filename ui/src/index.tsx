@@ -17,6 +17,7 @@ const hydrateSettings = (i: number, dataset: Settings) => {
 			settings[key] = dataset[key] || settings[key]
 		}
 	})
+	// optional settings overrides from env vars
 	Object.keys(process.env).filter(key => {
 		const envKey = key.split('REACT_APP_')[1]
 		const settingsKeys = Object.keys(settings).map(k => k.toUpperCase())
