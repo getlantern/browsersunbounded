@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import {StateEmitter} from './hooks/useStateEmitter'
-import {Settings, defaultSettings} from './constants'
+import {defaultSettings, Settings, Themes} from './constants'
 
 export const settingsEmitter = new StateEmitter<{ [key: number]: Settings }>({})
 
@@ -40,6 +40,10 @@ const hydrateSettings = (i: number, dataset: Settings) => {
 			settings[settingsKey] = process.env[key]
 		}
 	})
+	// set theme based on browser preference if using "dynamic"
+	if (settings.theme === Themes.AUTO) {
+		settings.theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? Themes.DARK : Themes.LIGHT
+	}
 	settingsEmitter.update({...settingsEmitter.state, [i]: settings})
 }
 

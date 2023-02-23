@@ -119,19 +119,19 @@ Example production embed:
 This tables lists all the available settings that can be passed to the `<lantern-network>` DOM el via the `data-*` attributes. 
 The "default" column shows the default value if the attribute is not set.
 
-| dataset   | description                                              | default |
-|-----------|----------------------------------------------------------|---------|
-| layout    | string "banner" or "panel" layout                        | banner  |
-| theme     | string "dark" or "light" theme                           | light   |
-| globe     | boolean to include webgl globe                           | true    |
-| exit      | boolean to include toast on exit intent                  | true    |
-| donate    | boolean to include donate link                           | true    |
-| mobile-bg | boolean to run on mobile background                      | false   |
-| mobile-bg | boolean to run on desktop background                     | true    |
-| editor    | boolean to include debug dataset editor                  | false   |
-| branding  | boolean to include logos                                 | true    |
-| mock      | boolean to use the mock wasm client data                 | false   |
-| target    | string "web", "extension-offscreen" or "extension-popup" | web     |
+| dataset   | description                                               | default |
+|-----------|-----------------------------------------------------------|---------|
+| layout    | string "banner" or "panel" layout                         | banner  |
+| theme     | string "dark", "light" or "auto" (browser settings) theme | light   |
+| globe     | boolean to include webgl globe                            | true    |
+| exit      | boolean to include toast on exit intent                   | true    |
+| donate    | boolean to include donate link                            | true    |
+| mobile-bg | boolean to run on mobile background                       | false   |
+| mobile-bg | boolean to run on desktop background                      | true    |
+| editor    | boolean to include debug dataset editor                   | false   |
+| branding  | boolean to include logos                                  | true    |
+| mock      | boolean to use the mock wasm client data                  | false   |
+| target    | string "web", "extension-offscreen" or "extension-popup"  | web     |
 
 In development, these settings can be customized using the `REACT_APP_*` environment variables in the `.env` or in your terminal.
 For example, to run the widget in "panel" layout, you can run `REACT_APP_LAYOUT=panel yarn start`. To run the widget with mock data,

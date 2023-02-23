@@ -53,7 +53,8 @@ export enum Layouts {
 
 export enum Themes {
 	'DARK' = 'dark',
-	'LIGHT' = 'light'
+	'LIGHT' = 'light',
+	'AUTO' = 'auto'
 }
 
 export interface Settings {
