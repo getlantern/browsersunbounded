@@ -6,7 +6,7 @@
 * [System components](#floppy_disk-system-components)
 * [Quickstart for devs](#arrow_forward-quickstart-for-devs)
 * [Observing networks with netstate](#spider_web)
-* [UI quickstart for devs](#nail_careart-ui-quickstart-for-devs)
+* [UI](#art-ui)
 
 ### :skull: Warning
 This is prototype-grade software!
@@ -60,7 +60,7 @@ EGRESS=http://localhost:8000 ./desktop`
 9. Decision point: do you want to run a **native binary** widget or a **browser** widget? To start 
 a native binary widget: `cd cmd/dist/bin && FREDDIE=http://localhost:9000 EGRESS=http://localhost:8000 
 ./widget`. Alternatively, to start a browser widget, follow the 
-[UI quickstart](#nail_careart-ui-quickstart-for-devs).
+[UI quickstart](#ui-quickstart-for-devs).
 
 _The widget and desktop client find each other via the discovery server, execute a signaling step,
 and establish several WebRTC connections._
@@ -93,8 +93,15 @@ TAG=Bob FREDDIE=http://localhost:9000 EGRESS=http://localhost:8000 ./desktop`
 signaling process and establish connection(s) to one another, you should see the network you have
 created. You must refresh the page to update the visualization.
 
-### :nail_care::art: UI quickstart for devs
-The UI is bootstrapped with [Create React App](https://github.com/facebook/create-react-app). Then "re-wired" to build one single js bundle entry using [rewire](https://www.npmjs.com/package/rewire). The React app will bind to a custom `<lantern-network>` DOM el and render based on settings passed to the [dataset](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/dataset):
+### :art: UI
+
+#### UI settings and configuration
+
+The UI is bootstrapped with [Create React App](https://github.com/facebook/create-react-app). Then "re-wired" to build one single js bundle entry using [rewire](https://www.npmjs.com/package/rewire). 
+The React app will bind to a custom `<lantern-network>` DOM el and render based on settings passed to the [dataset](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/dataset). 
+In development, this html can be found in `ui/public/index.html`. In production, the html is supplied by the "embedder" via https://network.lantern.io/embed.
+
+Example production embed:
 
 ```html
 <lantern-network
@@ -102,17 +109,15 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
    data-theme="dark"
    data-globe="true"
    data-exit="true"
-   data-donate="true"
-   data-mobile-bg="false"
-   data-desktop-bg="true"
-   data-editor="false"
-   data-branding="true"
    style='width: 100%;'
 ></lantern-network>
 <script defer="defer" src="https://embed.lantern.io/static/js/main.js"></script>
 ```
 
-| Data-set  | Description                                              | Default |
+This tables lists all the available settings that can be passed to the `<lantern-network>` DOM el via the `data-*` attributes. 
+The "default" column shows the default value if the attribute is not set.
+
+| dataset   | description                                              | default |
 |-----------|----------------------------------------------------------|---------|
 | layout    | string "banner" or "panel" layout                        | banner  |
 | theme     | string "dark" or "light" theme                           | light   |
@@ -126,9 +131,23 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 | mock      | boolean to use the mock wasm client data                 | false   |
 | target    | string "web", "extension-offscreen" or "extension-popup" | web     |
 
+In development, these settings can be customized using the `REACT_APP_*` environment variables in the `.env` or in your terminal.
+For example, to run the widget in "panel" layout, you can run `REACT_APP_LAYOUT=panel yarn start`. To run the widget with mock data,
+you can run `REACT_APP_MOCK=true yarn start`. 
+
+Settings can also be passed to the widget via the `data-*` attributes in `ui/public/index.html`. For example, to run the widget in "panel" layout,
+you can set `data-layout="panel"` in `ui/public/index.html`.
+
+If you enable the editor (by setting `REACT_APP_EDITOR=true` or `data-editor="true"`), you can also edit the settings dynamically in the browser using a UI editor the renders above the widget.
+*Note* that the `mock` and `target` settings are not dynamic and therefore not editable in the browser. These two settings are static and must be set at the time the wasm interface is initialized.
+
+Links:
+
 [Github pages sandbox](https://embed.lantern.io)
 
 [Lantern Network website](https://network.lantern.io)
+
+#### UI quickstart for devs
 
 1. Work from the ui dir: `cd ui`
 
@@ -136,6 +155,7 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
    1. Set `REACT_APP_WIDGET_WASM_URL` to your intended hosted `widget.wasm` file. If you are serving it from `client` in [step #8](#arrow_forward-quickstart-for-devs), use [http://localhost:9000/widget.wasm](http://localhost:9000/widget.wasm). If you ran `./build_web.sh` ([step #7](#arrow_forward-quickstart-for-devs)) you can also use `/widget.wasm`. To config for prod point to a publicly hosted `widget.wasm` e.g. `https://embed.lantern.io/widget.wasm`. If you know you know, if not, you likely want to use `/widget.wasm`.
    2. Set `REACT_APP_GEO_LOOKUP_URL` to your intended geo lookup service. Most likely `https://geo.getiantem.org/lookup` or `http://localhost:<PORT>/lookup` if testing geo lookups locally
    3. Set `REACT_APP_STORAGE_URL` to your intended iframe html for local storage of widget state and analytics. Most likely `https://embed.lantern.io/storage.html` or `/storage.html` if testing locally
+   4. Set any `REACT_APP_*` variables as needed for your development environment. See [UI settings and configuration](#ui-settings-and-configuration) for more info.
 
 3. Install the dependencies: `yarn`
 
@@ -151,7 +171,7 @@ The UI is bootstrapped with [Create React App](https://github.com/facebook/creat
 
 8. Coming soon to a repo near you: `yarn test`
 
-#### Browser extension UI
+#### Browser extension quickstart for devs
 
 1. Work from the ui/extension dir: `cd ui/extension`
 

@@ -5,6 +5,8 @@ package main
 
 import (
 	"log"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 
 	"github.com/getlantern/broflake/clientcore"
@@ -15,6 +17,7 @@ var (
 )
 
 func main() {
+	pprof := os.Getenv("PPROF")
 	freddie := os.Getenv("FREDDIE")
 	egress := os.Getenv("EGRESS")
 	netstated := os.Getenv("NETSTATED")
@@ -30,6 +33,7 @@ func main() {
 	log.Printf("egress: %v\n", egress)
 	log.Printf("netstated: %v\n", netstated)
 	log.Printf("tag: %v\n", tag)
+	log.Printf("pprof: %v\n", pprof)
 	log.Printf("proxyport: %v\n", proxyport)
 
 	bfOpt := clientcore.NewDefaultBroflakeOptions()
@@ -52,6 +56,12 @@ func main() {
 	bfconn, _, err := clientcore.NewBroflake(bfOpt, rtcOpt, egOpt)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if pprof != "" {
+		go func() {
+			log.Println(http.ListenAndServe("localhost:"+pprof, nil))
+		}()
 	}
 
 	if clientType == "desktop" {

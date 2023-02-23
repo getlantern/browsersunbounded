@@ -24,6 +24,18 @@ const bind = () => {
         if (message.type === 'popupOpened') return popupOpen = true
         // console.log('message from chrome, forwarding to iframe: ', message)
         iframe.contentWindow?.postMessage(message, '*')
+
+        if (isPopup && message.type === 'stateUpdate' && message.data.emitter === 'sharingEmitter') {
+            const state = message.data.value ? 'on' : 'off'
+            chrome.action.setIcon({
+                path: {
+                    "16": `/images/logo16_${state}.png`,
+                    "32": `/images/logo32_${state}.png`,
+                    "48": `/images/logo48_${state}.png`,
+                    "128": `/images/logo128_${state}.png`
+                }
+            })
+        }
         return false
     })
     if (isPopup) chrome.runtime.sendMessage({
