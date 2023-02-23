@@ -17,6 +17,22 @@ const hydrateSettings = (i: number, dataset: Settings) => {
 			settings[key] = dataset[key] || settings[key]
 		}
 	})
+	Object.keys(process.env).filter(key => {
+		const envKey = key.split('REACT_APP_')[1]
+		const settingsKeys = Object.keys(settings).map(k => k.toUpperCase())
+		return envKey && settingsKeys.includes(envKey)
+	}).forEach(key => {
+		const settingsKey = Object.keys(settings).find(k => {
+			return key.split('REACT_APP_')[1] === k.toUpperCase()
+		})
+		try {
+			// @ts-ignore
+			settings[settingsKey] = JSON.parse(process.env[key])
+		} catch {
+			// @ts-ignore
+			settings[settingsKey] = process.env[key]
+		}
+	})
 	settingsEmitter.update({...settingsEmitter.state, [i]: settings})
 }
 

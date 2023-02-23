@@ -31,7 +31,6 @@ const App = ({appId, embed}: Props) => {
   const [width, setWidth] = useState(0)
 
   useLayoutEffect(() => {
-    if (!mock || !target) return // settings not ready
     if (wasmInterface.current) return // already initialized or initializing
     wasmInterface.current = new WasmInterface()
     wasmInterface.current.initialize({mock, target}).then(instance => {
