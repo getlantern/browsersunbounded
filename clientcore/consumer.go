@@ -11,7 +11,6 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
-	"net/http"
 	"net/url"
 	"strconv"
 	"sync"
@@ -111,8 +110,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			log.Printf("Consumer state 1...\n")
 
 			// Listen for genesis messages
-			// TODO: use a custom http.Client and control our TCP connections
-			res, err := http.Get(options.DiscoverySrv + options.Endpoint)
+			res, err := options.HttpClient.Get(options.DiscoverySrv + options.Endpoint)
 			if err != nil {
 				log.Printf("Couldn't subscribe to genesis stream at %v\n", options.DiscoverySrv+options.Endpoint)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
@@ -232,8 +230,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 
 			// Signal the offer
-			// TODO: use a custom http.Client and control our TCP connections
-			res, err := http.PostForm(
+			res, err := options.HttpClient.PostForm(
 				options.DiscoverySrv+options.Endpoint,
 				url.Values{"data": {string(offerJSON)}, "send-to": {replyTo}, "type": {strconv.Itoa(int(common.SignalMsgOffer))}},
 			)
@@ -337,8 +334,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 
 			// Signal our ICE candidates
-			// TODO: use a custom http.Client and control our TCP connections
-			res, err := http.PostForm(
+			res, err := options.HttpClient.PostForm(
 				options.DiscoverySrv+options.Endpoint,
 				url.Values{"data": {string(candidatesJSON)}, "send-to": {replyTo}, "type": {strconv.Itoa(int(common.SignalMsgICE))}},
 			)

@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"net/http"
 	"net/url"
 	"strconv"
 	"sync"
@@ -143,8 +142,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 
 			// Signal the genesis message
-			// TODO: use a custom http.Client and control our TCP connections
-			res, err := http.PostForm(
+			res, err := options.HttpClient.PostForm(
 				options.DiscoverySrv+options.Endpoint,
 				url.Values{"data": {string(g)}, "send-to": {options.GenesisAddr}, "type": {strconv.Itoa(int(common.SignalMsgGenesis))}},
 			)
@@ -247,8 +245,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 
 			// Signal our answer
-			// TODO: use a custom http.Client and control our TCP connections
-			res, err := http.PostForm(
+			res, err := options.HttpClient.PostForm(
 				options.DiscoverySrv+options.Endpoint,
 				url.Values{"data": {string(a)}, "send-to": {replyTo}, "type": {strconv.Itoa(int(common.SignalMsgAnswer))}},
 			)
