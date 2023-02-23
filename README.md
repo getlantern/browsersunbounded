@@ -139,7 +139,7 @@ Settings can also be passed to the widget via the `data-*` attributes in `ui/pub
 you can set `data-layout="panel"` in `ui/public/index.html`.
 
 If you enable the editor (by setting `REACT_APP_EDITOR=true` or `data-editor="true"`), you can also edit the settings dynamically in the browser using a UI editor the renders above the widget.
-*Note* that the `mock` and `target` settings are dynamic nor editable in the editor. These two settings are static and must be set at the time the wasm interface is initialized.
+*Note* that the `mock` and `target` settings are not dynamic and therefore not editable in the browser. These two settings are static and must be set at the time the wasm interface is initialized.
 
 Links:
 
@@ -155,7 +155,7 @@ Links:
    1. Set `REACT_APP_WIDGET_WASM_URL` to your intended hosted `widget.wasm` file. If you are serving it from `client` in [step #8](#arrow_forward-quickstart-for-devs), use [http://localhost:9000/widget.wasm](http://localhost:9000/widget.wasm). If you ran `./build_web.sh` ([step #7](#arrow_forward-quickstart-for-devs)) you can also use `/widget.wasm`. To config for prod point to a publicly hosted `widget.wasm` e.g. `https://embed.lantern.io/widget.wasm`. If you know you know, if not, you likely want to use `/widget.wasm`.
    2. Set `REACT_APP_GEO_LOOKUP_URL` to your intended geo lookup service. Most likely `https://geo.getiantem.org/lookup` or `http://localhost:<PORT>/lookup` if testing geo lookups locally
    3. Set `REACT_APP_STORAGE_URL` to your intended iframe html for local storage of widget state and analytics. Most likely `https://embed.lantern.io/storage.html` or `/storage.html` if testing locally
-   4. Set any `REACT_APP_*` variables as needed for your development environment. See [UI settings and configuration](#nail_careart-ui-quickstart-for-devs) for more info.
+   4. Set any `REACT_APP_*` variables as needed for your development environment. See [UI settings and configuration](#ui-settings-and-configuration) for more info.
 
 3. Install the dependencies: `yarn`
 
