@@ -227,7 +227,7 @@ func main() {
 		Addr:         fmt.Sprintf(":%v", port),
 	}
 
-	http.HandleFunc("/ws", otelhttp.NewHandler(l.handleWebsocket))
+	http.Handle("/ws", otelhttp.NewHandler(http.HandlerFunc(l.handleWebsocket), "/ws"))
 	log.Printf("Egress server listening for WebSocket connections on %v\n\n", srv.Addr)
 	err := srv.ListenAndServe()
 	if err != nil {
