@@ -4,7 +4,7 @@
 # (spin up 100 censored peers)
 
 trap "kill 0" EXIT
-set -u
+set -ue
 
 for (( i=1; i <=$1; i++ ))
 do
