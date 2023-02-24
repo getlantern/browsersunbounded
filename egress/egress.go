@@ -18,8 +18,12 @@ import (
 
 	"github.com/elazarl/goproxy"
 	"github.com/getlantern/broflake/common"
+	"github.com/getlantern/telemetry"
 	"github.com/google/uuid"
 	"github.com/lucas-clemente/quic-go"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"nhooyr.io/websocket"
 )
 
@@ -60,6 +64,7 @@ type proxyListener struct {
 	net.Listener
 	connections chan net.Conn
 	tlsConfig   *tls.Config
+	tracer      trace.Tracer
 }
 
 func (l proxyListener) Accept() (net.Conn, error) {
@@ -100,6 +105,9 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 	// patterns as strings using AcceptOptions.OriginPattern
 	// TODO: disabling compression is a workaround for a WebKit bug:
 	// https://github.com/getlantern/broflake/issues/45
+	ctx := r.Context()
+	ctx, span := l.tracer.Start(ctx, "handleWebsocket")
+	defer span.End()
 	c, err := websocket.Accept(
 		w,
 		r,
@@ -117,8 +125,7 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 	defer wspconn.Close()
 
 	if err != nil {
-		// TODO: this is the idiom for our WebSocket library, but we should log the err better
-		log.Println(err)
+		span.RecordError(err)
 		return
 	}
 
@@ -127,6 +134,7 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 	listener, err := quic.Listen(wspconn, l.tlsConfig, &common.QUICCfg)
 	if err != nil {
 		log.Printf("Error creating QUIC listener: %v\n", err)
+		span.RecordError(err)
 		return
 	}
 
@@ -134,6 +142,7 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 		conn, err := listener.Accept(context.Background())
 		if err != nil {
 			log.Printf("%v QUIC listener error (%v), closing!\n", wspconn.addr, err)
+			span.RecordError(err)
 			listener.Close()
 			break
 		}
@@ -164,11 +173,16 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	ctx := context.Background()
+	closeFunc := telemetry.EnableOTELTracing(ctx)
+	defer func() { _ = closeFunc(ctx) }()
+
 	// We use this wrapped listener to enable our local HTTP proxy to listen for WebSocket connections
 	l := proxyListener{
 		Listener:    &net.TCPListener{},
 		connections: make(chan net.Conn, 2048),
 		tlsConfig:   generateTLSConfig(),
+		tracer:      otel.Tracer("websocket-tracer"),
 	}
 
 	// Instantiate our local HTTP CONNECT proxy
@@ -213,7 +227,7 @@ func main() {
 		Addr:         fmt.Sprintf(":%v", port),
 	}
 
-	http.HandleFunc("/ws", l.handleWebsocket)
+	http.HandleFunc("/ws", otelhttp.NewHandler(l.handleWebsocket))
 	log.Printf("Egress server listening for WebSocket connections on %v\n\n", srv.Addr)
 	err := srv.ListenAndServe()
 	if err != nil {
