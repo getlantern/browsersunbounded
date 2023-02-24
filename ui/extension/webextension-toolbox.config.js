@@ -1,5 +1,8 @@
+const webpack = require('webpack')
 const {resolve} = require("path")
 const GlobEntriesPlugin = require("webpack-watched-glob-entries-plugin")
+const dotenv = require('dotenv').config({ path: __dirname + '/.env' })
+const isDevelopment = process.env.NODE_ENV !== 'production'
 
 module.exports = {
     webpack: (config, { dev, vendor }) => {
@@ -17,8 +20,15 @@ module.exports = {
             },
             module: {
                 ...config.module,
-                rules: [...config.module.rules, {test: /\.tsx?$/, loader: "ts-loader"}],
-            }
+                rules: [...config.module.rules, {test: /\.tsx?$/, loader: "ts-loader"}]
+            },
+            plugins: [
+                ...config.plugins,
+                new webpack.DefinePlugin({
+                    'process.env': JSON.stringify(dotenv.parsed),
+                    'process.env.NODE_ENV': JSON.stringify(isDevelopment ? 'development' : 'production'),
+                }),
+            ].filter(Boolean)
         })
     },
 }

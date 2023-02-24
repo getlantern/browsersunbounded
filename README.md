@@ -179,6 +179,10 @@ Links:
 
 2. Install the dependencies: `yarn`
 
+3. Configure your .env file: `cp .env.example .env`
+   1. Set `POPUP_URL` to your intended hosted popup page. If you are serving it from `ui` in [step #6](#ui-quickstart-for-devs), use [http://localhost:3000/popup](http://localhost:3000/popup). To use prod, set to [https://embed.lantern.io/popup](https://embed.lantern.io/popup).
+   2. Set `OFFSCREEN_URL` to your intended hosted offscreen page. If you are serving it from `ui` in [step #6](#ui-quickstart-for-devs), use [http://localhost:3000/offscreen](http://localhost:3000/offscreen). To use prod, set to [https://embed.lantern.io/offscreen](https://embed.lantern.io/offscreen).
+
 3. To start in developer mode with hot-refresh server:
 ```
 yarn dev chrome

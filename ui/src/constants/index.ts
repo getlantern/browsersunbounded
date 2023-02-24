@@ -37,6 +37,7 @@ export enum MessageTypes {
 	WASM_STOP = 'wasmStop',
 	HYDRATE_STATE = 'hydrateState',
 	STATE_UPDATE = 'stateUpdate',
+	POPUP_OPENED = 'popupOpened'
 }
 
 export enum Targets {
@@ -86,3 +87,5 @@ export const defaultSettings: Settings = {
 	target: Targets.WEB,
 	mock: false
 }
+
+export const POPUP = 'popup'

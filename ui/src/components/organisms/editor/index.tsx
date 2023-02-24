@@ -83,6 +83,18 @@ const Editor = ({embed}: Props) => {
 					/>
 					<label htmlFor={Themes.LIGHT}>Light</label>
 				</div>
+
+				<div>
+					<input
+						type="radio"
+						id={Themes.AUTO}
+						name="theme"
+						value={Themes.AUTO}
+						checked={state.theme === Themes.AUTO}
+						onChange={() => setState({...state, theme: Themes.AUTO})}
+					/>
+					<label htmlFor={Themes.AUTO}>Auto</label>
+				</div>
 			</fieldset>
 			<fieldset>
 				<legend>Features</legend>

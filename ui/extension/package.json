@@ -10,8 +10,10 @@
   "dependencies": {
     "@types/chrome": "^0.0.216",
     "@webextension-toolbox/webextension-toolbox": "^5.2.2",
+    "dotenv": "^16.0.3",
     "ts-loader": "^9.4.2",
     "typescript": "^4.9.5",
+    "webpack": "^5.75.0",
     "webpack-watched-glob-entries-plugin": "^2.2.6"
   }
 }

@@ -19,3 +19,4 @@ ui/.env
 ui/extension/dist
 ui/extension/packages
 ui/extension/node_modules
+ui/extension/.env

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
     "isolatedModules": false,
-    "baseUrl": "."
+    "baseUrl": ".",
   }
 }
