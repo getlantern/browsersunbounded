@@ -190,10 +190,17 @@ yarn dev firefox
 yarn dev edge
 ```
 
+This will compile the extension and output to the `ui/extension/dist` dir. You can then load the unpacked extension in your browser of choice. 
+- For Chrome, go to [chrome://extensions](chrome://extensions) and click "Load unpacked" and select the `ui/extension/dist/chrome` dir. 
+- For Firefox, go to [about:debugging#/runtime/this-firefox](about:debugging#/runtime/this-firefox) and click "Load Temporary Add-on" and select the `ui/extension/dist/firefox/manifest.json` file. 
+- For Edge, go to [edge://extensions](edge://extensions) and click "Load unpacked" and select the `ui/extension/dist/edge` dir.
+
 4. To build for production:
 ```
 yarn build chrome
 yarn build firefox 
 yarn build edge
 ```
+
+This will compile the extension and output a compressed build to the `ui/extension/packages` dir. 
 

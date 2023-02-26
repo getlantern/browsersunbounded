@@ -3,7 +3,8 @@
   "short_name": "__MSG_appShortName__",
   "description": "__MSG_appDescription__",
   "version": "0.0.0",
-  "manifest_version": 3,
+  "__chrome__manifest_version": 3,
+  "__firefox__manifest_version": 2,
   "default_locale": "en",
   "icons": {
     "16": "/images/logo16.png",
@@ -11,20 +12,34 @@
     "48": "/images/logo48.png",
     "128": "/images/logo128.png"
   },
-  "permissions": [
+  "__chrome__permissions": [
     "scripting",
     "offscreen"
   ],
-  "content_security_policy": {
+  "__firefox__permissions": [
+    "scripting"
+  ],
+  "__chrome__content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; worker-src 'self';"
   },
+  "__firefox__content_security_policy": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; worker-src 'self';",
   "__chrome__background": {
     "service_worker": "scripts/serviceWorker.js"
   },
   "__firefox__background": {
-    "page": "pages/offscreen.html"
+    "page": "pages/offscreen.html",
+    "persistent": true
   },
-  "action": {
+  "__chrome__action": {
+    "default_popup": "pages/popup.html",
+    "default_title": "__MSG_appName__",
+    "default_icon": {
+      "16": "/images/logo16_off.png",
+      "48": "/images/logo48_off.png",
+      "128": "/images/logo128_off.png"
+    }
+  },
+  "__firefox__browser_action": {
     "default_popup": "pages/popup.html",
     "default_title": "__MSG_appName__",
     "default_icon": {

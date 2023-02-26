@@ -56,7 +56,9 @@ const bindPopup = (iframe) => {
 const iconToggleSubscribe = (message) => {
 	if (message.type === MessageTypes.STATE_UPDATE && message.data.emitter === 'sharingEmitter') {
 		const state = message.data.value ? 'on' : 'off'
-		chrome.action.setIcon({
+		// @ts-ignore
+		const isFirefox = !chrome.app && window.browser && browser.runtime
+		chrome[isFirefox ? 'browserAction' : 'action'].setIcon({
 			path: {
 				"16": `/images/logo16_${state}.png`,
 				"32": `/images/logo32_${state}.png`,
