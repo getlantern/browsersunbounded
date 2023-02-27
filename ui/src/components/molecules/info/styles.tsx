@@ -12,7 +12,8 @@ export const StyledButton = styled.button`
 `
 
 export const Wrapper = styled.div`
-	box-shadow: ${({theme}: {theme: Themes}) => theme === Themes.DARK ? SHADOWS.dark : SHADOWS.light};
+  z-index: 2147483647; // 2147483647 is largest positive value of a signed integer on a 32 bit system
+  box-shadow: ${({theme}: {theme: Themes}) => theme === Themes.DARK ? SHADOWS.dark : SHADOWS.light};
   padding: 8px 24px;
 	background-color: ${({theme}: {theme: Themes}) => theme === Themes.DARK ? COLORS.grey6 : COLORS.grey1};
 	border-radius: 30px;

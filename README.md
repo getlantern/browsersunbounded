@@ -125,7 +125,8 @@ The "default" column shows the default value if the attribute is not set.
 | theme     | string "dark", "light" or "auto" (browser settings) theme | light   |
 | globe     | boolean to include webgl globe                            | true    |
 | exit      | boolean to include toast on exit intent                   | true    |
-| donate    | boolean to include donate link                            | true    |
+| menu      | boolean to include menu                                   | true    |
+| keep-text | boolean to include text to keep tab open                  | true    |
 | mobile-bg | boolean to run on mobile background                       | false   |
 | mobile-bg | boolean to run on desktop background                      | true    |
 | editor    | boolean to include debug dataset editor                   | false   |

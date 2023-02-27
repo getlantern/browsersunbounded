@@ -71,7 +71,7 @@ const Panel = () => {
 						{/*	/>*/}
 						{/*</div>*/}
 						{
-							settings.collapse && (
+							settings.collapse && settings.globe && (
 								<ExpandWrapper
 									style={{margin: '24px 0 0'}}
 								>

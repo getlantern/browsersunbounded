@@ -4,10 +4,9 @@ import {Text} from '../../atoms/typography'
 import {useContext, useState} from 'react'
 import { Popover } from 'react-tiny-popover'
 import {AppContext} from '../../../context'
-import {Targets} from '../../../constants'
 
 const Info = () => {
-	const {theme, target} = useContext(AppContext).settings
+	const {theme, keepText} = useContext(AppContext).settings
 	const [active, setActive] = useState(false)
 	return (
 		<>
@@ -15,6 +14,7 @@ const Info = () => {
 				isOpen={active}
 				positions={['bottom', 'top', 'left', 'right']}
 				onClickOutside={() => setActive(false)}
+				containerStyle={{zIndex:'2147483647'}} // 2147483647 is largest positive value of a signed integer on a 32 bit system
 				content={
 					<Wrapper
 						theme={theme}
@@ -22,7 +22,7 @@ const Info = () => {
 						<Text>
 							{'Sharing your connection enables people living with censorship to access the open internet.'}
 							{/*<a href={'https://lantern.io'} target={'_blank'} rel={'noreferrer'}>Lantern</a>.*/}
-							{ target !== Targets.EXTENSION_POPUP && ' Keep this site open to continue sharing your connection.' }
+							{ keepText && ' Keep this site open to continue sharing your connection.' }
 						</Text>
 					</Wrapper>
 				}

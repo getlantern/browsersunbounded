@@ -66,11 +66,12 @@ export interface Settings {
 	layout: Layouts
 	theme: Themes
 	editor: boolean
-	donate: boolean
 	collapse: boolean
 	branding: boolean
 	target: Targets
 	mock: boolean
+	keepText: boolean
+	menu: boolean
 }
 
 export const defaultSettings: Settings = {
@@ -81,11 +82,12 @@ export const defaultSettings: Settings = {
 	layout: Layouts.BANNER,
 	theme: Themes.LIGHT,
 	editor: false,
-	donate: true,
 	collapse: true,
 	branding: true,
 	target: Targets.WEB,
-	mock: false
+	mock: false,
+	keepText: true,
+	menu: true,
 }
 
 export const POPUP = 'popup'

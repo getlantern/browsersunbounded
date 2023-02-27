@@ -43,7 +43,10 @@ const Floating = () => {
 							paddingBottom: !expanded ? 8 : 0
 						}}
 					>
-						{ settings.branding ? <LogoLeft /> : <div /> }
+						<div
+							style={{height: 48}} // this is a hack to create real estate for the logo which is positioned absolute because it overlaps the header right
+						/>
+						{ settings.branding && <LogoLeft style={{position: 'absolute'}} /> }
 						<HeaderRight>
 							{
 								settings.collapse && (
@@ -68,6 +71,7 @@ const Floating = () => {
 								>
 									<Control
 										onToggle={onToggle}
+										info
 									/>
 								</Item>
 							</Col>
@@ -95,7 +99,6 @@ const Floating = () => {
 								>
 									<Control
 										onToggle={onToggle}
-										info
 									/>
 								</Row>
 								{

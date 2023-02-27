@@ -44,7 +44,7 @@ interface MenuProps {
 }
 const Menu = ({setExpanded} : MenuProps) => {
 	const {settings, width} = useContext(AppContext)
-	const {theme, donate, layout, target, collapse} = settings
+	const {theme, layout, target, collapse} = settings
 	const [expanded, _setExpanded] = useState(false)
 	const triggerRef = useRef<HTMLElement>(null)
 	const ref = useRef<HTMLElement>(null)
@@ -55,7 +55,6 @@ const Menu = ({setExpanded} : MenuProps) => {
 	const compensateMargin = !collapse || layout === Layouts.PANEL
 
 	const _menuItems = menuItems.filter(item => {
-		if (!donate && item.key === 'donate') return false
 		if ((isFirefox() || target === Targets.EXTENSION_POPUP) && item.key === 'chrome') return false
 		if ((!isFirefox() || target === Targets.EXTENSION_POPUP) && item.key === 'firefox') return false
 		return true

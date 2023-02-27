@@ -19,7 +19,8 @@ const Globe = lazy(() => import('../../molecules/globe'))
 
 const Banner = () => {
 	const {width, settings} = useContext(AppContext)
-	const [expanded, setExpanded] = useState(!settings.collapse)
+	const {collapse} = settings
+	const [expanded, setExpanded] = useState(!collapse)
 	const interacted = useLatch(expanded)
 	const onToggle = (share: boolean) => !interacted && share ? setExpanded(share) : null
 	useEffect(() => setExpanded(!settings.collapse), [settings.collapse]) // hydrate on settings change
@@ -32,7 +33,9 @@ const Banner = () => {
 					padding: width > BREAKPOINT ? '8px 32px' : '8px 16px'
 				}}
 			>
-				<Header>
+				<Header
+					collapse={collapse}
+				>
 					{ settings.branding ? <LogoLeft /> : <div /> }
 					{
 						!expanded && width > 650 && (

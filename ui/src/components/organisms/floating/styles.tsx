@@ -11,8 +11,7 @@ export const Container = styled.div`
 export const Header = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  //gap: 16px;
+  align-items: flex-start;
   width: 100%;
 	a {
 		outline: none;
@@ -23,7 +22,7 @@ export const Header = styled.div`
 export const HeaderRight = styled.div`
 	display: flex;
   align-items: center;
-	//gap: 8px;
+	z-index: 1;
 `
 
 export const BodyWrapper = styled.div`

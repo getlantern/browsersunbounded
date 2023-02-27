@@ -7,16 +7,15 @@ const app = () => {
 	// set body styles based on user theme
 	document.body.setAttribute(
 		'style',
-		`background-color: ${backgroundColor}; margin: 0; padding: 0; width: 320px; height: 642px;`
+		`background-color: ${backgroundColor}; margin: 0; padding: 0; width: 320px; height: 584px; overflow: hidden;` // hide scrollbar on popup, inherit iframe scroll only
 	)
 	const iframe = document.createElement('iframe')
 	iframe.src = process.env.POPUP_URL
 	// set iframe styles based on user theme
 	iframe.setAttribute(
 		'style',
-		`background-color: ${backgroundColor}; width: 320px; height: 642px; border: none; margin: 0; padding: 0; overflow: hidden;`
+		`background-color: ${backgroundColor}; width: 320px; height: 584px; border: none; margin: 0; padding: 0;`
 	)
-	iframe.scrolling = 'no'
 	document.body.appendChild(iframe)
 	bindPopup(iframe)
 }

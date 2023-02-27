@@ -23,7 +23,7 @@ export const HeaderRight = styled.div`
 export const Header = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: ${({collapse}: {collapse: boolean}) => collapse ? 'center' : 'flex-start'}; // only center align when collapsed setting is true
   gap: 16px;
 	a {
 		outline: none;
