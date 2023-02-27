@@ -1,9 +1,9 @@
 import {Chrome, Firefox, Heart, Menu as MenuIcon, More, Twitter} from '../../atoms/icons'
 import {MenuItem, MenuWrapper, StyledButton} from './styles'
-import {useContext, useEffect, useRef, useState} from 'react'
+import {Dispatch, SetStateAction, useContext, useEffect, useRef, useState} from 'react'
 import useClickOutside from '../../../hooks/useClickOutside'
 import {AppContext} from '../../../context'
-import {COLORS, Themes} from '../../../constants'
+import {COLORS, Layouts, Targets, Themes} from '../../../constants'
 import {isFirefox} from '../../../utils/userAgent'
 
 const menuItems = [
@@ -38,17 +38,26 @@ const menuItems = [
 		icon: <More/>
 	}
 ]
-const Menu = () => {
-	const {theme, donate} = useContext(AppContext).settings
-	const [expanded, setExpanded] = useState(false)
+
+interface MenuProps {
+	setExpanded?: Dispatch<SetStateAction<boolean>> | null
+}
+const Menu = ({setExpanded} : MenuProps) => {
+	const {settings, width} = useContext(AppContext)
+	const {theme, donate, layout, target, collapse} = settings
+	const [expanded, _setExpanded] = useState(false)
 	const triggerRef = useRef<HTMLElement>(null)
 	const ref = useRef<HTMLElement>(null)
-	useClickOutside([ref, triggerRef], () => setExpanded(false))
-	const [width, setWidth] = useState(0)
+	useClickOutside([ref, triggerRef], () => _setExpanded(false))
+	const [_width, setWidth] = useState(0)
+	const centered = width < 600 || layout !== Layouts.BANNER
+	// unique case when collapse button is missing we have to compensate for margin
+	const compensateMargin = !collapse || layout === Layouts.PANEL
+
 	const _menuItems = menuItems.filter(item => {
 		if (!donate && item.key === 'donate') return false
-		if (isFirefox() && item.key === 'chrome') return false
-		if (!isFirefox() && item.key === 'firefox') return false
+		if ((isFirefox() || target === Targets.EXTENSION_POPUP) && item.key === 'chrome') return false
+		if ((!isFirefox() || target === Targets.EXTENSION_POPUP) && item.key === 'firefox') return false
 		return true
 	})
 
@@ -58,11 +67,16 @@ const Menu = () => {
 	}, [expanded])
 
 	return (
-		<div style={{position: 'relative'}}>
+		<div style={centered ? {} : {position: 'relative'}}>
 			<StyledButton
-				onClick={() => setExpanded(!expanded)}
+				onClick={() => {
+					_setExpanded(!expanded)
+					if (setExpanded && !expanded) setExpanded(!expanded)
+				}}
 				// @ts-ignore
 				ref={triggerRef}
+				area-label={expanded ? 'Close menu' : 'Open menu'}
+				style={compensateMargin ? {marginRight: -10} : {}}
 			>
 				<MenuIcon/>
 			</StyledButton>
@@ -74,8 +88,10 @@ const Menu = () => {
 						backgroundColor: theme === Themes.LIGHT ? COLORS.white : COLORS.grey6,
 						border: `1px solid ${theme === Themes.LIGHT ? COLORS.grey2 : COLORS.grey5}`,
 						boxShadow: `0 0 16px ${theme === Themes.LIGHT ? 'rgba(0, 97, 99, 0.1)' : 'rgba(0, 97, 99, 0.1)'}`,
-						left: `-${width - 8}px`,
-						opacity: width ? 1 : 0
+						left: centered ? (width - _width)/2 : -(_width - 30),
+						top: centered ? layout === Layouts.BANNER ? 60 : 75 : 30,
+						opacity: (_width && width) ? 1 : 0, // don't show until menu and app width is calculated
+						width: centered ? width - 24 : 'unset'
 					}}
 				>
 					{_menuItems.map(item => {

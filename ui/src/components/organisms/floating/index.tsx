@@ -54,7 +54,9 @@ const Floating = () => {
 									/>
 								)
 							}
-							<Menu />
+							<Menu
+								setExpanded={setExpanded}
+							/>
 						</HeaderRight>
 					</Header>
 					{

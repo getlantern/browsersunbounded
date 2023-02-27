@@ -13,7 +13,6 @@ export const StyledButton = styled.button`
 
 export const MenuWrapper = styled.menu`
 	z-index: 3;
-	top: 0;
 	position: absolute;
   display: flex;
   flex-direction: column;
@@ -22,6 +21,7 @@ export const MenuWrapper = styled.menu`
   gap: 16px;
   border-radius: 24px;
   margin: 0;
+	box-sizing: border-box;
 `
 
 export const MenuItem = styled.li`
