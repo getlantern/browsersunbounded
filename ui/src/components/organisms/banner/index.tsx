@@ -19,7 +19,7 @@ const Globe = lazy(() => import('../../molecules/globe'))
 
 const Banner = () => {
 	const {width, settings} = useContext(AppContext)
-	const {collapse} = settings
+	const {collapse, menu} = settings
 	const [expanded, setExpanded] = useState(!collapse)
 	const interacted = useLatch(expanded)
 	const onToggle = (share: boolean) => !interacted && share ? setExpanded(share) : null
@@ -60,7 +60,7 @@ const Banner = () => {
 						)
 					}
 					<HeaderRight>
-						<Menu />
+						{ menu && <Menu /> }
 						{
 							settings.collapse && (
 								<ExpandCollapse

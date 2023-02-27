@@ -19,7 +19,7 @@ const Globe = lazy(() => import('../../molecules/globe'))
 
 const Floating = () => {
 	const {width, settings} = useContext(AppContext)
-	const {theme} = settings
+	const {theme, menu} = settings
 	const {height} = useWindowSize()
 	const [expanded, setExpanded] = useState(!settings.collapse)
 	const interacted = useLatch(expanded)
@@ -57,9 +57,7 @@ const Floating = () => {
 									/>
 								)
 							}
-							<Menu
-								setExpanded={setExpanded}
-							/>
+							{ menu && <Menu setExpanded={setExpanded} /> }
 						</HeaderRight>
 					</Header>
 					{

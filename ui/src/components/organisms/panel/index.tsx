@@ -18,7 +18,7 @@ const Globe = lazy(() => import('../../molecules/globe'))
 
 const Panel = () => {
 	const {width, settings} = useContext(AppContext)
-	const {theme} = settings
+	const {theme, menu, branding} = settings
 	const [expanded, setExpanded] = useState(!settings.collapse)
 	const interacted = useLatch(expanded)
 	const onToggle = (share: boolean) => !interacted && share ? setExpanded(share) : null
@@ -37,8 +37,8 @@ const Panel = () => {
 					mobile={width < BREAKPOINT}
 				>
 					<Header>
-						{ settings.branding && <LogoLeft /> }
-						<Menu />
+						{ branding && <LogoLeft /> }
+						{ menu && <Menu /> }
 					</Header>
 					{ !expanded && <About style={{padding: '24px 0'}} /> }
 					{
