@@ -15,6 +15,11 @@ export const HeaderWrapper = styled.div`
 	gap: 8px;
 `
 
+export const HeaderRight = styled.div`
+	display: flex;
+	gap: 8px;
+`
+
 export const Header = styled.div`
   display: flex;
   justify-content: space-between;

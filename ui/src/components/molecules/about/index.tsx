@@ -10,13 +10,13 @@ interface Props {
 const About = ({style = {}}: Props) => {
 	const {theme, target} = useContext(AppContext).settings
 	const color = theme === Themes.DARK ? COLORS.grey2 : COLORS.blue5
-	const brand = theme === Themes.DARK ? COLORS.altBrand : COLORS.brand
+	// const brand = theme === Themes.DARK ? COLORS.altBrand : COLORS.brand
 	return(
 		<Text
 			style={{color, margin: 0, ...style}}
 		>
-			{'Sharing your connection enables people living with censorship to access the open internet using '}
-			<a style={{color: brand}} href={'https://lantern.io'} target={'_blank'} rel={'noreferrer'}>Lantern</a>.
+			{'Sharing your connection enables people living with censorship to access the open internet.'}
+			{/*<a style={{color: brand}} href={'https://lantern.io'} target={'_blank'} rel={'noreferrer'}>Lantern</a>.*/}
 			{ target !== Targets.EXTENSION_POPUP && ' Keep this site open to continue sharing your connection.' }
 		</Text>
 	)

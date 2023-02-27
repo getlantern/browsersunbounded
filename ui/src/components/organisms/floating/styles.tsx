@@ -12,12 +12,18 @@ export const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  //gap: 16px;
   width: 100%;
 	a {
 		outline: none;
 		cursor: pointer;
 	}
+`
+
+export const HeaderRight = styled.div`
+	display: flex;
+  align-items: center;
+	//gap: 8px;
 `
 
 export const BodyWrapper = styled.div`

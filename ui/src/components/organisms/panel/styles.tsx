@@ -8,6 +8,11 @@ export const Container = styled.div`
   width: 100%;
 `
 
+export const Header = styled.div`
+	display: flex;
+  justify-content: space-between;
+`
+
 export const BodyWrapper = styled.div`
   padding: 24px 16px;
   display: flex;

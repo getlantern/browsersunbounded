@@ -1,6 +1,7 @@
-import {Body, BodyWrapper, Container, Header, HeaderWrapper, Item} from './styles'
+import {Body, BodyWrapper, Container, Header, HeaderRight, HeaderWrapper, Item} from './styles'
 import {LogoLeft} from '../../atoms/icons'
 import Control from '../../molecules/control'
+import Menu from '../../molecules/menu'
 import React, {useContext, useState, lazy, Suspense, useEffect} from 'react'
 import Col from '../../atoms/col'
 import GlobeSuspense from '../../molecules/globe/suspense'
@@ -8,7 +9,7 @@ import Row from '../../atoms/row'
 import {BREAKPOINT, COLORS, Themes} from '../../../constants'
 import Stats, {Connections} from '../../molecules/stats'
 import About from '../../molecules/about'
-import Footer from '../../molecules/footer'
+// import Footer from '../../molecules/footer'
 import {AppContext} from '../../../context'
 import {useLatch} from '../../../hooks/useLatch'
 import ExpandCollapse from '../../atoms/expandCollapse'
@@ -32,7 +33,7 @@ const Banner = () => {
 				}}
 			>
 				<Header>
-					{ settings.branding && <LogoLeft /> }
+					{ settings.branding ? <LogoLeft /> : <div /> }
 					{
 						!expanded && width > 650 && (
 							<Item
@@ -47,7 +48,7 @@ const Banner = () => {
 						)
 					}
 					{
-						!expanded && width > 900 && (
+						!expanded && width > 1000 && (
 							<Item
 								theme={settings.theme}
 							>
@@ -55,22 +56,17 @@ const Banner = () => {
 							</Item>
 						)
 					}
-					{
-						!expanded && width > 1150 && (
-							<Footer
-								social={false}
-								donate={settings.donate}
-							/>
-						)
-					}
-					{
-						settings.collapse && (
-							<ExpandCollapse
-								expanded={expanded}
-								setExpanded={setExpanded}
-							/>
-						)
-					}
+					<HeaderRight>
+						<Menu />
+						{
+							settings.collapse && (
+								<ExpandCollapse
+									expanded={expanded}
+									setExpanded={setExpanded}
+								/>
+							)
+						}
+					</HeaderRight>
 				</Header>
 				{
 					!expanded && width <= 650 && (
@@ -122,13 +118,16 @@ const Banner = () => {
 								</Row>
 								<Stats/>
 								<div
-									style={{paddingLeft: 8, paddingRight: 8, marginTop: 24}}
-								>
-									<Footer
-										social={true}
-										donate={settings.donate}
-									/>
-								</div>
+									style={{width: '100%', height: width > BREAKPOINT ? 80 : 24}}
+								/>
+								{/*<div*/}
+								{/*	style={{paddingLeft: 8, paddingRight: 8}}*/}
+								{/*>*/}
+									{/*<Footer*/}
+									{/*	social={true}*/}
+									{/*	donate={settings.donate}*/}
+									{/*/>*/}
+								{/*</div>*/}
 							</Col>
 						</Body>
 					</BodyWrapper>

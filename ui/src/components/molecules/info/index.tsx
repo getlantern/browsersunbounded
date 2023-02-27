@@ -20,8 +20,8 @@ const Info = () => {
 						theme={theme}
 					>
 						<Text>
-							{'Sharing your connection enables people living with censorship to access the open internet using '}
-							<a href={'https://lantern.io'} target={'_blank'} rel={'noreferrer'}>Lantern</a>.
+							{'Sharing your connection enables people living with censorship to access the open internet.'}
+							{/*<a href={'https://lantern.io'} target={'_blank'} rel={'noreferrer'}>Lantern</a>.*/}
 							{ target !== Targets.EXTENSION_POPUP && ' Keep this site open to continue sharing your connection.' }
 						</Text>
 					</Wrapper>

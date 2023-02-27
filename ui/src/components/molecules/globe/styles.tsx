@@ -13,7 +13,7 @@ const Container = styled.div`
 
   > div {
     position: absolute;
-    top: ${({size}: {size: number, active: boolean}) => size === 250 ? -10 : -48}px; // ugly offset to match figma
+    top: ${({size}: {size: number, active: boolean}) => size === 250 ? -10 : -65}px; // ugly offset to match figma
     cursor: ${({active}: {active: boolean, size: number}) => active ? 'pointer': 'all-scroll'};
   }
 

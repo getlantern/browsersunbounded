@@ -1,4 +1,4 @@
-import {Container, Body, BodyWrapper, Header, Item} from './styles'
+import {Container, Body, BodyWrapper, Header, Item, HeaderRight} from './styles'
 import React, {useContext, useState, lazy, Suspense, useEffect} from 'react'
 import {AppContext} from '../../../context'
 import {BREAKPOINT, COLORS, Themes} from '../../../constants'
@@ -7,11 +7,13 @@ import GlobeSuspense from '../../molecules/globe/suspense'
 import Row from '../../atoms/row'
 import Control from '../../molecules/control'
 import Stats, {Connections} from '../../molecules/stats'
-import Footer from '../../molecules/footer'
+// import Footer from '../../molecules/footer'
 import {LogoLeft} from '../../atoms/icons'
 import ExpandCollapse from '../../atoms/expandCollapse'
 import {useLatch} from '../../../hooks/useLatch'
 import useWindowSize from '../../../hooks/useWindowSize'
+import About from '../../molecules/about'
+import Menu from '../../molecules/menu'
 
 const Globe = lazy(() => import('../../molecules/globe'))
 
@@ -42,15 +44,18 @@ const Floating = () => {
 						}}
 					>
 						{ settings.branding ? <LogoLeft /> : <div /> }
-						{
-							settings.collapse && (
-								<ExpandCollapse
-									expanded={expanded}
-									setExpanded={setExpanded}
-									carrot={true}
-								/>
-							)
-						}
+						<HeaderRight>
+							{
+								settings.collapse && (
+									<ExpandCollapse
+										expanded={expanded}
+										setExpanded={setExpanded}
+										carrot={true}
+									/>
+								)
+							}
+							<Menu />
+						</HeaderRight>
 					</Header>
 					{
 						!expanded && (
@@ -61,7 +66,6 @@ const Floating = () => {
 								>
 									<Control
 										onToggle={onToggle}
-										info
 									/>
 								</Item>
 							</Col>
@@ -79,6 +83,9 @@ const Floating = () => {
 					{
 						expanded && (
 							<Col>
+								<About
+									style={{marginBottom: 20, marginTop: 10, fontSize: 12, lineHeight: '20px'}}
+								/>
 								<Row
 									borderTop
 									borderBottom
@@ -96,14 +103,14 @@ const Floating = () => {
 										</>
 									)
 								}
-								<div
-									style={{paddingLeft: 8, paddingRight: 8, margin: '24px 0 0'}}
-								>
-									<Footer
-										social={false}
-										donate={settings.donate}
-									/>
-								</div>
+								{/*<div*/}
+								{/*	style={{paddingLeft: 8, paddingRight: 8, margin: '24px 0 0'}}*/}
+								{/*>*/}
+								{/*	<Footer*/}
+								{/*		social={false}*/}
+								{/*		donate={settings.donate}*/}
+								{/*	/>*/}
+								{/*</div>*/}
 							</Col>
 						)
 					}

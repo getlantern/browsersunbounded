@@ -1,4 +1,4 @@
-import {Container, Body, BodyWrapper, ExpandWrapper} from './styles'
+import {Container, Body, BodyWrapper, ExpandWrapper, Header} from './styles'
 import React, {useContext, useState, lazy, Suspense, useEffect} from 'react'
 import {AppContext} from '../../../context'
 import {BREAKPOINT, COLORS, Themes} from '../../../constants'
@@ -8,10 +8,11 @@ import Row from '../../atoms/row'
 import Control from '../../molecules/control'
 import Stats from '../../molecules/stats'
 import About from '../../molecules/about'
-import Footer from '../../molecules/footer'
+// import Footer from '../../molecules/footer'
 import {LogoLeft} from '../../atoms/icons'
 import {ExpandCollapsePanel} from '../../atoms/expandCollapse'
 import {useLatch} from '../../../hooks/useLatch'
+import Menu from '../../molecules/menu'
 
 const Globe = lazy(() => import('../../molecules/globe'))
 
@@ -35,7 +36,10 @@ const Panel = () => {
 				<Body
 					mobile={width < BREAKPOINT}
 				>
-					{ settings.branding && <LogoLeft /> }
+					<Header>
+						{ settings.branding && <LogoLeft /> }
+						<Menu />
+					</Header>
 					{ !expanded && <About style={{padding: '24px 0'}} /> }
 					{
 						settings.globe && expanded && (
@@ -58,14 +62,14 @@ const Panel = () => {
 							/>
 						</Row>
 						<Stats />
-						<div
-							style={{paddingLeft: 8, paddingRight: 8, margin: '24px 0 0'}}
-						>
-							<Footer
-								social={false}
-								donate={settings.donate}
-							/>
-						</div>
+						{/*<div*/}
+						{/*	style={{paddingLeft: 8, paddingRight: 8, margin: '24px 0 0'}}*/}
+						{/*>*/}
+						{/*	<Footer*/}
+						{/*		social={false}*/}
+						{/*		donate={settings.donate}*/}
+						{/*	/>*/}
+						{/*</div>*/}
 						{
 							settings.collapse && (
 								<ExpandWrapper
