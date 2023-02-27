@@ -23,6 +23,8 @@ import (
 	"github.com/lucas-clemente/quic-go"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric/global"
+	"go.opentelemetry.io/otel/metric/instrument"
 	"go.opentelemetry.io/otel/trace"
 	"nhooyr.io/websocket"
 )
@@ -32,6 +34,12 @@ import (
 
 var nClients uint64
 var nQUICStreams uint64
+
+// TODO: it'd be more elegant to use observers rather than counters, such that we could simply
+// observe the value of nClients and nQUICStreams instead of duplicating the increment/decrement
+// operations. However, the otel observer API seems more complicated than it's worth?
+var nClientsCounter instrument.Int64UpDownCounter
+var nQUICStreamsCounter instrument.Int64UpDownCounter
 
 // webSocketPacketConn wraps a websocket.Conn as a net.PacketConn
 type websocketPacketConn struct {
@@ -53,6 +61,7 @@ func (q websocketPacketConn) WriteTo(p []byte, addr net.Addr) (n int, err error)
 
 func (q websocketPacketConn) Close() error {
 	defer log.Printf("Closed a WebSocket connection! (%v total)\n", atomic.AddUint64(&nClients, ^uint64(0)))
+	defer nClientsCounter.Add(context.Background(), -1)
 	return q.w.Close(websocket.StatusNormalClosure, "")
 }
 
@@ -76,7 +85,6 @@ func (l proxyListener) Addr() net.Addr {
 	return common.DebugAddr("DEBUG NELSON WUZ HERE")
 }
 
-// TODO: Someone should scrutinize this
 func generateTLSConfig() *tls.Config {
 	key, err := rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
@@ -130,6 +138,7 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("Accepted a new WebSocket connection! (%v total)\n", atomic.AddUint64(&nClients, 1))
+	nClientsCounter.Add(r.Context(), 1)
 
 	listener, err := quic.Listen(wspconn, l.tlsConfig, &common.QUICCfg)
 	if err != nil {
@@ -163,9 +172,11 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 				}
 
 				log.Printf("Accepted a new QUIC stream! (%v total)\n", atomic.AddUint64(&nQUICStreams, 1))
+				nQUICStreamsCounter.Add(r.Context(), 1)
 
 				l.connections <- common.QUICStreamNetConn{Stream: stream, OnClose: func() {
 					defer log.Printf("Closed a QUIC stream! (%v total)\n", atomic.AddUint64(&nQUICStreams, ^uint64(0)))
+					nQUICStreamsCounter.Add(r.Context(), -1)
 				}}
 			}
 		}()
@@ -174,8 +185,24 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	ctx := context.Background()
-	closeFunc := telemetry.EnableOTELTracing(ctx)
-	defer func() { _ = closeFunc(ctx) }()
+	closeFuncTrace := telemetry.EnableOTELTracing(ctx)
+	closeFuncMetric := telemetry.EnableOTELMetrics(ctx)
+	defer func() {
+		_ = closeFuncTrace(ctx)
+		_ = closeFuncMetric(ctx)
+	}()
+
+	m := global.Meter("github.com/getlantern/broflake/egress")
+	var err error
+	nClientsCounter, err = m.Int64UpDownCounter("websocket-counter")
+	if err != nil {
+		panic(err)
+	}
+
+	nQUICStreamsCounter, err = m.Int64UpDownCounter("quic-stream-counter")
+	if err != nil {
+		panic(err)
+	}
 
 	// We use this wrapped listener to enable our local HTTP proxy to listen for WebSocket connections
 	l := proxyListener{
@@ -229,7 +256,7 @@ func main() {
 
 	http.Handle("/ws", otelhttp.NewHandler(http.HandlerFunc(l.handleWebsocket), "/ws"))
 	log.Printf("Egress server listening for WebSocket connections on %v\n\n", srv.Addr)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	if err != nil {
 		log.Println(err)
 	}
