@@ -8,7 +8,7 @@ set -ue
 
 for (( i=1; i <=$1; i++ ))
 do
-  TAG=widget${i} NETSTATED=http://localhost:8080/exec dist/bin/widget &
+  dist/bin/widget &
 done
 
 wait

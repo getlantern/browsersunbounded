@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -11,7 +12,10 @@ import (
 	"time"
 
 	"github.com/getlantern/broflake/common"
+	"github.com/getlantern/telemetry"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/metric/global"
+	"go.opentelemetry.io/otel/metric/instrument"
 )
 
 const (
@@ -22,6 +26,8 @@ const (
 
 var consumerTable = userTable{Data: make(map[string]chan string)}
 var signalTable = userTable{Data: make(map[string]chan string)}
+
+var nConcurrentReqs instrument.Int64UpDownCounter
 
 type userTable struct {
 	Data map[string]chan string
@@ -66,6 +72,9 @@ func (t *userTable) Size() int {
 }
 
 func handleSignal(w http.ResponseWriter, r *http.Request) {
+	nConcurrentReqs.Add(r.Context(), 1)
+	defer nConcurrentReqs.Add(r.Context(), -1)
+
 	switch r.Method {
 	case http.MethodGet:
 		handleSignalGet(w, r)
@@ -175,6 +184,17 @@ func main() {
 		port = "8080"
 	}
 
+	ctx := context.Background()
+	closeFuncMetric := telemetry.EnableOTELMetrics(ctx)
+	defer func() { _ = closeFuncMetric(ctx) }()
+
+	m := global.Meter("github.com/getlantern/broflake/freddie")
+	var err error
+	nConcurrentReqs, err = m.Int64UpDownCounter("concurrent-reqs")
+	if err != nil {
+		panic(err)
+	}
+
 	srv := &http.Server{
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
@@ -182,7 +202,7 @@ func main() {
 	}
 	http.HandleFunc("/v1/signal", handleSignal)
 	log.Printf("Discovery server listening on %v\n\n", srv.Addr)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	if err != nil {
 		log.Println(err)
 	}

@@ -194,12 +194,12 @@ func main() {
 
 	m := global.Meter("github.com/getlantern/broflake/egress")
 	var err error
-	nClientsCounter, err = m.Int64UpDownCounter("websocket-counter")
+	nClientsCounter, err = m.Int64UpDownCounter("concurrent-websockets")
 	if err != nil {
 		panic(err)
 	}
 
-	nQUICStreamsCounter, err = m.Int64UpDownCounter("quic-stream-counter")
+	nQUICStreamsCounter, err = m.Int64UpDownCounter("concurrent-quic-streams")
 	if err != nil {
 		panic(err)
 	}
