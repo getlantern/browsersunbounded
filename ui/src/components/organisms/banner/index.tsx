@@ -1,5 +1,4 @@
 import {Body, BodyWrapper, Container, Header, HeaderRight, HeaderWrapper, Item} from './styles'
-import {LogoLeft} from '../../atoms/icons'
 import Control from '../../molecules/control'
 import Menu from '../../molecules/menu'
 import React, {useContext, useState, lazy, Suspense, useEffect} from 'react'
@@ -13,6 +12,7 @@ import About from '../../molecules/about'
 import {AppContext} from '../../../context'
 import {useLatch} from '../../../hooks/useLatch'
 import ExpandCollapse from '../../atoms/expandCollapse'
+import LogoLink from '../../atoms/logoLink'
 
 const Globe = lazy(() => import('../../molecules/globe'))
 
@@ -36,7 +36,7 @@ const Banner = () => {
 				<Header
 					collapse={collapse}
 				>
-					{ settings.branding ? <LogoLeft /> : <div /> }
+					{ settings.branding ? <LogoLink /> : <div /> }
 					{
 						!expanded && width > 650 && (
 							<Item

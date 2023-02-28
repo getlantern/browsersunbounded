@@ -1,17 +1,17 @@
-import {POPUP, SIGNATURE} from '../../../src/constants'
-// @todo fixup webpack config to use es6 imports
-const messageCheck = (message: MessageEvent['data']) => (typeof message === 'object' && message !== null && message.hasOwnProperty(SIGNATURE))
-const app = () => {
+import {POPUP} from '../../../src/constants'
+import {messageCheck} from '../../../src/utils/messages'
+
+const offscreenApp = () => {
 	const state = {
 		popupOpen: false // maintain state of popup open/close to prevent sending messages to closed popup
 	}
 	const iframe = document.createElement('iframe')
-	iframe.src = process.env.OFFSCREEN_URL
+	iframe.src = process.env.EXTENSION_OFFSCREEN_URL!
 	document.body.appendChild(iframe)
 	bindOffscreen(iframe, state)
 }
 
-const bindOffscreen = (iframe, state) => {
+const bindOffscreen = (iframe: HTMLIFrameElement, state: {popupOpen: boolean }) => {
 	// subscribe to close events from popup to update state
 	chrome.runtime.onConnect.addListener((port) => {
 		if (port.name === POPUP) port.onDisconnect.addListener(() => {
@@ -21,12 +21,12 @@ const bindOffscreen = (iframe, state) => {
 	})
 
 	// subscribe to messages from popup to forward to offscreen iframe
-	chrome.runtime.onMessage.addListener((message) => {
+	chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 		if (messageCheck(message)) {
 			// if message is that popupOpened, update state
 			if (message.type === 'popupOpened') return state.popupOpen = true
 			// console.log('message from chrome, forwarding to iframe: ', message)
-			iframe.contentWindow.postMessage(message, '*')
+			iframe.contentWindow!.postMessage(message, '*')
 			return false
 		}
 	})
@@ -41,4 +41,4 @@ const bindOffscreen = (iframe, state) => {
 	})
 }
 
-window.addEventListener('load', app)
+window.addEventListener('load', offscreenApp)

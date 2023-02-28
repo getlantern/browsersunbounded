@@ -162,9 +162,9 @@ Links:
 
 3. Install the dependencies: `yarn`
 
-4. To start in developer mode with hot-refresh server (degraded performance): run `yarn start` and visit [http://localhost:3000](http://localhost:3000)
+4. To start in developer mode with hot-refresh server (degraded performance): run `yarn dev:web` and visit [http://localhost:3000](http://localhost:3000)
 
-5. To build optimized for best performance run: `yarn build`
+5. To build optimized for best performance run: `yarn build:web`
 
 6. To serve a build:
    1. Install a simple server e.g. `npm install -g serve` (or your lightweight http server of choice)
@@ -176,19 +176,18 @@ Links:
 
 #### Browser extension quickstart for devs
 
-1. Work from the ui/extension dir: `cd ui/extension`
+1. Work from the ui dir: `cd ui`
 
 2. Install the dependencies: `yarn`
 
-3. Configure your .env file: `cp .env.example .env`
-   1. Set `POPUP_URL` to your intended hosted popup page. If you are serving it from `ui` in [step #6](#ui-quickstart-for-devs), use [http://localhost:3000/popup](http://localhost:3000/popup). To use prod, set to [https://embed.lantern.io/popup](https://embed.lantern.io/popup).
-   2. Set `OFFSCREEN_URL` to your intended hosted offscreen page. If you are serving it from `ui` in [step #6](#ui-quickstart-for-devs), use [http://localhost:3000/offscreen](http://localhost:3000/offscreen). To use prod, set to [https://embed.lantern.io/offscreen](https://embed.lantern.io/offscreen).
+3. Configure your .env file: `cd extension && cp .env.example .env`
+   1. Set `EXTENSION_POPUP_URL` to your intended hosted popup page. If you are serving it from `ui` in [step #6](#ui-quickstart-for-devs), use [http://localhost:3000/popup](http://localhost:3000/popup). To use prod, set to [https://embed.lantern.io/popup](https://embed.lantern.io/popup).
+   2. Set `EXTENSION_OFFSCREEN_URL` to your intended hosted offscreen page. If you are serving it from `ui` in [step #6](#ui-quickstart-for-devs), use [http://localhost:3000/offscreen](http://localhost:3000/offscreen). To use prod, set to [https://embed.lantern.io/offscreen](https://embed.lantern.io/offscreen).
 
 3. To start in developer mode with hot-refresh server:
 ```
-yarn dev chrome
-yarn dev firefox 
-yarn dev edge
+yarn dev:ext chrome
+yarn dev:ext firefox 
 ```
 
 This will compile the extension and output to the `ui/extension/dist` dir. You can then load the unpacked extension in your browser of choice. 
@@ -198,9 +197,8 @@ This will compile the extension and output to the `ui/extension/dist` dir. You c
 
 4. To build for production:
 ```
-yarn build chrome
-yarn build firefox 
-yarn build edge
+yarn build:ext chrome
+yarn build:ext firefox 
 ```
 
 This will compile the extension and output a compressed build to the `ui/extension/packages` dir. 

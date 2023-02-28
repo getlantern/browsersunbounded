@@ -10,17 +10,17 @@ module.exports = {
         const entries = [
             resolve(src, "*.{js,mjs,jsx,ts,tsx}"),
             resolve(src, "?(scripts)/*.{js,mjs,jsx,ts,tsx}"),
-        ];
+        ]
         return ({
             ...config,
             entry: GlobEntriesPlugin.getEntries(entries),
             resolve: {
                 ...config.resolve,
-                extensions: [...config.resolve.extensions, ".ts", ".tsx"],
+                extensions: [...config.resolve.extensions, ".ts"],
             },
             module: {
                 ...config.module,
-                rules: [...config.module.rules, {test: /\.tsx?$/, loader: "ts-loader"}]
+                rules: [...config.module.rules, {test: /\.ts?$/, loader: "ts-loader"}]
             },
             plugins: [
                 ...config.plugins,
@@ -28,7 +28,7 @@ module.exports = {
                     'process.env': JSON.stringify(dotenv.parsed),
                     'process.env.NODE_ENV': JSON.stringify(isDevelopment ? 'development' : 'production'),
                 }),
-            ].filter(Boolean)
+            ]
         })
     },
 }

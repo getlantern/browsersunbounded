@@ -1,4 +1,4 @@
-try {
+const launchOffscreen = () => {
   chrome.offscreen.createDocument({
       url: chrome.runtime.getURL('pages/offscreen.html'),
       // @ts-ignore
@@ -7,6 +7,7 @@ try {
     },
     () => null
   )
-} catch (e) {
-  console.error(e)
 }
+
+chrome.runtime.onInstalled.addListener(launchOffscreen)
+chrome.runtime.onStartup.addListener(launchOffscreen)
