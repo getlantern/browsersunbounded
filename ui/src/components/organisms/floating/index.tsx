@@ -8,12 +8,12 @@ import Row from '../../atoms/row'
 import Control from '../../molecules/control'
 import Stats, {Connections} from '../../molecules/stats'
 // import Footer from '../../molecules/footer'
-import {LogoLeft} from '../../atoms/icons'
 import ExpandCollapse from '../../atoms/expandCollapse'
 import {useLatch} from '../../../hooks/useLatch'
 import useWindowSize from '../../../hooks/useWindowSize'
 import About from '../../molecules/about'
 import Menu from '../../molecules/menu'
+import LogoLink from '../../atoms/logoLink'
 
 const Globe = lazy(() => import('../../molecules/globe'))
 
@@ -46,7 +46,7 @@ const Floating = () => {
 						<div
 							style={{height: 48}} // this is a hack to create real estate for the logo which is positioned absolute because it overlaps the header right
 						/>
-						{ settings.branding && <LogoLeft style={{position: 'absolute'}} /> }
+						{ settings.branding && <LogoLink style={{position: 'absolute'}} /> }
 						<HeaderRight>
 							{
 								settings.collapse && (

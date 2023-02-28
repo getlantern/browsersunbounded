@@ -12,7 +12,7 @@ export const StyledButton = styled.button`
 `
 
 export const MenuWrapper = styled.menu`
-	z-index: 3;
+	z-index: 2147483647;
 	position: absolute;
   display: flex;
   flex-direction: column;

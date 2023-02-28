@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "homepage": "https://embed.lantern.io",
+  "description": "Use your internet connection to fight censorship.",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
@@ -23,13 +24,20 @@
     "react-tiny-popover": "^7.2.0",
     "rewire": "^6.0.0",
     "styled-components": "^5.3.6",
-    "typescript": "^4.8.4",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "@types/chrome": "^0.0.216",
+    "@webextension-toolbox/webextension-toolbox": "^5.2.2",
+    "dotenv": "^16.0.3",
+    "ts-loader": "^9.4.2",
+    "typescript": "^4.9.5",
+    "webpack": "^5.75.0",
+    "webpack-watched-glob-entries-plugin": "^2.2.6"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "GENERATE_SOURCEMAP=false node ./scripts/build.js",
-    "_build": "react-scripts build",
+    "dev:web": "react-scripts start",
+    "dev:ext": "cd extension && NODE_ENV=development webextension-toolbox dev --config extension/webextension-toolbox.config.js",
+    "build:web": "GENERATE_SOURCEMAP=false node ./scripts/build.js",
+    "build:ext": "cd extension && NODE_ENV=production webextension-toolbox build --config extension/webextension-toolbox.config.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "yarn build",

@@ -1,7 +1,7 @@
 import {MessageTypes, SIGNATURE, Themes, POPUP} from '../../../src/constants'
-// @todo fixup webpack config to use es6 imports
-const _messageCheck = (message: MessageEvent['data']) => (typeof message === 'object' && message !== null && message.hasOwnProperty(SIGNATURE))
-const app = () => {
+import {messageCheck} from '../../../src/utils/messages'
+
+const popupApp = async () => {
 	const theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? Themes.DARK : Themes.LIGHT
 	const backgroundColor = theme === Themes.DARK ? '#1B1C1D' : '#F8FAFB'
 	// set body styles based on user theme
@@ -10,25 +10,25 @@ const app = () => {
 		`background-color: ${backgroundColor}; margin: 0; padding: 0; width: 320px; height: 584px; overflow: hidden;` // hide scrollbar on popup, inherit iframe scroll only
 	)
 	const iframe = document.createElement('iframe')
-	iframe.src = process.env.POPUP_URL
+	iframe.src = process.env.EXTENSION_POPUP_URL!
 	// set iframe styles based on user theme
 	iframe.setAttribute(
 		'style',
 		`background-color: ${backgroundColor}; width: 320px; height: 584px; border: none; margin: 0; padding: 0;`
 	)
 	document.body.appendChild(iframe)
-	bindPopup(iframe)
+	await bindPopup(iframe)
 }
 
-const bindPopup = (iframe) => {
+const bindPopup = async (iframe: HTMLIFrameElement) => {
 	// connect to port so that offscreen can subscribe to close events
 	chrome.runtime.connect({'name': POPUP})
 
 	// subscribe to messages from offscreen to forward to popup iframe
 	chrome.runtime.onMessage.addListener((message) => {
-		if (_messageCheck(message)) {
+		if (messageCheck(message)) {
 			// console.log('message from chrome, forwarding to iframe: ', message)
-			iframe.contentWindow.postMessage(message, '*')
+			iframe.contentWindow!.postMessage(message, '*')
 			iconToggleSubscribe(message) // @todo maybe move to service worker
 			return false
 		}
@@ -44,7 +44,7 @@ const bindPopup = (iframe) => {
 	// subscribe to messages from popup iframe to forward to offscreen
 	window.addEventListener('message', event => {
 		const message = event.data
-		if (_messageCheck(message)) {
+		if (messageCheck(message)) {
 			// console.log('message from iframe, forwarding to chrome: ', message)
 			chrome.runtime.sendMessage(message)
 		}
@@ -52,7 +52,7 @@ const bindPopup = (iframe) => {
 }
 
 // toggle icon based on sharing status messages from offscreen
-const iconToggleSubscribe = (message) => {
+const iconToggleSubscribe = (message: MessageEvent) => {
 	if (message.type === MessageTypes.STATE_UPDATE && message.data.emitter === 'sharingEmitter') {
 		const state = message.data.value ? 'on' : 'off'
 		// @ts-ignore
@@ -68,4 +68,4 @@ const iconToggleSubscribe = (message) => {
 	}
 }
 
-window.addEventListener('load', app)
+window.addEventListener('load', popupApp)

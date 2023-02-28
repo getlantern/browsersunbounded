@@ -9,10 +9,10 @@ import Control from '../../molecules/control'
 import Stats from '../../molecules/stats'
 import About from '../../molecules/about'
 // import Footer from '../../molecules/footer'
-import {LogoLeft} from '../../atoms/icons'
 import {ExpandCollapsePanel} from '../../atoms/expandCollapse'
 import {useLatch} from '../../../hooks/useLatch'
 import Menu from '../../molecules/menu'
+import LogoLink from '../../atoms/logoLink'
 
 const Globe = lazy(() => import('../../molecules/globe'))
 
@@ -37,7 +37,7 @@ const Panel = () => {
 					mobile={width < BREAKPOINT}
 				>
 					<Header>
-						{ branding && <LogoLeft /> }
+						{ branding ? <LogoLink /> : <div /> }
 						{ menu && <Menu /> }
 					</Header>
 					{ !expanded && <About style={{padding: '24px 0'}} /> }
