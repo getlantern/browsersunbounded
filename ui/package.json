@@ -40,7 +40,7 @@
     "build:ext": "cd extension && NODE_ENV=production webextension-toolbox build --config extension/webextension-toolbox.config.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "predeploy": "yarn build",
+    "predeploy": "yarn build:web",
     "deploy": "gh-pages -d build",
     "postinstall": "patch-package"
   },

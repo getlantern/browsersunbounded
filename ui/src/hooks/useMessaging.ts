@@ -1,4 +1,4 @@
-import { useEffect} from 'react'
+import {useContext, useEffect} from 'react'
 import {MessageTypes, SIGNATURE, Targets} from '../constants'
 import {
 	averageThroughputEmitter,
@@ -9,6 +9,7 @@ import {
 	sharingEmitter,
 } from '../utils/wasmInterface'
 import {messageCheck} from '../utils/messages'
+import {AppContext} from '../context'
 
 const emitterMap = {
 	sharingEmitter,
@@ -23,7 +24,9 @@ type EmitterKey = keyof typeof emitterMap
 
 let callbacksMap = {} as any
 
-const useMessaging = (target: Targets) => {
+const useMessaging = () => {
+	const {target} = useContext(AppContext).settings
+
 	useEffect(() => {
 		const handler = (value: any, emitter: EmitterKey) => window.parent.postMessage({
 			type: MessageTypes.STATE_UPDATE,

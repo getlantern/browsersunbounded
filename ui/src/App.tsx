@@ -14,6 +14,7 @@ import Storage from './components/molecules/storage'
 import useMessaging from './hooks/useMessaging'
 import {Targets, Layouts} from './constants'
 import {AppContextProvider} from './context'
+import useAutoUpdate from './hooks/useAutoUpdate'
 
 interface Props {
   appId: number
@@ -25,10 +26,12 @@ const App = ({appId, embed}: Props) => {
   const sharing = useEmitterState(sharingEmitter)
   const settings = useEmitterState(settingsEmitter)[appId]
   const {mock, target} = settings
-  useMessaging(settings.target)
   const [mobileBg, desktopBg] = [settings.mobileBg, settings.desktopBg]
   const wasmInterface = useRef<WasmInterface>()
   const [width, setWidth] = useState(0)
+  // setup app-wide listeners
+  useMessaging()
+  useAutoUpdate()
 
   useLayoutEffect(() => {
     if (wasmInterface.current) return // already initialized or initializing
