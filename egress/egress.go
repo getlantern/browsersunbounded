@@ -138,7 +138,7 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("Accepted a new WebSocket connection! (%v total)\n", atomic.AddUint64(&nClients, 1))
-	nClientsCounter.Add(r.Context(), 1)
+	nClientsCounter.Add(context.Background(), 1)
 
 	listener, err := quic.Listen(wspconn, l.tlsConfig, &common.QUICCfg)
 	if err != nil {
@@ -172,11 +172,11 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 				}
 
 				log.Printf("Accepted a new QUIC stream! (%v total)\n", atomic.AddUint64(&nQUICStreams, 1))
-				nQUICStreamsCounter.Add(r.Context(), 1)
+				nQUICStreamsCounter.Add(context.Background(), 1)
 
 				l.connections <- common.QUICStreamNetConn{Stream: stream, OnClose: func() {
 					defer log.Printf("Closed a QUIC stream! (%v total)\n", atomic.AddUint64(&nQUICStreams, ^uint64(0)))
-					nQUICStreamsCounter.Add(r.Context(), -1)
+					nQUICStreamsCounter.Add(context.Background(), -1)
 				}}
 			}
 		}()
