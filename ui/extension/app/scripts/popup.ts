@@ -14,7 +14,7 @@ const popupApp = async () => {
 	// set iframe styles based on user theme
 	iframe.setAttribute(
 		'style',
-		`background-color: ${backgroundColor}; width: 320px; height: 584px; border: none; margin: 0; padding: 0;`
+		`background-color: ${backgroundColor}; width: 324px; height: 588px; border: none; margin: 0; padding: 0;` // 4px buffer seems needed to hide unnecessary scrollbars
 	)
 	document.body.appendChild(iframe)
 	await bindPopup(iframe)
