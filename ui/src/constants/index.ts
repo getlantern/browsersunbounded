@@ -92,4 +92,4 @@ export const defaultSettings: Settings = {
 
 export const POPUP = 'popup'
 
-export const AUTO_UPDATE_ETAG_URL = 'https://embed.lantern.io/manifest.json'
+export const AUTO_UPDATE_URL = 'https://embed.lantern.io/manifest.json'

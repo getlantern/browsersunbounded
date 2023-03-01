@@ -1,5 +1,5 @@
 import {useCallback, useContext, useEffect, useState} from 'react'
-import {AUTO_UPDATE_ETAG_URL, Targets} from '../constants'
+import {AUTO_UPDATE_URL, Targets} from '../constants'
 import {AppContext} from '../context'
 
 // hook fetches the last modified header from manifest.jsom every hour and compares it to the existing state.
@@ -11,7 +11,7 @@ const useAutoUpdate = () => {
 	const {target} = useContext(AppContext).settings
 
 	const cb = useCallback(async () => {
-		const res = await fetch(AUTO_UPDATE_ETAG_URL, {method: 'HEAD'})
+		const res = await fetch(AUTO_UPDATE_URL, {method: 'HEAD'})
 		const lastModifiedDateString = res.headers.get('Last-Modified') || ''
 		if (!lastModifiedDateString) return console.warn('No last modified found in manifest.json header')
 		const _lastModified = new Date(lastModifiedDateString)
