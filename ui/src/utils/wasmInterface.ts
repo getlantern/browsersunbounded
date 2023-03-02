@@ -131,8 +131,8 @@ export class WasmInterface {
 			this.go.run(this.instance)
 			this.wasmClient = globalThis.newBroflake(
 				'widget',
-				5,
-				5,
+				10,
+				10,
 				4096,
 				'',
 				''
