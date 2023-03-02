@@ -1,14 +1,12 @@
-import {useCallback, useContext, useEffect, useState} from 'react'
+import {useCallback, useEffect, useState} from 'react'
 import {AUTO_UPDATE_URL, Targets} from '../constants'
-import {AppContext} from '../context'
 
 // hook fetches the last modified header from manifest.jsom every hour and compares it to the existing state.
 // If they are different, it reloads the page. A simple way to force a reload of the page when the manifest.json changes (new bundle published to the CDN).
 
 const ONE_HOUR = 1000 * 60 * 60
-const useAutoUpdate = () => {
+const useAutoUpdate = (target: Targets) => {
 	const [lastModified, setLastModified] = useState(new Date()) // safe to use app launch time as the initial value, since it just fetched the bundle
-	const {target} = useContext(AppContext).settings
 
 	const cb = useCallback(async () => {
 		const res = await fetch(AUTO_UPDATE_URL, {method: 'HEAD'})

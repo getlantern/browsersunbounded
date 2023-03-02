@@ -26,12 +26,12 @@ const App = ({appId, embed}: Props) => {
   const sharing = useEmitterState(sharingEmitter)
   const settings = useEmitterState(settingsEmitter)[appId]
   const {mock, target} = settings
+  // setup app-wide listeners
+  useMessaging(target)
+  useAutoUpdate(target)
   const [mobileBg, desktopBg] = [settings.mobileBg, settings.desktopBg]
   const wasmInterface = useRef<WasmInterface>()
   const [width, setWidth] = useState(0)
-  // setup app-wide listeners
-  useMessaging()
-  useAutoUpdate()
 
   useLayoutEffect(() => {
     if (wasmInterface.current) return // already initialized or initializing
