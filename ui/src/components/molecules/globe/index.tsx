@@ -27,7 +27,7 @@ interface Props {
 const Globe = ({target}: Props) => {
 	const sharing = useEmitterState(sharingEmitter)
 	const {width, settings} = useContext(AppContext)
-	const {theme} = settings
+	const {theme, title} = settings
 	const size = width < BREAKPOINT ? 250 : 400
 	const isSetup = useRef(false)
 	const [arc, setArc] = useState(null)
@@ -115,6 +115,7 @@ const Globe = ({target}: Props) => {
 		<Container
 			ref={container}
 			size={size}
+			$title={title}
 			active={!!arc}
 			onMouseDown={() => setInteracted(true)}
 			onTouchStart={() => setInteracted(true)}

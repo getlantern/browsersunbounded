@@ -72,6 +72,8 @@ export interface Settings {
 	mock: boolean
 	keepText: boolean
 	menu: boolean
+	title: boolean
+	share: boolean
 }
 
 export const defaultSettings: Settings = {
@@ -88,6 +90,8 @@ export const defaultSettings: Settings = {
 	mock: false,
 	keepText: true,
 	menu: true,
+	title: false,
+	share: false
 }
 
 export const POPUP = 'popup'

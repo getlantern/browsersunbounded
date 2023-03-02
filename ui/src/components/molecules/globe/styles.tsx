@@ -1,5 +1,10 @@
 import styled from 'styled-components'
 
+interface Props {
+	size: number
+	active: boolean
+	$title: boolean
+}
 const Container = styled.div`
   width: 100%;
   height: 100%;
@@ -13,8 +18,8 @@ const Container = styled.div`
 
   > div {
     position: absolute;
-    top: ${({size}: {size: number, active: boolean}) => size === 250 ? -10 : -65}px; // ugly offset to match figma
-    cursor: ${({active}: {active: boolean, size: number}) => active ? 'pointer': 'all-scroll'};
+    top: ${({size, $title}: Props) => size === 250 ? -10 : $title ? -40 : -80}px; // ugly offset to match figma @todo try to fix this with flexbox
+    cursor: ${({active}: Props) => active ? 'pointer': 'all-scroll'};
   }
 
   > span.shadow {

@@ -196,6 +196,17 @@ const Editor = ({embed}: Props) => {
 					/>
 					<label htmlFor="branding">Branding</label>
 				</div>
+
+				<div>
+					<input
+						type="checkbox"
+						id="title"
+						name="title"
+						checked={state.title}
+						onChange={e => setState({...state, title: e.target.checked})}
+					/>
+					<label htmlFor="title">Title</label>
+				</div>
 			</fieldset>
 		</StyledEditor>
 	)

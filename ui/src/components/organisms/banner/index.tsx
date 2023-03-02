@@ -13,13 +13,14 @@ import {AppContext} from '../../../context'
 import {useLatch} from '../../../hooks/useLatch'
 import ExpandCollapse from '../../atoms/expandCollapse'
 import LogoLink from '../../atoms/logoLink'
+import Title from '../../molecules/title'
 
 const Globe = lazy(() => import('../../molecules/globe'))
 
 
 const Banner = () => {
 	const {width, settings} = useContext(AppContext)
-	const {collapse, menu} = settings
+	const {collapse, menu, title} = settings
 	const [expanded, setExpanded] = useState(!collapse)
 	const interacted = useLatch(expanded)
 	const onToggle = (share: boolean) => !interacted && share ? setExpanded(share) : null
@@ -105,6 +106,15 @@ const Banner = () => {
 								)
 							}
 							<Col>
+								{
+									title && (
+										<div
+											style={{marginBottom: 24}}
+										>
+											<Title/>
+										</div>
+									)
+								}
 								<div
 									style={{marginBottom: 24}}
 								>
@@ -121,7 +131,7 @@ const Banner = () => {
 								</Row>
 								<Stats/>
 								<div
-									style={{width: '100%', height: width > BREAKPOINT ? 80 : 24}}
+									style={{width: '100%', height: !title && width > BREAKPOINT ? 80 : 24}}
 								/>
 								{/*<div*/}
 								{/*	style={{paddingLeft: 8, paddingRight: 8}}*/}
