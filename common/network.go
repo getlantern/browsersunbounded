@@ -7,6 +7,8 @@ import (
 	"github.com/lucas-clemente/quic-go"
 )
 
+var ProtocolVersion = "?.?.?"
+
 var QUICCfg = quic.Config{
 	MaxIncomingStreams:    int64(2 << 16),
 	MaxIncomingUniStreams: int64(2 << 16),
