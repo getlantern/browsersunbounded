@@ -7,6 +7,11 @@ import (
 	"github.com/lucas-clemente/quic-go"
 )
 
+// Must be a valid semver
+var Version = "v0.0.1"
+
+var VersionHeader = "x-bf-version"
+
 var QUICCfg = quic.Config{
 	MaxIncomingStreams:    int64(2 << 16),
 	MaxIncomingUniStreams: int64(2 << 16),

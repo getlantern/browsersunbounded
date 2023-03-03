@@ -9,8 +9,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -142,10 +144,26 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 
 			// Signal the genesis message
-			res, err := options.HttpClient.PostForm(
+			form := url.Values{
+				"data":    {string(g)},
+				"send-to": {options.GenesisAddr},
+				"type":    {strconv.Itoa(int(common.SignalMsgGenesis))},
+			}
+
+			req, err := http.NewRequest(
+				"POST",
 				options.DiscoverySrv+options.Endpoint,
-				url.Values{"data": {string(g)}, "send-to": {options.GenesisAddr}, "type": {strconv.Itoa(int(common.SignalMsgGenesis))}},
+				strings.NewReader(form.Encode()),
 			)
+			if err != nil {
+				log.Printf("Error constructing request\n")
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			}
+
+			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+			req.Header.Add(common.VersionHeader, common.Version)
+
+			res, err := options.HttpClient.Do(req)
 			if err != nil {
 				log.Printf("Couldn't signal genesis message to %v\n", options.DiscoverySrv+options.Endpoint)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
@@ -245,10 +263,28 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 
 			// Signal our answer
-			res, err := options.HttpClient.PostForm(
+			form := url.Values{
+				"data":    {string(a)},
+				"send-to": {replyTo},
+				"type":    {strconv.Itoa(int(common.SignalMsgAnswer))},
+			}
+
+			req, err := http.NewRequest(
+				"POST",
 				options.DiscoverySrv+options.Endpoint,
-				url.Values{"data": {string(a)}, "send-to": {replyTo}, "type": {strconv.Itoa(int(common.SignalMsgAnswer))}},
+				strings.NewReader(form.Encode()),
 			)
+			if err != nil {
+				log.Printf("Error constructing request\n")
+				// Borked!
+				peerConnection.Close() // TODO: there's an err we should handle here
+				return 0, []interface{}{}
+			}
+
+			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+			req.Header.Add(common.VersionHeader, common.Version)
+
+			res, err := options.HttpClient.Do(req)
 			if err != nil {
 				log.Printf("Couldn't signal answer SDP to %v\n", options.DiscoverySrv+options.Endpoint)
 				// Borked!

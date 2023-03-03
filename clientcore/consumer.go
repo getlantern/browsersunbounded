@@ -11,8 +11,10 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
+	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -110,7 +112,19 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			log.Printf("Consumer state 1...\n")
 
 			// Listen for genesis messages
-			res, err := options.HttpClient.Get(options.DiscoverySrv + options.Endpoint)
+			req, err := http.NewRequest(
+				"GET",
+				options.DiscoverySrv+options.Endpoint,
+				nil,
+			)
+			if err != nil {
+				log.Printf("Error constructing request\n")
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			}
+
+			req.Header.Add(common.VersionHeader, common.Version)
+
+			res, err := options.HttpClient.Do(req)
 			if err != nil {
 				log.Printf("Couldn't subscribe to genesis stream at %v\n", options.DiscoverySrv+options.Endpoint)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
@@ -230,10 +244,26 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 
 			// Signal the offer
-			res, err := options.HttpClient.PostForm(
+			form := url.Values{
+				"data":    {string(offerJSON)},
+				"send-to": {replyTo},
+				"type":    {strconv.Itoa(int(common.SignalMsgOffer))},
+			}
+
+			req, err := http.NewRequest(
+				"POST",
 				options.DiscoverySrv+options.Endpoint,
-				url.Values{"data": {string(offerJSON)}, "send-to": {replyTo}, "type": {strconv.Itoa(int(common.SignalMsgOffer))}},
+				strings.NewReader(form.Encode()),
 			)
+			if err != nil {
+				log.Printf("Error constructing request\n")
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			}
+
+			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+			req.Header.Add(common.VersionHeader, common.Version)
+
+			res, err := options.HttpClient.Do(req)
 			if err != nil {
 				log.Printf("Couldn't signal offer SDP to %v\n", options.DiscoverySrv+options.Endpoint)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
@@ -334,10 +364,28 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 
 			// Signal our ICE candidates
-			res, err := options.HttpClient.PostForm(
+			form := url.Values{
+				"data":    {string(candidatesJSON)},
+				"send-to": {replyTo},
+				"type":    {strconv.Itoa(int(common.SignalMsgICE))},
+			}
+
+			req, err := http.NewRequest(
+				"POST",
 				options.DiscoverySrv+options.Endpoint,
-				url.Values{"data": {string(candidatesJSON)}, "send-to": {replyTo}, "type": {strconv.Itoa(int(common.SignalMsgICE))}},
+				strings.NewReader(form.Encode()),
 			)
+			if err != nil {
+				log.Printf("Error constructing request\n")
+				// Borked!
+				peerConnection.Close() // TODO: there's an err we should handle here
+				return 0, []interface{}{}
+			}
+
+			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+			req.Header.Add(common.VersionHeader, common.Version)
+
+			res, err := options.HttpClient.Do(req)
 			if err != nil {
 				log.Printf("Couldn't signal ICE candidates to %v\n", options.DiscoverySrv+options.Endpoint)
 				// Borked!
