@@ -19,6 +19,7 @@ type WebRTCOptions struct {
 	Tag            string
 	HttpClient     *http.Client
 	Patience       time.Duration
+	ErrorBackoff   time.Duration
 }
 
 func NewDefaultWebRTCOptions() *WebRTCOptions {
@@ -60,6 +61,7 @@ func NewDefaultWebRTCOptions() *WebRTCOptions {
 		Tag:           "",
 		HttpClient:    &http.Client{},
 		Patience:      500 * time.Millisecond,
+		ErrorBackoff:  5 * time.Second,
 	}
 }
 

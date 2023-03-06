@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/getlantern/broflake/clientcore"
+	"github.com/getlantern/broflake/common"
 )
 
 var (
@@ -27,7 +28,7 @@ func main() {
 		proxyport = "1080"
 	}
 
-	log.Printf("Welcome to Broflake\n")
+	log.Printf("Welcome to Broflake %v\n", common.Version)
 	log.Printf("type: %v\n", clientType)
 	log.Printf("freddie: %v\n", freddie)
 	log.Printf("egress: %v\n", egress)
