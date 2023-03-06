@@ -16,6 +16,7 @@ import (
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/metric/instrument"
+	"golang.org/x/mod/semver"
 )
 
 const (
@@ -74,6 +75,13 @@ func (t *userTable) Size() int {
 func handleSignal(w http.ResponseWriter, r *http.Request) {
 	nConcurrentReqs.Add(r.Context(), 1)
 	defer nConcurrentReqs.Add(r.Context(), -1)
+	enableCors(&w)
+
+	if !isValidProtocolVersion(r) {
+		w.WriteHeader(http.StatusTeapot)
+		w.Write([]byte("418\n"))
+		return
+	}
 
 	switch r.Method {
 	case http.MethodGet:
@@ -85,7 +93,6 @@ func handleSignal(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/signal is the producer advertisement stream
 func handleSignalGet(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
 	consumerID := uuid.NewString()
 	consumerChan := consumerTable.Add(consumerID)
 	defer consumerTable.Delete(consumerID)
@@ -111,7 +118,6 @@ func handleSignalGet(w http.ResponseWriter, r *http.Request) {
 
 // POST /v1/signal is how all signaling messaging is performed
 func handleSignalPost(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
 	reqID := uuid.NewString()
 	reqChan := signalTable.Add(reqID)
 	defer signalTable.Delete(reqID)
@@ -178,6 +184,16 @@ func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
+// Validate the Broflake protocol version header. If the header isn't present, we consider you
+// invalid. Protocol version is currently the major version of Broflake's reference implementation
+func isValidProtocolVersion(r *http.Request) bool {
+	if semver.Major(r.Header.Get(common.VersionHeader)) != semver.Major(common.Version) {
+		return false
+	}
+
+	return true
+}
+
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -201,7 +217,7 @@ func main() {
 		Addr:         fmt.Sprintf(":%v", port),
 	}
 	http.HandleFunc("/v1/signal", handleSignal)
-	log.Printf("Discovery server listening on %v\n\n", srv.Addr)
+	log.Printf("Freddie (%v) listening on %v\n\n", common.Version, srv.Addr)
 	err = srv.ListenAndServe()
 	if err != nil {
 		log.Println(err)
