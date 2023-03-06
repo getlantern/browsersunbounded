@@ -77,6 +77,20 @@ func handleSignal(w http.ResponseWriter, r *http.Request) {
 	defer nConcurrentReqs.Add(r.Context(), -1)
 	enableCors(&w)
 
+	// Handle preflight requests
+	if r.Method == http.MethodOptions {
+		w.Header().Set("Access-Control-Allow-Credentials", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT")
+		w.Header().Set(
+			"Access-Control-Allow-Headers",
+			"Access-Control-Allow-Headers, Origin, Accept, X-Requested-With, Content-Type, "+
+				"Access-Control-Request-Method, Access-Control-Request-Headers, "+common.VersionHeader,
+		)
+
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	if !isValidProtocolVersion(r) {
 		w.WriteHeader(http.StatusTeapot)
 		w.Write([]byte("418\n"))
@@ -93,6 +107,7 @@ func handleSignal(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/signal is the producer advertisement stream
 func handleSignalGet(w http.ResponseWriter, r *http.Request) {
+
 	consumerID := uuid.NewString()
 	consumerChan := consumerTable.Add(consumerID)
 	defer consumerTable.Delete(consumerID)
