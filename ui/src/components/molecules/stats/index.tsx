@@ -11,6 +11,9 @@ import {
 	// lifetimeChunksEmitter,
 	lifetimeConnectionsEmitter
 } from '../../../utils/wasmInterface'
+import {humanizeCount} from '../../../utils/humanize'
+import {LifetimeConnectionsWrapper} from './styles'
+import TwitterLink from '../../atoms/twitterLink'
 // import useSample from '../../../hooks/useSample'
 
 export const Connections = () => {
@@ -30,7 +33,8 @@ export const Connections = () => {
 
 
 const Stats = () => {
-	const {width} = useContext(AppContext)
+	const {width, settings} = useContext(AppContext)
+	const {menu} = settings
 	const connections = useEmitterState(connectionsEmitter)
 	const lifetimeConnections = useEmitterState(lifetimeConnectionsEmitter)
 	// const sampledThroughput = useSample({emitter: averageThroughputEmitter, ms: 500})
@@ -57,8 +61,22 @@ const Stats = () => {
 			<Row
 				borderBottom
 			>
-				<Text>Total people helped to date:</Text>
-				<Text>{lifetimeConnections}</Text>
+				{
+					menu ? (
+						<Text>
+							Total people helped to date:
+						</Text>
+					)
+					: (
+						<LifetimeConnectionsWrapper>
+							<Text>
+								Total people helped to date:
+							</Text>
+							<TwitterLink connections={lifetimeConnections} />
+						</LifetimeConnectionsWrapper>
+					)
+				}
+				<Text>{humanizeCount(lifetimeConnections)}</Text>
 			</Row>
 			{/*<Row*/}
 			{/*	borderBottom*/}

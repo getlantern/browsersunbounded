@@ -5,12 +5,16 @@ import useClickOutside from '../../../hooks/useClickOutside'
 import {AppContext} from '../../../context'
 import {COLORS, Layouts, Targets, Themes} from '../../../constants'
 import {isFirefox} from '../../../utils/userAgent'
+import {connectedTwitterLink} from '../../../utils/share'
+import {useEmitterState} from '../../../hooks/useStateEmitter'
+import {lifetimeConnectionsEmitter} from '../../../utils/wasmInterface'
+import {humanizeCount} from '../../../utils/humanize'
 
-const menuItems = [
+const menuItems = (connected: number | string) => [
 	{
 		key: 'firefox',
 		label: 'Install Firefox Extension',
-		href: 'https://addons.mozilla.org/en-US/firefox/extensions/',
+		href: 'https://addons.mozilla.org/en-US/firefox/addon/lantern-network/',
 		icon: <Firefox/>
 	},
 	{
@@ -22,7 +26,7 @@ const menuItems = [
 	{
 		key: 'twitter',
 		label: 'Share',
-		href: 'https://twitter.com',
+		href: connectedTwitterLink(connected),
 		icon: <Twitter/>
 	},
 	{
@@ -44,6 +48,7 @@ interface MenuProps {
 }
 const Menu = ({setExpanded} : MenuProps) => {
 	const {settings, width} = useContext(AppContext)
+	const lifetimeConnections = useEmitterState(lifetimeConnectionsEmitter)
 	const {theme, layout, target, collapse} = settings
 	const [expanded, _setExpanded] = useState(false)
 	const triggerRef = useRef<HTMLElement>(null)
@@ -54,7 +59,7 @@ const Menu = ({setExpanded} : MenuProps) => {
 	// unique case when collapse button is missing we have to compensate for margin
 	const compensateMargin = !collapse || layout === Layouts.PANEL
 
-	const _menuItems = menuItems.filter(item => {
+	const _menuItems = menuItems(humanizeCount(lifetimeConnections)).filter(item => {
 		if ((isFirefox() || target === Targets.EXTENSION_POPUP) && item.key === 'chrome') return false
 		if ((!isFirefox() || target === Targets.EXTENSION_POPUP) && item.key === 'firefox') return false
 		return true
