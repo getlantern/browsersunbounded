@@ -131,6 +131,13 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 			defer res.Body.Close()
 
+			// Handle bad protocol version
+			if res.StatusCode == 418 {
+				log.Printf("Received 'bad protocol version' response\n")
+				<-time.After(options.ErrorBackoff)
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			}
+
 			// We make a long-lived HTTP request to Freddie. Freddie streams newline-terminated genesis
 			// messages as they become available. We wait until we hear one genesis message, then continue
 			// listening for a tunable amount of time ("patience") to see if we might hear a few more
@@ -270,8 +277,13 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 			defer res.Body.Close()
 
-			// We didn't win the connection
-			if res.StatusCode == 404 {
+			switch res.StatusCode {
+			case 418:
+				log.Printf("Received 'bad protocol version' response\n")
+				<-time.After(options.ErrorBackoff)
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			case 404:
+				// We didn't win the connection
 				log.Printf("Too late for genesis message %v!\n", replyTo)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
@@ -395,6 +407,12 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			defer res.Body.Close()
 
 			switch res.StatusCode {
+			case 418:
+				log.Printf("Received 'bad protocol version' response\n")
+				<-time.After(options.ErrorBackoff)
+				// Borked!
+				peerConnection.Close() // TODO: there's an err we should handle here
+				return 0, []interface{}{}
 			case 404:
 				log.Printf("Signaling partner hung up, aborting!\n")
 				// Borked!

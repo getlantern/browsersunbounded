@@ -172,6 +172,13 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 
 			// Freddie never returns 404s for genesis messages, so we're not catching that case here
 
+			// Handle bad protocol version
+			if res.StatusCode == 418 {
+				log.Printf("Received 'bad protocol version' response\n")
+				<-time.After(options.ErrorBackoff)
+				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			}
+
 			// The HTTP request is complete
 			offerBytes, err := ioutil.ReadAll(res.Body)
 			if err != nil {
@@ -293,8 +300,14 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 			defer res.Body.Close()
 
-			// Our signaling partner hung up
-			if res.StatusCode == 404 {
+			switch res.StatusCode {
+			case 418:
+				log.Printf("Received 'bad protocol version' response\n")
+				<-time.After(options.ErrorBackoff)
+				// Borked!
+				peerConnection.Close() // TODO: there's an err we should handle here
+				return 0, []interface{}{}
+			case 404:
 				log.Printf("Signaling partner hung up, aborting!\n")
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
