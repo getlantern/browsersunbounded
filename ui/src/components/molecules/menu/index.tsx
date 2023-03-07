@@ -20,7 +20,7 @@ const menuItems = (connected: number | string) => [
 	{
 		key: 'chrome',
 		label: 'Install Chrome Extension',
-		href: 'https://chrome.google.com/webstore/category/extensions',
+		href: 'https://chrome.google.com/webstore/detail/lantern-network/jonhnkjdlimggpmbehgkgpjgphoepfdj/',
 		icon: <Chrome/>
 	},
 	{
