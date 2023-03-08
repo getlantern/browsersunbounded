@@ -29,7 +29,6 @@ const bindPopup = async (iframe: HTMLIFrameElement) => {
 		if (messageCheck(message)) {
 			// console.log('message from chrome, forwarding to iframe: ', message)
 			iframe.contentWindow!.postMessage(message, '*')
-			iconToggleSubscribe(message) // @todo maybe move to service worker
 			return false
 		}
 	})
@@ -49,23 +48,6 @@ const bindPopup = async (iframe: HTMLIFrameElement) => {
 			chrome.runtime.sendMessage(message)
 		}
 	})
-}
-
-// toggle icon based on sharing status messages from offscreen
-const iconToggleSubscribe = (message: MessageEvent) => {
-	if (message.type === MessageTypes.STATE_UPDATE && message.data.emitter === 'sharingEmitter') {
-		const state = message.data.value ? 'on' : 'off'
-		// @ts-ignore
-		const isFirefox = !chrome.app && window.browser && browser.runtime
-		chrome[isFirefox ? 'browserAction' : 'action'].setIcon({
-			path: {
-				"16": `/images/logo16_${state}.png`,
-				"32": `/images/logo32_${state}.png`,
-				"48": `/images/logo48_${state}.png`,
-				"128": `/images/logo128_${state}.png`
-			}
-		})
-	}
 }
 
 window.addEventListener('load', popupApp)
