@@ -3,16 +3,27 @@ import {iconToggleSubscribe} from '../../utils'
 
 console.log('service worker running')
 
-const serviceWorkerApp = () => {
-  // launch offscreen.html in a separate tab (background DOM process)
-  chrome.offscreen.createDocument({
+const state = {
+  booted: false,
+}
+
+const createOffscreenDocument = () => {
+  return new Promise((resolve, reject) => {
+    chrome.offscreen.createDocument({
       url: chrome.runtime.getURL('pages/offscreen.html'),
       // @ts-ignore
       reasons: ['WEB_RTC'],
       justification: 'offscreen.html used for WebRTC',
-    },
-    () => null
-  )
+    }).then(resolve).catch(e => reject(e))
+  })
+}
+
+const serviceWorkerApp = () => {
+  state.booted = true // set booted flag to true
+
+  // launch offscreen.html in a separate tab (background DOM process)
+  // https://groups.google.com/a/chromium.org/g/chromium-extensions/c/D5Jg2ukyvUc
+  createOffscreenDocument().then(() => {}).catch(e => console.error(e))
 
   // subscribe to messages from offscreen to forward to popup iframe
   chrome.runtime.onMessage.addListener((message) => {
@@ -26,5 +37,13 @@ const serviceWorkerApp = () => {
   })
 }
 
+// run on startup (this should handle most cases)
 chrome.runtime.onInstalled.addListener(serviceWorkerApp)
 chrome.runtime.onStartup.addListener(serviceWorkerApp)
+
+// this handles edge cases where the service worker is not booted on startup
+// see https://stackoverflow.com/questions/13979781/chrome-extension-how-to-handle-disable-and-enable-event-from-browser
+// choosing this method instead of requesting the 'management' permission
+setTimeout(() => {
+  if (!state.booted) serviceWorkerApp()
+}, 500)
