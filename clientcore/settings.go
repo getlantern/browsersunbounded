@@ -69,6 +69,7 @@ type EgressOptions struct {
 	Addr           string
 	Endpoint       string
 	ConnectTimeout time.Duration
+	ErrorBackoff   time.Duration
 }
 
 func NewDefaultEgressOptions() *EgressOptions {
@@ -76,6 +77,7 @@ func NewDefaultEgressOptions() *EgressOptions {
 		Addr:           "wss://broflake-egress-xdy27ofj3a-ue.a.run.app",
 		Endpoint:       "/ws",
 		ConnectTimeout: 5 * time.Second,
+		ErrorBackoff:   5 * time.Second,
 	}
 }
 

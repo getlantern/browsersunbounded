@@ -127,6 +127,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			res, err := options.HttpClient.Do(req)
 			if err != nil {
 				log.Printf("Couldn't subscribe to genesis stream at %v\n", options.DiscoverySrv+options.Endpoint)
+				<-time.After(options.ErrorBackoff)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
 			defer res.Body.Close()
@@ -178,6 +179,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 					rt, _, err := common.DecodeSignalMsg(rawMsg)
 					if err != nil {
 						log.Printf("Error decoding signal message: %v", err)
+						<-time.After(options.ErrorBackoff)
 						// Take the error in stride, continue listening to our existing HTTP request stream
 						continue
 					}
@@ -273,6 +275,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			res, err := options.HttpClient.Do(req)
 			if err != nil {
 				log.Printf("Couldn't signal offer SDP to %v\n", options.DiscoverySrv+options.Endpoint)
+				<-time.After(options.ErrorBackoff)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
 			defer res.Body.Close()
@@ -400,6 +403,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			res, err := options.HttpClient.Do(req)
 			if err != nil {
 				log.Printf("Couldn't signal ICE candidates to %v\n", options.DiscoverySrv+options.Endpoint)
+				<-time.After(options.ErrorBackoff)
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}

@@ -166,6 +166,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			res, err := options.HttpClient.Do(req)
 			if err != nil {
 				log.Printf("Couldn't signal genesis message to %v\n", options.DiscoverySrv+options.Endpoint)
+				<-time.After(options.ErrorBackoff)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
 			defer res.Body.Close()
@@ -294,6 +295,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			res, err := options.HttpClient.Do(req)
 			if err != nil {
 				log.Printf("Couldn't signal answer SDP to %v\n", options.DiscoverySrv+options.Endpoint)
+				<-time.After(options.ErrorBackoff)
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}

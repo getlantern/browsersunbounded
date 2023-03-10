@@ -8,6 +8,7 @@ import (
 	"context"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/getlantern/broflake/common"
 	"nhooyr.io/websocket"
@@ -43,6 +44,7 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 			c, _, err := websocket.Dial(ctx, options.Addr+options.Endpoint, nil)
 			if err != nil {
 				log.Printf("Couldn't connect to egress server at %v\n", options.Addr)
+				<-time.After(options.ErrorBackoff)
 				return 0, []interface{}{}
 			}
 
@@ -83,7 +85,7 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 			// 1. handle chunks from the bus, write them to the WebSocket, detect and handle write errors
 			// 2. listen for errors from the read goroutine and handle them
 
-			// Upon read and write errors, we contradictorily close the websocket with StatusNormalClosure.
+			// On read and write errors, we counterintuitively close the websocket with StatusNormalClosure.
 			// This is to ensure that the egress server detects closed connections while respecting a
 			// quirk in our WS library's net.Conn wrapper: https://pkg.go.dev/nhooyr.io/websocket#NetConn
 			for {
