@@ -1,1 +1,1 @@
-web: egress
+web: cd egress && egress
