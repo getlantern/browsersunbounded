@@ -1,5 +1,11 @@
 import {POPUP} from '../../../src/constants'
 import {messageCheck} from '../../../src/utils/messages'
+import {iconToggleSubscribe} from '../../utils'
+
+// reliable test to tell if we are in Firefox or Chrome. Note that this can not be used in the service worker env.
+// it must be used in the offscreen or popup env.
+// @ts-ignore
+const isFirefox = !chrome.app && window.browser && browser.runtime
 
 const offscreenApp = () => {
 	const state = {
@@ -37,6 +43,8 @@ const bindOffscreen = (iframe: HTMLIFrameElement, state: {popupOpen: boolean }) 
 		if (messageCheck(message)) {
 			// console.log('message from iframe, forwarding to chrome: ', message)
 			if (state.popupOpen) chrome.runtime.sendMessage(message)
+			// since firefox doesn't support service workers, we need to toggle the icon here
+			if (isFirefox) iconToggleSubscribe(message, isFirefox)
 		}
 	})
 }

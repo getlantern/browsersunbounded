@@ -14,7 +14,7 @@ import Storage from './components/molecules/storage'
 import useMessaging from './hooks/useMessaging'
 import {Targets, Layouts} from './constants'
 import {AppContextProvider} from './context'
-import useAutoUpdate from './hooks/useAutoUpdate'
+import useAutoUpdate, {AUTO_START_STORAGE_FLAG} from './hooks/useAutoUpdate'
 
 interface Props {
   appId: number
@@ -40,6 +40,15 @@ const App = ({appId, embed}: Props) => {
         if (!instance) return
         console.log(`p2p ${mock ? '"wasm"' : 'wasm'} initialized!`)
         console.log('instance: ', instance)
+        // If the offscreen extension just auto updated and user was sharing pre-update, we will start after init
+        // see useAutoUpdate hook for more details on this logic @todo move auto start to a config
+        if (target === Targets.EXTENSION_OFFSCREEN) {
+          if (localStorage.getItem(AUTO_START_STORAGE_FLAG)) {
+            localStorage.removeItem(AUTO_START_STORAGE_FLAG)
+            console.log('Auto starting due to auto update')
+            wasmInterface.current!.start()
+          }
+        }
       }
     )
   }, [mock, target])
