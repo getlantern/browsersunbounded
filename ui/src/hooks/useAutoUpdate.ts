@@ -19,7 +19,7 @@ const useAutoUpdate = (target: Targets) => {
 		const _lastModified = new Date(lastModifiedDateString)
 		if (_lastModified > lastModified) {
 			console.log('New bundle found, reloading page')
-			// if currently sharing, set flag to auto start sharing on reload
+			// if currently sharing, set flag to auto start sharing on reload see app.tsx for more info
 			// @todo: this is a bit hacky, eventually we should move this to the config eventually
 			if (sharing) localStorage.setItem(AUTO_START_STORAGE_FLAG, 'true')
 			window.location.reload()
