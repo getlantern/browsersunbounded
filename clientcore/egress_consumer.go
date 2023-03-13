@@ -84,8 +84,9 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 			// Main loop:
 			// 1. handle chunks from the bus, write them to the WebSocket, detect and handle write errors
 			// 2. listen for errors from the read goroutine and handle them
+			// 3. if there hasn't been a chunk from the bus or a read error for a while, send a keepalive
 
-			// On read and write errors, we counterintuitively close the websocket with StatusNormalClosure.
+			// On error, we counterintuitively close the websocket with StatusNormalClosure.
 			// This is to ensure that the egress server detects closed connections while respecting a
 			// quirk in our WS library's net.Conn wrapper: https://pkg.go.dev/nhooyr.io/websocket#NetConn
 			for {
@@ -103,6 +104,14 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 					c.Close(websocket.StatusNormalClosure, err.Error())
 					log.Printf("Egress consumer WebSocket read error: %v\n", err)
 					return 0, []interface{}{}
+				case <-time.After(options.Keepalive):
+					log.Printf("WebSocket PING\n")
+					err := c.Ping(context.Background())
+					if err != nil {
+						c.Close(websocket.StatusNormalClosure, err.Error())
+						log.Printf("Egress consumer WebSocket ping error: %v\n", err)
+						return 0, []interface{}{}
+					}
 
 					// Ordinarily it would be incorrect to put a worker into an infinite loop without including
 					// a case to listen for context cancellation, but here we handle context cancellation in a
