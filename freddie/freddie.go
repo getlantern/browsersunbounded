@@ -73,8 +73,8 @@ func (t *userTable) Size() int {
 }
 
 func handleSignal(w http.ResponseWriter, r *http.Request) {
-	nConcurrentReqs.Add(r.Context(), 1)
-	defer nConcurrentReqs.Add(r.Context(), -1)
+	nConcurrentReqs.Add(context.Background(), 1)
+	defer nConcurrentReqs.Add(context.Background(), -1)
 	enableCors(&w)
 
 	// Handle preflight requests
@@ -107,7 +107,6 @@ func handleSignal(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/signal is the producer advertisement stream
 func handleSignalGet(w http.ResponseWriter, r *http.Request) {
-
 	consumerID := uuid.NewString()
 	consumerChan := consumerTable.Add(consumerID)
 	defer consumerTable.Delete(consumerID)
