@@ -79,7 +79,7 @@ func NewDefaultEgressOptions() *EgressOptions {
 		Endpoint:       "/ws",
 		ConnectTimeout: 5 * time.Second,
 		ErrorBackoff:   5 * time.Second,
-		Keepalive:      30 * time.Second,
+		Keepalive:      5 * time.Second,
 	}
 }
 
