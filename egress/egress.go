@@ -37,6 +37,7 @@ var nQUICStreams uint64
 // observe the value of nClients and nQUICStreams instead of duplicating the increment/decrement
 // operations. However, the otel observer API seems more complicated than it's worth?
 var nClientsCounter instrument.Int64UpDownCounter
+var nQUICConnectionsCounter instrument.Int64UpDownCounter
 var nQUICStreamsCounter instrument.Int64UpDownCounter
 
 // webSocketPacketConn wraps a websocket.Conn as a net.PacketConn
@@ -147,6 +148,7 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
+		nQUICConnectionsCounter.Add(context.Background(), 1)
 		log.Printf("%v accepted a new QUIC connection!\n", wspconn.addr)
 
 		go func() {
@@ -159,6 +161,7 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 					errString := fmt.Sprintf("%v stream error (%v), closing QUIC connection!", wspconn.addr, err)
 					log.Printf("%v\n", errString)
 					conn.CloseWithError(quic.ApplicationErrorCode(42069), errString)
+					nQUICConnectionsCounter.Add(context.Background(), -1)
 					return
 				}
 
@@ -182,6 +185,11 @@ func main() {
 	m := global.Meter("github.com/getlantern/broflake/egress")
 	var err error
 	nClientsCounter, err = m.Int64UpDownCounter("concurrent-websockets")
+	if err != nil {
+		panic(err)
+	}
+
+	nQUICConnectionsCounter, err = m.Int64UpDownCounter("concurrent-quic-connections")
 	if err != nil {
 		panic(err)
 	}
