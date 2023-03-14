@@ -1,5 +1,5 @@
 import {messageCheck} from '../../../src/utils/messages'
-import {iconToggleSubscribe} from '../../utils'
+import {iconToggleSubscribe, registerAutoUpdater} from '../../utils'
 
 console.log('service worker running')
 
@@ -35,6 +35,9 @@ const serviceWorkerApp = () => {
       return false
     }
   })
+
+  // register app store auto updater for chrome (see offscreen.ts for firefox)
+  registerAutoUpdater()
 }
 
 // run on startup (this should handle most cases)

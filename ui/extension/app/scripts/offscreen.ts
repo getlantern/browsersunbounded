@@ -1,6 +1,7 @@
 import {POPUP} from '../../../src/constants'
 import {messageCheck} from '../../../src/utils/messages'
 import {iconToggleSubscribe} from '../../utils'
+import {registerAutoUpdater} from '../../utils'
 
 // reliable test to tell if we are in Firefox or Chrome. Note that this can not be used in the service worker env.
 // it must be used in the offscreen or popup env.
@@ -15,6 +16,8 @@ const offscreenApp = () => {
 	iframe.src = process.env.EXTENSION_OFFSCREEN_URL!
 	document.body.appendChild(iframe)
 	bindOffscreen(iframe, state)
+	// register app store auto updater for firefox (see serviceWorker.ts for chrome)
+	if (isFirefox) registerAutoUpdater()
 }
 
 const bindOffscreen = (iframe: HTMLIFrameElement, state: {popupOpen: boolean }) => {
