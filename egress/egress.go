@@ -30,6 +30,10 @@ import (
 // TODO: rate limiters and fancy settings and such:
 // https://github.com/nhooyr/websocket/blob/master/examples/echo/server.go
 
+const (
+	websocketKeepalive = 30 * time.Second
+)
+
 var nClients uint64
 var nQUICStreams uint64
 
@@ -43,12 +47,35 @@ var nQUICStreamsCounter instrument.Int64UpDownCounter
 // webSocketPacketConn wraps a websocket.Conn as a net.PacketConn
 type websocketPacketConn struct {
 	net.PacketConn
-	w    *websocket.Conn
-	addr net.Addr
+	w         *websocket.Conn
+	addr      net.Addr
+	keepalive time.Duration
 }
 
 func (q websocketPacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
+	// TODO: The channel and goroutine we fire off here are used to implement serverside keepalive.
+	// For as long as we're reading from this WebSocket, if we haven't received any readable data for
+	// a while, we send a ping. Keepalive is only desirable to prevent lots of disconnections
+	// and reconnections on idle WebSockets, and so it's worth asking whether the cycles added by this
+	// keepalive logic are worth the overhead we're saving in reduced discon/recon loops. Ultimately,
+	// we'd rather implement keepalive on the client side, but that's a much bigger lift. See:
+	// https://github.com/getlantern/broflake/issues/127
+	readDone := make(chan struct{})
+
+	go func() {
+		for {
+			select {
+			case <-time.After(q.keepalive):
+				log.Printf("%v PING\n", q.addr)
+				q.w.Ping(context.Background())
+			case <-readDone:
+				return
+			}
+		}
+	}()
+
 	_, b, err := q.w.Read(context.Background())
+	readDone <- struct{}{}
 	copy(p, b)
 	return len(b), common.DebugAddr("DEBUG NELSON WUZ HERE"), err
 }
@@ -121,8 +148,9 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 	)
 
 	wspconn := websocketPacketConn{
-		w:    c,
-		addr: common.DebugAddr(fmt.Sprintf("WebSocket connection %v", uuid.NewString())),
+		w:         c,
+		addr:      common.DebugAddr(fmt.Sprintf("WebSocket connection %v", uuid.NewString())),
+		keepalive: websocketKeepalive,
 	}
 
 	defer wspconn.Close()

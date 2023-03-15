@@ -70,7 +70,6 @@ type EgressOptions struct {
 	Endpoint       string
 	ConnectTimeout time.Duration
 	ErrorBackoff   time.Duration
-	Keepalive      time.Duration
 }
 
 func NewDefaultEgressOptions() *EgressOptions {
@@ -79,7 +78,6 @@ func NewDefaultEgressOptions() *EgressOptions {
 		Endpoint:       "/ws",
 		ConnectTimeout: 5 * time.Second,
 		ErrorBackoff:   5 * time.Second,
-		Keepalive:      30 * time.Second,
 	}
 }
 
