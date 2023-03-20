@@ -22,6 +22,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/lucas-clemente/quic-go"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/metric/instrument"
 	"nhooyr.io/websocket"
@@ -34,15 +35,23 @@ const (
 	websocketKeepalive = 30 * time.Second
 )
 
+// Multi-writer values used for logging and otel metrics
+// nClients is the number of open WebSocket connections
 var nClients uint64
+
+// nQUICStreams is the number of open QUIC streams (not to be confused with QUIC connections)
 var nQUICStreams uint64
 
-// TODO: it'd be more elegant to use observers rather than counters, such that we could simply
-// observe the value of nClients and nQUICStreams instead of duplicating the increment/decrement
-// operations. However, the otel observer API seems more complicated than it's worth?
+// nIngressBytes is the number of bytes received over all WebSocket connections since the last otel measurement callback
+var nIngressBytes uint64
+
+// Otel instruments
 var nClientsCounter instrument.Int64UpDownCounter
+
+// TODO: weirdly, we report the number of open QUIC conections to otel but we don't maintain an atomic value to log it?
 var nQUICConnectionsCounter instrument.Int64UpDownCounter
 var nQUICStreamsCounter instrument.Int64UpDownCounter
+var nIngressBytesCounter instrument.Int64ObservableUpDownCounter
 
 // webSocketPacketConn wraps a websocket.Conn as a net.PacketConn
 type websocketPacketConn struct {
@@ -77,6 +86,7 @@ func (q websocketPacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err error
 	_, b, err := q.w.Read(context.Background())
 	readDone <- struct{}{}
 	copy(p, b)
+	atomic.AddUint64(&nIngressBytes, uint64(len(b)))
 	return len(b), common.DebugAddr("DEBUG NELSON WUZ HERE"), err
 }
 
@@ -223,6 +233,25 @@ func main() {
 	}
 
 	nQUICStreamsCounter, err = m.Int64UpDownCounter("concurrent-quic-streams")
+	if err != nil {
+		panic(err)
+	}
+
+	nIngressBytesCounter, err = m.Int64ObservableUpDownCounter("ingress-bytes")
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = m.RegisterCallback(
+		func(ctx context.Context, o metric.Observer) error {
+			b := atomic.LoadUint64(&nIngressBytes)
+			o.ObserveInt64(nIngressBytesCounter, int64(b))
+			log.Printf("Ingress bytes: %v\n", b)
+			atomic.StoreUint64(&nIngressBytes, uint64(0))
+			return nil
+		},
+		nIngressBytesCounter,
+	)
 	if err != nil {
 		panic(err)
 	}
