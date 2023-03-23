@@ -37,7 +37,8 @@ export enum MessageTypes {
 	WASM_STOP = 'wasmStop',
 	HYDRATE_STATE = 'hydrateState',
 	STATE_UPDATE = 'stateUpdate',
-	POPUP_OPENED = 'popupOpened'
+	POPUP_OPENED = 'popupOpened',
+	EVENT = 'event',
 }
 
 export enum Targets {
