@@ -37,8 +37,8 @@ type QUICLayerOptions struct {
 }
 
 // Maintains an end to end quic connection with egress server over a BroflakeConn
-func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICLayerOptions) (*quicLayer, error) {
-	q := &quicLayer{
+func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICLayerOptions) (*QUICLayer, error) {
+	q := &QUICLayer{
 		bfconn: bfconn,
 		tlsConfig: &tls.Config{
 			ServerName:         qopt.ServerName,
@@ -53,14 +53,14 @@ func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICLayerOptions) (*quicLayer, err
 	return q, nil
 }
 
-type quicLayer struct {
+type QUICLayer struct {
 	bfconn       *BroflakeConn
 	tlsConfig    *tls.Config
 	eventualConn *eventualConn
 	mx           sync.RWMutex
 }
 
-func (c *quicLayer) DialContext(ctx context.Context) (net.Conn, error) {
+func (c *QUICLayer) DialContext(ctx context.Context) (net.Conn, error) {
 	c.mx.RLock()
 	waiter := c.eventualConn
 	c.mx.RUnlock()
@@ -76,7 +76,7 @@ func (c *quicLayer) DialContext(ctx context.Context) (net.Conn, error) {
 	return common.QUICStreamNetConn{Stream: stream}, nil
 }
 
-func (c *quicLayer) maintainQUICConnection() {
+func (c *QUICLayer) maintainQUICConnection() {
 	for {
 		var conn quic.Connection
 
@@ -104,7 +104,7 @@ func (c *quicLayer) maintainQUICConnection() {
 		}
 
 		// If we've hit this path, our QUIC connection has terminated, so we start trying to
-		// acquire a new one. If there's a process that's using this quicLayer for communication,
+		// acquire a new one. If there's a process that's using this QUICLayer for communication,
 		// they'll block on their next call to DialContext until a new QUIC connection is acquired.
 		c.mx.Lock()
 		c.eventualConn = newEventualConn()
@@ -112,8 +112,8 @@ func (c *quicLayer) maintainQUICConnection() {
 	}
 }
 
-// quicLayer is a ReliableStreamLayer
-var _ ReliableStreamLayer = &quicLayer{}
+// QUICLayer is a ReliableStreamLayer
+var _ ReliableStreamLayer = &QUICLayer{}
 
 func newEventualConn() *eventualConn {
 	return &eventualConn{
