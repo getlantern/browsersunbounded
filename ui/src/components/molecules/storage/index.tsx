@@ -1,7 +1,7 @@
 import React, {useCallback, useContext, useEffect, useRef} from 'react'
-import {Chunk, lifetimeChunksEmitter, lifetimeConnectionsEmitter} from '../../../utils/wasmInterface'
+import {Chunk, lifetimeChunksEmitter, lifetimeConnectionsEmitter, sharingEmitter} from '../../../utils/wasmInterface'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
-import {SIGNATURE, MessageTypes} from '../../../constants'
+import {SIGNATURE, MessageTypes, Settings} from '../../../constants'
 import {messageCheck} from '../../../utils/messages'
 import {AppContext} from '../../../context'
 
@@ -16,12 +16,14 @@ enum StorageKeys {
 	LIFETIME_CHUNKS = 'lifetimeChunks',
 }
 
-const Storage = () => {
+const Storage = ({settings}: {settings: Settings}) => {
+	const {target} = settings
 	const {wasmInterface} = useContext(AppContext)
 	const synced = useRef({[StorageKeys.LIFETIME_CONNECTIONS]: false, [StorageKeys.LIFETIME_CHUNKS]: false})
 	const iframe = useRef<HTMLIFrameElement>(null)
 	const lifetimeConnections = useEmitterState(lifetimeConnectionsEmitter)
 	const lifetimeChunks = useEmitterState(lifetimeChunksEmitter)
+	const sharing = useEmitterState(sharingEmitter)
 
 	const onMessage = useCallback((event: MessageEvent) => {
 		const message = event.data
@@ -103,6 +105,36 @@ const Storage = () => {
 			}
 		}, '*')
 	}, [lifetimeChunks])
+
+	useEffect(() => {
+		// this timeout is dumb but needed to make sure the iframe plausible js is loaded
+		// before we send the event. Ideally we should use a callback from the iframe
+		// leaving like this for now because this may be refactored in the future to sandbox
+		// the entire widget in the same iframe
+		setTimeout(() => {
+			if (!iframe.current) return;
+			iframe.current.contentWindow?.postMessage({
+				type: MessageTypes.EVENT,
+				[SIGNATURE]: true,
+				data: {
+					eventName: 'load',
+					eventProperties: {target}
+				}
+			}, '*')
+		}, 1000)
+	}, [target, iframe])
+
+	useEffect(() => {
+		if (!iframe.current) return;
+		iframe.current.contentWindow?.postMessage({
+			type: MessageTypes.EVENT,
+			[SIGNATURE]: true,
+			data: {
+				eventName: 'sharing',
+				eventProperties: {on: sharing}
+			}
+		}, '*')
+	}, [sharing, iframe])
 
 	return (
 		<iframe

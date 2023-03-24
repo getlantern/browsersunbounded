@@ -76,7 +76,7 @@ const App = ({appId, embed}: Props) => {
 
   return (
     <AppContextProvider value={{width, setWidth, settings, wasmInterface: wasmInterface.current!}}>
-      { settings.target !== Targets.EXTENSION_POPUP && <Storage /> }
+      { settings.target !== Targets.EXTENSION_POPUP && <Storage settings={settings} /> }
       { settings.editor && <Editor embed={embed} /> }
       <Layout>
         <Toast />
