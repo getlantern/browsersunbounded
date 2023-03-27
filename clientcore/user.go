@@ -13,16 +13,18 @@ import (
 	"sync"
 
 	"github.com/getlantern/broflake/common"
+	"github.com/google/uuid"
 )
 
 type BroflakeConn struct {
 	net.PacketConn
 	writeChan chan IPCMsg
 	readChan  chan IPCMsg
+	addr      common.DebugAddr
 }
 
 func (c BroflakeConn) LocalAddr() net.Addr {
-	return common.DebugAddr("DEBUG NELSON WUZ HERE")
+	return c.addr
 }
 
 func (c BroflakeConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
@@ -58,6 +60,12 @@ func NewProducerUserStream(wg *sync.WaitGroup) (*BroflakeConn, *WorkerFSM) {
 		}),
 	})
 
-	bfconn := BroflakeConn{PacketConn: &net.UDPConn{}, writeChan: worker.com.tx, readChan: worker.com.rx}
+	bfconn := BroflakeConn{
+		PacketConn: &net.UDPConn{},
+		writeChan:  worker.com.tx,
+		readChan:   worker.com.rx,
+		addr:       common.DebugAddr(uuid.NewString()),
+	}
+
 	return &bfconn, worker
 }
