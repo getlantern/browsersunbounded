@@ -36,7 +36,6 @@ type QUICLayerOptions struct {
 	InsecureSkipVerify bool
 }
 
-// Maintains an end to end quic connection with egress server over a BroflakeConn
 func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICLayerOptions) (*QUICLayer, error) {
 	q := &QUICLayer{
 		bfconn: bfconn,
@@ -48,8 +47,6 @@ func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICLayerOptions) (*QUICLayer, err
 		eventualConn: newEventualConn(),
 	}
 
-	go q.maintainQUICConnection()
-
 	return q, nil
 }
 
@@ -58,6 +55,66 @@ type QUICLayer struct {
 	tlsConfig    *tls.Config
 	eventualConn *eventualConn
 	mx           sync.RWMutex
+	ctx          context.Context
+	cancel       context.CancelFunc
+}
+
+// DialAndMaintainQUICConnection attempts to create and maintain an e2e QUIC connection by dialing
+// the other end, detecting if that connection breaks, and redialing. Forever.
+func (c *QUICLayer) DialAndMaintainQUICConnection() {
+	c.ctx, c.cancel = context.WithCancel(context.Background())
+
+	go func() {
+		for {
+			var conn quic.Connection
+
+			// State 1 of 2: Keep dialing until we acquire a connection
+			for {
+				select {
+				case <-c.ctx.Done():
+					log.Printf("Cancelling QUIC dialer!\n")
+					return
+				default:
+					// Do nothing
+				}
+
+				var err error
+				conn, err = quic.Dial(c.bfconn, common.DebugAddr("NELSON WUZ HERE"), "DEBUG", c.tlsConfig, &common.QUICCfg)
+				if err != nil {
+					log.Printf("QUIC dial failed (%v), retrying...\n", err)
+					continue
+				}
+				break
+			}
+
+			c.mx.Lock()
+			c.eventualConn.set(conn)
+			c.mx.Unlock()
+			log.Println("QUIC connection established, ready to proxy!")
+
+			// State 2 of 2: Connection established, block until we detect a half open or a context cancellation
+			_, err := conn.AcceptStream(c.ctx)
+			if err != nil {
+				log.Printf("QUIC connection error (%v), closing!\n", err)
+				conn.CloseWithError(42069, "")
+			}
+
+			// If we've hit this path, either our QUIC connection has broken or the caller wants to
+			// destroy this QUICLayer, so we iterate the loop to proceed. If there's a process that's
+			// using this QUICLayer for communication, they'll block on their next call to DialContext
+			// until a new QUIC connection is acquired (or their context deadline expires).
+			c.mx.Lock()
+			c.eventualConn = newEventualConn()
+			c.mx.Unlock()
+		}
+	}()
+}
+
+// Close a QUICLayer which was previously opened via a call to DialAndMaintainQUICConnection.
+func (c *QUICLayer) Close() {
+	if c.cancel != nil {
+		c.cancel()
+	}
 }
 
 func (c *QUICLayer) DialContext(ctx context.Context) (net.Conn, error) {
@@ -74,42 +131,6 @@ func (c *QUICLayer) DialContext(ctx context.Context) (net.Conn, error) {
 		return nil, err
 	}
 	return common.QUICStreamNetConn{Stream: stream}, nil
-}
-
-func (c *QUICLayer) maintainQUICConnection() {
-	for {
-		var conn quic.Connection
-
-		// Keep dialing until we establish a connection with the egress server
-		for {
-			var err error
-			conn, err = quic.Dial(c.bfconn, common.DebugAddr("NELSON WUZ HERE"), "DEBUG", c.tlsConfig, &common.QUICCfg)
-			if err != nil {
-				log.Printf("QUIC dial failed (%v), retrying...\n", err)
-				continue
-			}
-			break
-		}
-
-		c.mx.Lock()
-		c.eventualConn.set(conn)
-		c.mx.Unlock()
-		log.Println("QUIC connection established, ready to proxy!")
-
-		// The egress server doesn't actually open streams to us, this is just how we detect a half open
-		_, err := conn.AcceptStream(context.Background())
-		if err != nil {
-			log.Printf("QUIC connection error (%v), closing!\n", err)
-			conn.CloseWithError(42069, "")
-		}
-
-		// If we've hit this path, our QUIC connection has terminated, so we start trying to
-		// acquire a new one. If there's a process that's using this QUICLayer for communication,
-		// they'll block on their next call to DialContext until a new QUIC connection is acquired.
-		c.mx.Lock()
-		c.eventualConn = newEventualConn()
-		c.mx.Unlock()
-	}
 }
 
 // QUICLayer is a ReliableStreamLayer

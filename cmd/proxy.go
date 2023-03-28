@@ -28,6 +28,8 @@ func runLocalProxy(port string, bfconn *clientcore.BroflakeConn) {
 		log.Printf("Cannot start local HTTP proxy: failed to create QUIC layer: %v", err)
 		return
 	}
+
+	ql.DialAndMaintainQUICConnection()
 	proxy.Tr = clientcore.CreateHTTPTransport(ql)
 
 	proxy.OnRequest().DoFunc(
