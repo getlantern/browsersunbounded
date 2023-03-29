@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"github.com/elazarl/goproxy"
-
 	"github.com/getlantern/broflake/egress"
 )
 
