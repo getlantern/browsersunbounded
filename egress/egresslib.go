@@ -1,4 +1,4 @@
-package main
+package egress
 
 import (
 	"context"
@@ -12,13 +12,9 @@ import (
 	"math/big"
 	"net"
 	"net/http"
-	"os"
 	"sync/atomic"
 	"time"
 
-	"github.com/elazarl/goproxy"
-	"github.com/getlantern/broflake/common"
-	"github.com/getlantern/telemetry"
 	"github.com/google/uuid"
 	"github.com/lucas-clemente/quic-go"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -26,6 +22,9 @@ import (
 	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/metric/instrument"
 	"nhooyr.io/websocket"
+
+	"github.com/getlantern/broflake/common"
+	"github.com/getlantern/telemetry"
 )
 
 // TODO: rate limiters and fancy settings and such:
@@ -107,8 +106,10 @@ func (q websocketPacketConn) LocalAddr() net.Addr {
 
 type proxyListener struct {
 	net.Listener
-	connections chan net.Conn
-	tlsConfig   *tls.Config
+	connections  chan net.Conn
+	tlsConfig    *tls.Config
+	addr         net.Addr
+	closeMetrics func(ctx context.Context) error
 }
 
 func (l proxyListener) Accept() (net.Conn, error) {
@@ -117,7 +118,15 @@ func (l proxyListener) Accept() (net.Conn, error) {
 }
 
 func (l proxyListener) Addr() net.Addr {
-	return common.DebugAddr("DEBUG NELSON WUZ HERE")
+	return l.addr
+}
+
+func (l proxyListener) Close() error {
+	err := l.Listener.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	l.closeMetrics(ctx)
+	return err
 }
 
 func generateTLSConfig() *tls.Config {
@@ -215,31 +224,32 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func main() {
-	ctx := context.Background()
+func NewListener(ctx context.Context, ll net.Listener) (net.Listener, error) {
 	closeFuncMetric := telemetry.EnableOTELMetrics(ctx)
-	defer func() { _ = closeFuncMetric(ctx) }()
-
 	m := global.Meter("github.com/getlantern/broflake/egress")
 	var err error
 	nClientsCounter, err = m.Int64UpDownCounter("concurrent-websockets")
 	if err != nil {
-		panic(err)
+		closeFuncMetric(ctx)
+		return nil, err
 	}
 
 	nQUICConnectionsCounter, err = m.Int64UpDownCounter("concurrent-quic-connections")
 	if err != nil {
-		panic(err)
+		closeFuncMetric(ctx)
+		return nil, err
 	}
 
 	nQUICStreamsCounter, err = m.Int64UpDownCounter("concurrent-quic-streams")
 	if err != nil {
-		panic(err)
+		closeFuncMetric(ctx)
+		return nil, err
 	}
 
 	nIngressBytesCounter, err = m.Int64ObservableUpDownCounter("ingress-bytes")
 	if err != nil {
-		panic(err)
+		closeFuncMetric(ctx)
+		return nil, err
 	}
 
 	_, err = m.RegisterCallback(
@@ -253,62 +263,30 @@ func main() {
 		nIngressBytesCounter,
 	)
 	if err != nil {
-		panic(err)
+		closeFuncMetric(ctx)
+		return nil, err
 	}
 
 	// We use this wrapped listener to enable our local HTTP proxy to listen for WebSocket connections
 	l := proxyListener{
-		Listener:    &net.TCPListener{},
-		connections: make(chan net.Conn, 2048),
-		tlsConfig:   generateTLSConfig(),
-	}
-
-	// Instantiate our local HTTP CONNECT proxy
-	proxy := goproxy.NewProxyHttpServer()
-	proxy.Verbose = true
-	log.Printf("Starting HTTP CONNECT proxy...\n")
-
-	proxy.OnRequest().DoFunc(
-		func(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
-			log.Println("HTTP proxy just saw a request:")
-			// TODO: overriding the context is a hack to prevent "context canceled" errors when proxying
-			// HTTP (not HTTPS) requests. It's not yet clear why this is necessary -- it may be a quirk
-			// of elazarl/goproxy. See: https://github.com/getlantern/broflake/issues/47
-			r = r.WithContext(context.Background())
-			log.Println(r)
-			return r, nil
-		},
-	)
-
-	proxy.OnResponse().DoFunc(
-		func(r *http.Response, ctx *goproxy.ProxyCtx) *http.Response {
-			// TODO: log something interesting?
-			return r
-		},
-	)
-
-	go func() {
-		err := http.Serve(l, proxy)
-		if err != nil {
-			panic(err)
-		}
-	}()
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+		Listener:     &net.TCPListener{},
+		connections:  make(chan net.Conn, 2048),
+		tlsConfig:    generateTLSConfig(),
+		addr:         ll.Addr(),
+		closeMetrics: closeFuncMetric,
 	}
 
 	srv := &http.Server{
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
-		Addr:         fmt.Sprintf(":%v", port),
 	}
 
 	http.Handle("/ws", otelhttp.NewHandler(http.HandlerFunc(l.handleWebsocket), "/ws"))
-	log.Printf("Egress server listening for WebSocket connections on %v\n\n", srv.Addr)
-	err = srv.ListenAndServe()
-	if err != nil {
-		log.Println(err)
-	}
+	log.Printf("Egress server listening for WebSocket connections on %v\n", ll.Addr())
+	go func() {
+		err := srv.Serve(ll)
+		panic(fmt.Sprintf("stopped listening and serving for some reason: %v", err))
+	}()
+
+	return l, nil
 }

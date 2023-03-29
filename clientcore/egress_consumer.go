@@ -10,8 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/broflake/common"
 	"nhooyr.io/websocket"
+
+	"github.com/getlantern/broflake/common"
 )
 
 func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *WorkerFSM {
@@ -43,7 +44,7 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 
 			c, _, err := websocket.Dial(ctx, options.Addr+options.Endpoint, nil)
 			if err != nil {
-				log.Printf("Couldn't connect to egress server at %v\n", options.Addr)
+				log.Printf("Couldn't connect to egress server at %v: %v\n", options.Addr, err)
 				<-time.After(options.ErrorBackoff)
 				return 0, []interface{}{}
 			}
