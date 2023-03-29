@@ -52,7 +52,7 @@ Instructions last updated February 1, 2023. If something's not working and it's 
 
 6. Start Freddie: `cd freddie && PORT=9000 go run freddie.go`
 
-7. Start the egress server: `cd egress && PORT=8000 go run egress.go`
+7. Start the egress server: `cd egress/cmd && PORT=8000 go run egress.go`
 
 8. Start a desktop client: `cd cmd/dist/bin && FREDDIE=http://localhost:9000 
 EGRESS=http://localhost:8000 ./desktop`
