@@ -35,8 +35,8 @@ and share the resource of internet access across network boundaries and runtime 
 | ui         | embeddable web user interface                                                       |
 
 ### :arrow_forward: Quickstart for devs
-Instructions last updated February 1, 2023. If something's not working and it's been a while since 
-2/1, you might want to check with nelson.
+Instructions last updated March 29, 2023. If something's not working and it's been a while since 
+3/29, you might want to check with nelson.
 
 1. Clone this repo.
 
