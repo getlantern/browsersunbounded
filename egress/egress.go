@@ -282,7 +282,7 @@ func NewListener(ctx context.Context, ll net.Listener) (net.Listener, error) {
 	}
 
 	http.Handle("/ws", otelhttp.NewHandler(http.HandlerFunc(l.handleWebsocket), "/ws"))
-	log.Printf("Egress server listening for WebSocket connections on %v\n\n", srv.Addr)
+	log.Printf("Egress server listening for WebSocket connections on %v\n", ll.Addr())
 	go func() {
 		err := srv.Serve(ll)
 		panic(fmt.Sprintf("stopped listening and serving for some reason: %v", err))
