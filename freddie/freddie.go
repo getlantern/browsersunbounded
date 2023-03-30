@@ -211,7 +211,7 @@ func isValidProtocolVersion(r *http.Request) bool {
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "9000"
 	}
 
 	ctx := context.Background()

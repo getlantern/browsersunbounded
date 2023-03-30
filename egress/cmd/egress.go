@@ -16,7 +16,7 @@ func main() {
 	ctx := context.Background()
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8000"
 	}
 
 	l, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
