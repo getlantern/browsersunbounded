@@ -33,8 +33,7 @@
                 case 'storageSet':
                     localStorage.setItem(message.data.key, message.data.value)
                     break
-                case 'plausibleEvent':
-                    console.log('plausibleEvent', message.data.eventName, message.data.eventProperties)
+                case 'event':
                     window.plausible(message.data.eventName, {props: message.data.eventProperties})
                     break
             }
