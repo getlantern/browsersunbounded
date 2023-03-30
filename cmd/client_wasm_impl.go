@@ -13,8 +13,23 @@ import (
 func main() {
 	log.Printf("wasm client started...")
 
-	// exposed to JS: newBroflake(clientType, cTableSize, pTableSize, busBufferSz, netstated, tag)
-	// returns a reference to a Broflake JS API impl (defined in ui_wasm_impl.go)
+	// A constructor is exposed to JS. Some (but not all) defaults are forcibly overridden by passing
+	// args. You *must* pass valid values for all of these args:
+	//
+	// newBroflake(
+	//    BroflakeOptions.ClientType,
+	//    BroflakeOptions.CTableSize,
+	//    BroflakeOptions.PTableSize,
+	//    BroflakeOptions.BusBufferSz,
+	//    BroflakeOptions.Netstated,
+	//    WebRTCOptions.DiscoverySrv
+	//    WebRTCOptions.Endpoint
+	//    WebRTCOptions.Tag
+	//    EgressOptions.Addr
+	//    EgressOptions.Endpoint
+	// )
+	//
+	// Returns a reference to a Broflake JS API impl (defined in ui_wasm_impl.go)
 	js.Global().Set(
 		"newBroflake",
 		js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -27,9 +42,13 @@ func main() {
 			}
 
 			rtcOpt := clientcore.NewDefaultWebRTCOptions()
-			rtcOpt.Tag = args[5].String()
+			rtcOpt.DiscoverySrv = args[5].String()
+			rtcOpt.Endpoint = args[6].String()
+			rtcOpt.Tag = args[7].String()
 
 			egOpt := clientcore.NewDefaultEgressOptions()
+			egOpt.Addr = args[8].String()
+			egOpt.Endpoint = args[9].String()
 
 			_, ui, err := clientcore.NewBroflake(&bfOpt, rtcOpt, egOpt)
 			if err != nil {

@@ -78,7 +78,11 @@ declare global {
 		pTableSz: number,
 		busBufSz: number,
 		netstated: string,
-		tag: string
+    discoverySrv: string,
+    discoverySrvEndpoint: string,
+		tag: string,
+    egressAddr: string,
+    egressEndpoint: string
 	): WasmClient
 }
 
@@ -135,7 +139,11 @@ export class WasmInterface {
 				10,
 				4096,
 				'',
-				''
+        "http://localhost:9000",
+        "/v1/signal",
+				'',
+        "http://localhost:8000",
+        "/ws"
 			)
 		}
 		this.initListeners()
