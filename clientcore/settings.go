@@ -24,7 +24,7 @@ type WebRTCOptions struct {
 
 func NewDefaultWebRTCOptions() *WebRTCOptions {
 	return &WebRTCOptions{
-		DiscoverySrv:   "https://bf-freddie.herokuapp.com",
+		DiscoverySrv:   "http://localhost:9000",
 		Endpoint:       "/v1/signal",
 		GenesisAddr:    "genesis",
 		NATFailTimeout: 5 * time.Second,
@@ -74,7 +74,7 @@ type EgressOptions struct {
 
 func NewDefaultEgressOptions() *EgressOptions {
 	return &EgressOptions{
-		Addr:           "wss://bf-egress.herokuapp.com",
+		Addr:           "ws://localhost:8000",
 		Endpoint:       "/ws",
 		ConnectTimeout: 5 * time.Second,
 		ErrorBackoff:   5 * time.Second,
