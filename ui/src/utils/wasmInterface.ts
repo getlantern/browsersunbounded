@@ -1,7 +1,7 @@
 import go from './goWasmExec'
 import {StateEmitter} from '../hooks/useStateEmitter'
 import MockWasmClient from '../mocks/mockWasmClient'
-import {MessageTypes, SIGNATURE, Targets} from '../constants'
+import {MessageTypes, SIGNATURE, Targets, WASM_CLIENT_CONFIG} from '../constants'
 import {messageCheck} from './messages'
 
 type WebAssemblyInstance = InstanceType<typeof WebAssembly.Instance>
@@ -134,16 +134,16 @@ export class WasmInterface {
 			this.instance = res.instance
 			this.go.run(this.instance)
 			this.wasmClient = globalThis.newBroflake(
-				'widget',
-				10,
-				10,
-				4096,
-				'',
-        "http://localhost:9000",
-        "/v1/signal",
-				'',
-        "http://localhost:8000",
-        "/ws"
+				WASM_CLIENT_CONFIG.type,
+				WASM_CLIENT_CONFIG.cTableSz,
+				WASM_CLIENT_CONFIG.pTableSz,
+				WASM_CLIENT_CONFIG.busBufSz,
+				WASM_CLIENT_CONFIG.netstated,
+				WASM_CLIENT_CONFIG.discoverySrv,
+				WASM_CLIENT_CONFIG.discoverySrvEndpoint,
+				WASM_CLIENT_CONFIG.tag,
+				WASM_CLIENT_CONFIG.egressAddr,
+				WASM_CLIENT_CONFIG.egressEndpoint
 			)
 		}
 		this.initListeners()
