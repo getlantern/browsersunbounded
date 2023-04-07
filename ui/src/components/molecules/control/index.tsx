@@ -6,7 +6,7 @@ import Info from '../info'
 import {TextInfo} from './styles'
 import {useContext} from 'react'
 import {AppContext} from '../../../context'
-import {COLORS} from '../../../constants'
+import {COLORS, Targets} from '../../../constants'
 
 interface Props {
 	onToggle?: (s: boolean) => void
@@ -16,9 +16,20 @@ interface Props {
 const Control = ({onToggle, info = false}: Props) => {
 	const ready = useEmitterState(readyEmitter)
 	const sharing = useEmitterState(sharingEmitter)
-	const {wasmInterface} = useContext(AppContext)
+	const {wasmInterface, settings} = useContext(AppContext)
+	const {mock, target} = settings
+	// on web, we don't need to initialize wasm until user starts sharing
+	const needsInit = target === Targets.WEB && !wasmInterface?.instance
 
-	const _onToggle = (share: boolean) => {
+	const init = async () => {
+		if (!wasmInterface) return
+		const instance = await wasmInterface.initialize({mock, target})
+		if (!instance) return console.warn('wasm failed to initialize')
+		console.log(`p2p ${mock ? '"wasm"' : 'wasm'} initialized!`)
+	}
+
+	const _onToggle = async (share: boolean) => {
+		if (needsInit) await init()
 		if (share) wasmInterface.start()
 		if (!share) wasmInterface.stop()
 		if (onToggle) onToggle(share)
@@ -36,7 +47,7 @@ const Control = ({onToggle, info = false}: Props) => {
 			<Switch
 				onToggle={_onToggle}
 				checked={sharing}
-				disabled={!ready}
+				disabled={!ready && !needsInit}
 			/>
 		</>
 	)
