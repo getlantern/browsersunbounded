@@ -29,39 +29,12 @@ func NewDefaultWebRTCOptions() *WebRTCOptions {
 		GenesisAddr:    "genesis",
 		NATFailTimeout: 5 * time.Second,
 		ICEFailTimeout: 5 * time.Second,
-		STUNBatch: func(size uint32) (batch []string, err error) {
-			// Naive batch logic: at batch time, fetch a public list of servers and select N at random
-			res, err := http.Get("https://raw.githubusercontent.com/pradt2/always-online-stun/master/valid_ipv4s.txt")
-			if err != nil {
-				return batch, err
-			}
-
-			candidates := []string{}
-			scanner := bufio.NewScanner(res.Body)
-			for scanner.Scan() {
-				candidates = append(candidates, fmt.Sprintf("stun:%v", scanner.Text()))
-			}
-
-			if err := scanner.Err(); err != nil {
-				return batch, err
-			}
-
-			rand.Seed(time.Now().Unix())
-
-			for i := 0; i < int(size) && len(candidates) > 0; i++ {
-				idx := rand.Intn(len(candidates))
-				batch = append(batch, candidates[idx])
-				candidates[idx] = candidates[len(candidates)-1]
-				candidates = candidates[:len(candidates)-1]
-			}
-
-			return batch, err
-		},
-		STUNBatchSize: 5,
-		Tag:           "",
-		HttpClient:    &http.Client{},
-		Patience:      500 * time.Millisecond,
-		ErrorBackoff:  5 * time.Second,
+		STUNBatch:      DefaultSTUNBatchFunc,
+		STUNBatchSize:  5,
+		Tag:            "",
+		HttpClient:     &http.Client{},
+		Patience:       500 * time.Millisecond,
+		ErrorBackoff:   5 * time.Second,
 	}
 }
 
@@ -97,4 +70,33 @@ func NewDefaultBroflakeOptions() *BroflakeOptions {
 		BusBufferSz: 4096,
 		Netstated:   "",
 	}
+}
+
+func DefaultSTUNBatchFunc(size uint32) (batch []string, err error) {
+	// Naive batch logic: at batch time, fetch a public list of servers and select N at random
+	res, err := http.Get("https://raw.githubusercontent.com/pradt2/always-online-stun/master/valid_ipv4s.txt")
+	if err != nil {
+		return batch, err
+	}
+
+	candidates := []string{}
+	scanner := bufio.NewScanner(res.Body)
+	for scanner.Scan() {
+		candidates = append(candidates, fmt.Sprintf("stun:%v", scanner.Text()))
+	}
+
+	if err := scanner.Err(); err != nil {
+		return batch, err
+	}
+
+	rand.Seed(time.Now().Unix())
+
+	for i := 0; i < int(size) && len(candidates) > 0; i++ {
+		idx := rand.Intn(len(candidates))
+		batch = append(batch, candidates[idx])
+		candidates[idx] = candidates[len(candidates)-1]
+		candidates = candidates[:len(candidates)-1]
+	}
+
+	return batch, err
 }
