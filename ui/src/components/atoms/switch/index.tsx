@@ -1,14 +1,15 @@
 import React, {ChangeEvent, useContext} from 'react'
-import {Container, Input, Label, Slider} from './styles'
+import {Container, Input, Label, LoadingSpinner, Slider} from './styles'
 import {AppContext} from '../../../context'
 
 interface Props {
 	onToggle: (e: boolean) => void
 	checked: boolean
 	disabled: boolean
+	loading: boolean
 }
 
-const Switch = ({onToggle, checked, disabled}: Props) => {
+const Switch = ({onToggle, checked, disabled, loading}: Props) => {
 	const {theme} = useContext(AppContext).settings
 
 	return (
@@ -28,7 +29,13 @@ const Switch = ({onToggle, checked, disabled}: Props) => {
 					checked={checked}
 					disabled={disabled}
 					theme={theme}
+					loading={loading}
 				/>
+				{
+					loading && (
+						<LoadingSpinner />
+					)
+				}
 			</Label>
 		</Container>
 	)
