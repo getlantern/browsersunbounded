@@ -12,6 +12,6 @@ export const AppContext = createContext({
 	width: 0,
 	setWidth: (width: number) => {},
 	settings: defaultSettings,
-	wasmInterface: new WasmInterface()
+	wasmInterface: new WasmInterface(),
 } as ContextInterface)
 export const AppContextProvider = AppContext.Provider

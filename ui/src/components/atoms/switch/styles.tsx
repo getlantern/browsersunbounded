@@ -23,6 +23,7 @@ interface Props {
 	disabled: boolean
 	checked: boolean
 	theme: Themes
+	loading: boolean
 }
 
 const Slider = styled.span`
@@ -46,12 +47,30 @@ const Slider = styled.span`
     width: 17px;
     left: 3.5px;
     bottom: 3.5px;
-    background-color: ${COLORS.white};
+    background-color: ${({loading}: Props) => loading ? 'transparent' : COLORS.white};
     border-radius: 50%;
     transition: transform 250ms;
     transform: translateX(${({checked}: Props) => checked ? '16px' : 0});
   }
 `
 
+const LoadingSpinner = styled.div`
+  border: 2.5px solid transparent;
+  border-top: 2.5px solid ${COLORS.white};
+  border-right: 2.5px solid ${COLORS.white};
+  border-radius: 50%;
+  width: 17px;
+  height: 17px;
+  animation: spin 1s linear infinite;
+  position: absolute;
+  top: 3.5px;
+  left: 3.5px;
+  box-sizing: border-box;
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`
 
-export {Container, Label, Input, Slider}
+
+export {Container, Label, Input, Slider, LoadingSpinner}

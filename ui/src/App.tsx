@@ -35,22 +35,24 @@ const App = ({appId, embed}: Props) => {
 
   useLayoutEffect(() => {
     if (wasmInterface.current) return // already initialized or initializing
-    wasmInterface.current = new WasmInterface()
-    wasmInterface.current.initialize({mock, target}).then(instance => {
-        if (!instance) return
-        console.log(`p2p ${mock ? '"wasm"' : 'wasm'} initialized!`)
-        console.log('instance: ', instance)
-        // If the offscreen extension just auto updated and user was sharing pre-update, we will start after init
-        // see useAutoUpdate hook for more details on this logic @todo move auto start to a config
-        if (target === Targets.EXTENSION_OFFSCREEN) {
-          if (localStorage.getItem(AUTO_START_STORAGE_FLAG)) {
-            localStorage.removeItem(AUTO_START_STORAGE_FLAG)
-            console.log('Auto starting due to auto update')
-            wasmInterface.current!.start()
-          }
+    const init = async (wasmInterface: WasmInterface) => {
+      const instance = await wasmInterface.initialize({mock, target})
+      if (!instance) return console.warn('wasm failed to initialize')
+      // If the offscreen extension just auto updated and user was sharing pre-update, we will start after init
+      // see useAutoUpdate hook for more details on this logic @todo move auto start to a config
+      if (target === Targets.EXTENSION_OFFSCREEN) {
+        if (localStorage.getItem(AUTO_START_STORAGE_FLAG)) {
+          localStorage.removeItem(AUTO_START_STORAGE_FLAG)
+          console.log('Auto starting due to auto update')
+          wasmInterface.start()
         }
       }
-    )
+    }
+    wasmInterface.current = new WasmInterface()
+    // on web, we don't need to initialize wasm until user starts sharing
+    // see control/index.tsx for web init
+    if (target === Targets.WEB) return
+    init(wasmInterface.current).then(() => console.log(`p2p ${mock ? '"wasm"' : 'wasm'} initialized!`))
   }, [mock, target])
 
   useEffect(() => {
