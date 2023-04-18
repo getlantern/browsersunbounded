@@ -3,6 +3,7 @@ package clientcore
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"log"
 	"net"
 	"net/http"
@@ -34,6 +35,7 @@ func CreateHTTPTransport(c ReliableStreamLayer) *http.Transport {
 type QUICLayerOptions struct {
 	ServerName         string
 	InsecureSkipVerify bool
+	CA                 *x509.CertPool
 }
 
 func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICLayerOptions) (*QUICLayer, error) {
@@ -43,6 +45,7 @@ func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICLayerOptions) (*QUICLayer, err
 			ServerName:         qopt.ServerName,
 			InsecureSkipVerify: qopt.InsecureSkipVerify,
 			NextProtos:         []string{"broflake"},
+			RootCAs:            qopt.CA,
 		},
 		eventualConn: newEventualConn(),
 	}

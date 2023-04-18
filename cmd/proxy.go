@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/x509"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,7 +15,7 @@ const (
 	ip = "127.0.0.1"
 )
 
-func runLocalProxy(port string, bfconn *clientcore.BroflakeConn) {
+func runLocalProxy(port string, bfconn *clientcore.BroflakeConn, ca *x509.CertPool, sn string, isv bool) {
 	// TODO: this is just to prevent a race with client boot processes, it's not worth getting too
 	// fancy with an event-driven solution because the local proxy is all mocked functionality anyway
 	<-time.After(2 * time.Second)
@@ -23,7 +24,10 @@ func runLocalProxy(port string, bfconn *clientcore.BroflakeConn) {
 	// This tells goproxy to wrap the dial function in a chained CONNECT request
 	proxy.ConnectDial = proxy.NewConnectDialToProxy("http://i.do.nothing")
 
-	ql, err := clientcore.NewQUICLayer(bfconn, &clientcore.QUICLayerOptions{InsecureSkipVerify: true})
+	ql, err := clientcore.NewQUICLayer(
+		bfconn,
+		&clientcore.QUICLayerOptions{ServerName: sn, InsecureSkipVerify: isv, CA: ca},
+	)
 	if err != nil {
 		log.Printf("Cannot start local HTTP proxy: failed to create QUIC layer: %v", err)
 		return

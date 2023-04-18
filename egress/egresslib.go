@@ -224,7 +224,7 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewListener(ctx context.Context, ll net.Listener) (net.Listener, error) {
+func NewListener(ctx context.Context, ll net.Listener, certFile, keyFile string) (net.Listener, error) {
 	closeFuncMetric := telemetry.EnableOTELMetrics(ctx)
 	m := global.Meter("github.com/getlantern/broflake/egress")
 	var err error
@@ -267,11 +267,29 @@ func NewListener(ctx context.Context, ll net.Listener) (net.Listener, error) {
 		return nil, err
 	}
 
+	var tlsConfig *tls.Config
+
+	if certFile != "" && keyFile != "" {
+		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to load key file for broflake: %v", err)
+		}
+
+		log.Printf("Using cert %v and key %v\n", certFile, keyFile)
+		tlsConfig = &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			NextProtos:   []string{"broflake"},
+		}
+	} else {
+		log.Printf("No certfile and/or keyfile specified, generating a TLSConfig!\n")
+		tlsConfig = generateTLSConfig()
+	}
+
 	// We use this wrapped listener to enable our local HTTP proxy to listen for WebSocket connections
 	l := proxyListener{
 		Listener:     &net.TCPListener{},
 		connections:  make(chan net.Conn, 2048),
-		tlsConfig:    generateTLSConfig(),
+		tlsConfig:    tlsConfig,
 		addr:         ll.Addr(),
 		closeMetrics: closeFuncMetric,
 	}

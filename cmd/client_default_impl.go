@@ -4,10 +4,13 @@
 package main
 
 import (
+	"crypto/x509"
+	"io/ioutil"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"strconv"
 
 	"github.com/getlantern/broflake/clientcore"
 	"github.com/getlantern/broflake/common"
@@ -23,19 +26,34 @@ func main() {
 	egress := os.Getenv("EGRESS")
 	netstated := os.Getenv("NETSTATED")
 	tag := os.Getenv("TAG")
-	proxyport := os.Getenv("PORT")
-	if proxyport == "" {
-		proxyport = "1080"
+	ca := os.Getenv("CA")
+	if ca == "" {
+		ca = "../../../egress/cmd/dev.crt"
+	}
+	serverName := os.Getenv("SERVER_NAME")
+	if serverName == "" {
+		serverName = "localhost"
+	}
+	insecureSkipVerify := os.Getenv("INSECURE_SKIP_VERIFY")
+	if insecureSkipVerify == "" {
+		insecureSkipVerify = "false"
+	}
+	proxyPort := os.Getenv("PORT")
+	if proxyPort == "" {
+		proxyPort = "1080"
 	}
 
 	log.Printf("Welcome to Broflake %v\n", common.Version)
-	log.Printf("type: %v\n", clientType)
+	log.Printf("clientType: %v\n", clientType)
 	log.Printf("freddie: %v\n", freddie)
 	log.Printf("egress: %v\n", egress)
 	log.Printf("netstated: %v\n", netstated)
 	log.Printf("tag: %v\n", tag)
 	log.Printf("pprof: %v\n", pprof)
-	log.Printf("proxyport: %v\n", proxyport)
+	log.Printf("ca: %v\n", ca)
+	log.Printf("serverName: %v\n", serverName)
+	log.Printf("insecureSkipVerify: %v\n", insecureSkipVerify)
+	log.Printf("proxyPort: %v\n", proxyPort)
 
 	bfOpt := clientcore.NewDefaultBroflakeOptions()
 	bfOpt.ClientType = clientType
@@ -73,7 +91,19 @@ func main() {
 	}
 
 	if clientType == "desktop" {
-		runLocalProxy(proxyport, bfconn)
+		pem, err := ioutil.ReadFile(ca)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		isv, err := strconv.ParseBool(insecureSkipVerify)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		certPool := x509.NewCertPool()
+		certPool.AppendCertsFromPEM(pem)
+		runLocalProxy(proxyPort, bfconn, certPool, serverName, isv)
 	}
 
 	select {}

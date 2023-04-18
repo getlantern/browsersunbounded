@@ -19,12 +19,19 @@ func main() {
 		port = "8000"
 	}
 
+	tlsCert := os.Getenv("TLS_CERT")
+	tlsKey := os.Getenv("TLS_KEY")
+	if tlsCert == "" || tlsKey == "" {
+		tlsCert = "dev.crt"
+		tlsKey = "dev.key"
+	}
+
 	l, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
 	if err != nil {
 		panic(err)
 	}
 
-	ll, err := egress.NewListener(ctx, l)
+	ll, err := egress.NewListener(ctx, l, tlsCert, tlsKey)
 	if err != nil {
 		panic(err)
 	}
