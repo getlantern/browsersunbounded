@@ -4,13 +4,10 @@
 package main
 
 import (
-	"crypto/x509"
-	"io/ioutil"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
-	"strconv"
 
 	"github.com/getlantern/broflake/clientcore"
 	"github.com/getlantern/broflake/common"
@@ -27,17 +24,7 @@ func main() {
 	netstated := os.Getenv("NETSTATED")
 	tag := os.Getenv("TAG")
 	ca := os.Getenv("CA")
-	if ca == "" {
-		ca = "../../../egress/cmd/dev.crt"
-	}
 	serverName := os.Getenv("SERVER_NAME")
-	if serverName == "" {
-		serverName = "localhost"
-	}
-	insecureSkipVerify := os.Getenv("INSECURE_SKIP_VERIFY")
-	if insecureSkipVerify == "" {
-		insecureSkipVerify = "false"
-	}
 	proxyPort := os.Getenv("PORT")
 	if proxyPort == "" {
 		proxyPort = "1080"
@@ -52,7 +39,6 @@ func main() {
 	log.Printf("pprof: %v\n", pprof)
 	log.Printf("ca: %v\n", ca)
 	log.Printf("serverName: %v\n", serverName)
-	log.Printf("insecureSkipVerify: %v\n", insecureSkipVerify)
 	log.Printf("proxyPort: %v\n", proxyPort)
 
 	bfOpt := clientcore.NewDefaultBroflakeOptions()
@@ -91,19 +77,7 @@ func main() {
 	}
 
 	if clientType == "desktop" {
-		pem, err := ioutil.ReadFile(ca)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		isv, err := strconv.ParseBool(insecureSkipVerify)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		certPool := x509.NewCertPool()
-		certPool.AppendCertsFromPEM(pem)
-		runLocalProxy(proxyPort, bfconn, certPool, serverName, isv)
+		runLocalProxy(proxyPort, bfconn, ca, serverName)
 	}
 
 	select {}

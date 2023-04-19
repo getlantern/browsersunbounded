@@ -281,7 +281,7 @@ func NewListener(ctx context.Context, ll net.Listener, certFile, keyFile string)
 			NextProtos:   []string{"broflake"},
 		}
 	} else {
-		log.Printf("No certfile and/or keyfile specified, generating a TLSConfig!\n")
+		log.Printf("!!! WARNING !!! No certfile and/or keyfile specified, generating an insecure TLSConfig!\n")
 		tlsConfig = generateTLSConfig()
 	}
 

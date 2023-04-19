@@ -21,10 +21,6 @@ func main() {
 
 	tlsCert := os.Getenv("TLS_CERT")
 	tlsKey := os.Getenv("TLS_KEY")
-	if tlsCert == "" || tlsKey == "" {
-		tlsCert = "dev.crt"
-		tlsKey = "dev.key"
-	}
 
 	l, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
 	if err != nil {

@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -15,7 +16,7 @@ const (
 	ip = "127.0.0.1"
 )
 
-func runLocalProxy(port string, bfconn *clientcore.BroflakeConn, ca *x509.CertPool, sn string, isv bool) {
+func runLocalProxy(port string, bfconn *clientcore.BroflakeConn, ca, sn string) {
 	// TODO: this is just to prevent a race with client boot processes, it's not worth getting too
 	// fancy with an event-driven solution because the local proxy is all mocked functionality anyway
 	<-time.After(2 * time.Second)
@@ -24,9 +25,25 @@ func runLocalProxy(port string, bfconn *clientcore.BroflakeConn, ca *x509.CertPo
 	// This tells goproxy to wrap the dial function in a chained CONNECT request
 	proxy.ConnectDial = proxy.NewConnectDialToProxy("http://i.do.nothing")
 
+	// If a certfile has been specified in 'ca', we'll specify that certfile as a root CA and
+	// properly verify the cert chain. If not, we'll use insecure TLS!
+	certPool := x509.NewCertPool()
+	insecureSkipVerify := false
+
+	if ca != "" {
+		pem, err := ioutil.ReadFile(ca)
+		if err != nil {
+			log.Fatal(err)
+		}
+		certPool.AppendCertsFromPEM(pem)
+	} else {
+		insecureSkipVerify = true
+		log.Printf("!!! WARNING !!! No root CA cert specified, using insecure TLS!")
+	}
+
 	ql, err := clientcore.NewQUICLayer(
 		bfconn,
-		&clientcore.QUICLayerOptions{ServerName: sn, InsecureSkipVerify: isv, CA: ca},
+		&clientcore.QUICLayerOptions{ServerName: sn, InsecureSkipVerify: insecureSkipVerify, CA: certPool},
 	)
 	if err != nil {
 		log.Printf("Cannot start local HTTP proxy: failed to create QUIC layer: %v", err)
