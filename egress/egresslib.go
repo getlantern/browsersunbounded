@@ -224,7 +224,7 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewListener(ctx context.Context, ll net.Listener, certFile, keyFile string) (net.Listener, error) {
+func NewListener(ctx context.Context, ll net.Listener, certPEM, keyPEM string) (net.Listener, error) {
 	closeFuncMetric := telemetry.EnableOTELMetrics(ctx)
 	m := global.Meter("github.com/getlantern/broflake/egress")
 	var err error
@@ -269,13 +269,13 @@ func NewListener(ctx context.Context, ll net.Listener, certFile, keyFile string)
 
 	var tlsConfig *tls.Config
 
-	if certFile != "" && keyFile != "" {
-		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if certPEM != "" && keyPEM != "" {
+		cert, err := tls.X509KeyPair([]byte(certPEM), []byte(keyPEM))
 		if err != nil {
-			return nil, fmt.Errorf("Unable to load key file for broflake: %v", err)
+			return nil, fmt.Errorf("Unable to load cert/key from PEM for broflake: %v", err)
 		}
 
-		log.Printf("Using cert %v and key %v\n", certFile, keyFile)
+		log.Printf("Broflake using cert %v and key %v\n", certPEM, keyPEM)
 		tlsConfig = &tls.Config{
 			Certificates: []tls.Certificate{cert},
 			NextProtos:   []string{"broflake"},

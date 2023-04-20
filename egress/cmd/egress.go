@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -19,12 +20,31 @@ func main() {
 		port = "8000"
 	}
 
-	tlsCert := os.Getenv("TLS_CERT")
-	tlsKey := os.Getenv("TLS_KEY")
+	certFile := os.Getenv("TLS_CERT")
+	keyFile := os.Getenv("TLS_KEY")
 
 	l, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
 	if err != nil {
 		panic(err)
+	}
+
+	var tlsCert string
+	var tlsKey string
+
+	// XXX: in the process of delivering the cert and key to egress.NewListener, we suboptimally
+	// cast back and forth between []string and []byte... it's just a byproduct of the API
+	if certFile != "" && keyFile != "" {
+		cert, err := ioutil.ReadFile(certFile)
+		if err != nil {
+			panic(err)
+		}
+		tlsCert = string(cert)
+
+		key, err := ioutil.ReadFile(keyFile)
+		if err != nil {
+			panic(err)
+		}
+		tlsKey = string(key)
 	}
 
 	ll, err := egress.NewListener(ctx, l, tlsCert, tlsKey)
