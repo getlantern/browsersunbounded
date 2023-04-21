@@ -58,6 +58,7 @@ type websocketPacketConn struct {
 	w         *websocket.Conn
 	addr      net.Addr
 	keepalive time.Duration
+	tcpAddr   *net.TCPAddr
 }
 
 func (q websocketPacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
@@ -86,7 +87,7 @@ func (q websocketPacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err error
 	readDone <- struct{}{}
 	copy(p, b)
 	atomic.AddUint64(&nIngressBytes, uint64(len(b)))
-	return len(b), common.DebugAddr("DEBUG NELSON WUZ HERE"), err
+	return len(b), q.tcpAddr, err
 }
 
 func (q websocketPacketConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
@@ -166,10 +167,17 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
+	tcpAddr, err := net.ResolveTCPAddr("tcp", r.RemoteAddr)
+	if err != nil {
+		log.Printf("Error resolving TCPAddr: %v\n", err)
+		return
+	}
+
 	wspconn := websocketPacketConn{
 		w:         c,
 		addr:      common.DebugAddr(fmt.Sprintf("WebSocket connection %v", uuid.NewString())),
 		keepalive: websocketKeepalive,
+		tcpAddr:   tcpAddr,
 	}
 
 	defer wspconn.Close()
