@@ -164,12 +164,12 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			req.Header.Add(common.VersionHeader, common.Version)
 
 			res, err := options.HttpClient.Do(req)
-			defer res.Body.Close()
 			if err != nil {
 				log.Printf("Couldn't signal genesis message to %v: %v\n", options.DiscoverySrv+options.Endpoint, err)
 				<-time.After(options.ErrorBackoff)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
+			defer res.Body.Close()
 
 			// Freddie never returns 404s for genesis messages, so we're not catching that case here
 
@@ -293,7 +293,6 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			req.Header.Add(common.VersionHeader, common.Version)
 
 			res, err := options.HttpClient.Do(req)
-			defer res.Body.Close()
 			if err != nil {
 				log.Printf("Couldn't signal answer SDP to %v: %v\n", options.DiscoverySrv+options.Endpoint, err)
 				<-time.After(options.ErrorBackoff)
@@ -301,6 +300,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}
 			}
+			defer res.Body.Close()
 
 			switch res.StatusCode {
 			case 418:

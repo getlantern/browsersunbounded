@@ -125,12 +125,12 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			req.Header.Add(common.VersionHeader, common.Version)
 
 			res, err := options.HttpClient.Do(req)
-			defer res.Body.Close()
 			if err != nil {
 				log.Printf("Couldn't subscribe to genesis stream at %v: %v\n", options.DiscoverySrv+options.Endpoint, err)
 				<-time.After(options.ErrorBackoff)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
+			defer res.Body.Close()
 
 			// Handle bad protocol version
 			if res.StatusCode == 418 {
@@ -273,12 +273,12 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			req.Header.Add(common.VersionHeader, common.Version)
 
 			res, err := options.HttpClient.Do(req)
-			defer res.Body.Close()
 			if err != nil {
 				log.Printf("Couldn't signal offer SDP to %v: %v\n", options.DiscoverySrv+options.Endpoint, err)
 				<-time.After(options.ErrorBackoff)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
+			defer res.Body.Close()
 
 			switch res.StatusCode {
 			case 418:
@@ -401,7 +401,6 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			req.Header.Add(common.VersionHeader, common.Version)
 
 			res, err := options.HttpClient.Do(req)
-			defer res.Body.Close()
 			if err != nil {
 				log.Printf("Couldn't signal ICE candidates to %v: %v\n", options.DiscoverySrv+options.Endpoint, err)
 				<-time.After(options.ErrorBackoff)
@@ -409,6 +408,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}
 			}
+			defer res.Body.Close()
 
 			switch res.StatusCode {
 			case 418:
