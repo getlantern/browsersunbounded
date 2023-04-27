@@ -21,7 +21,7 @@ import (
 
 const (
 	consumerTTL = 20
-	msgTTL      = 60 // XXX: This is an unreasonably high value set only for testing Flashlight!
+	msgTTL      = 5
 	bufferSz    = 16384
 )
 
