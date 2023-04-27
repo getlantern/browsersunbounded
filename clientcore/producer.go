@@ -196,7 +196,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// Looks like we got some kind of response. It ought to be an offer SDP wrapped in a SignalMsg
 			replyTo, offer, err := common.DecodeSignalMsg(offerBytes)
 			if err != nil {
-				log.Printf("Error decoding signal message: %v\n", err)
+				log.Printf("Error decoding signal message: %v (msg: %v)\n", err, string(offerBytes))
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
 
@@ -336,7 +336,7 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// Looks like we got some kind of response. Should be a slice of ICE candidates in a SignalMsg
 			replyTo, candidates, err := common.DecodeSignalMsg(iceBytes)
 			if err != nil {
-				log.Printf("Error decoding signal message: %v\n", err)
+				log.Printf("Error decoding signal message: %v (msg: %v)\n", err, string(iceBytes))
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}

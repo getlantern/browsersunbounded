@@ -178,7 +178,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 
 					rt, _, err := common.DecodeSignalMsg(rawMsg)
 					if err != nil {
-						log.Printf("Error decoding signal message: %v", err)
+						log.Printf("Error decoding signal message: %v (msg: %v)\n", err, string(rawMsg))
 						<-time.After(options.ErrorBackoff)
 						// Take the error in stride, continue listening to our existing HTTP request stream
 						continue
@@ -307,7 +307,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// Looks like we got some kind of response. Should be an answer SDP in a SignalMsg
 			replyTo, answer, err := common.DecodeSignalMsg(answerBytes)
 			if err != nil {
-				log.Printf("Error decoding signal message: %v\n", err)
+				log.Printf("Error decoding signal message: %v (msg: %v)\n", err, string(answerBytes))
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
 
