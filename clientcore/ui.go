@@ -2,14 +2,13 @@
 package clientcore
 
 import (
-	"log"
 	"net"
 	"strconv"
 	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/broflake/common"
-	"github.com/getlantern/broflake/netstate/client"
+	netstatecl "github.com/getlantern/broflake/netstate/client"
 )
 
 const (
@@ -86,7 +85,7 @@ func UpstreamUIHandler(ui UIImpl, netstated, tag string) func(msg IPCMsg) {
 				)
 
 				if err != nil {
-					log.Printf("netstatecl.Exec error: %v\n", err)
+					common.Debugf("netstatecl.Exec error: %v", err)
 				}
 			}
 		}

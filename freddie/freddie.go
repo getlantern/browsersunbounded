@@ -4,19 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"sync"
 	"time"
 
-	"github.com/getlantern/broflake/common"
-	"github.com/getlantern/telemetry"
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/metric/instrument"
 	"golang.org/x/mod/semver"
+
+	"github.com/getlantern/broflake/common"
+	"github.com/getlantern/telemetry"
 )
 
 const (
@@ -110,7 +110,7 @@ func handleSignalGet(w http.ResponseWriter, r *http.Request) {
 	consumerID := uuid.NewString()
 	consumerChan := consumerTable.Add(consumerID)
 	defer consumerTable.Delete(consumerID)
-	log.Printf("New consumer listening (%v) | total consumers: %v\n", consumerID, consumerTable.Size())
+	common.Debugf("New consumer listening (%v) | total consumers: %v", consumerID, consumerTable.Size())
 
 	// TODO: Matchmaking would happen here. (Just be selective about which consumers you broadcast
 	// to, and you've implemented matchmaking!) If consumerTable was an indexed datastore, we could
@@ -124,7 +124,7 @@ func handleSignalGet(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(fmt.Sprintf("%v\n", msg)))
 			w.(http.Flusher).Flush()
 		case <-timeoutChan:
-			log.Printf("Consumer %v timeout, bye bye!\n", consumerID)
+			common.Debugf("Consumer %v timeout, bye bye!", consumerID)
 			return
 		}
 	}
@@ -147,8 +147,8 @@ func handleSignalPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf(
-		"New msg (%v) -> %v: %v | total open messages: %v\n",
+	common.Debugf(
+		"New msg (%v) -> %v: %v | total open messages: %v",
 		reqID,
 		sendTo,
 		data,
@@ -188,7 +188,7 @@ func handleSignalPost(w http.ResponseWriter, r *http.Request) {
 	case res := <-reqChan:
 		w.Write([]byte(fmt.Sprintf("%v\n", res)))
 	case <-time.After(msgTTL * time.Second):
-		log.Printf("Msg %v received no reply, bye bye!\n", reqID)
+		common.Debugf("Msg %v received no reply, bye bye!", reqID)
 		w.Write(nil)
 	}
 }
@@ -231,9 +231,9 @@ func main() {
 		Addr:         fmt.Sprintf(":%v", port),
 	}
 	http.HandleFunc("/v1/signal", handleSignal)
-	log.Printf("Freddie (%v) listening on %v\n\n", common.Version, srv.Addr)
+	common.Debugf("Freddie (%v) listening on %v", common.Version, srv.Addr)
 	err = srv.ListenAndServe()
 	if err != nil {
-		log.Println(err)
+		common.Debug(err)
 	}
 }

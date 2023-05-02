@@ -3,9 +3,10 @@ package clientcore
 
 import (
 	"fmt"
-	"log"
 	"runtime"
 	"sync"
+
+	"github.com/getlantern/broflake/common"
 )
 
 type BroflakeEngine struct {
@@ -35,13 +36,13 @@ func (b *BroflakeEngine) stop() {
 }
 
 func (b *BroflakeEngine) debug() {
-	log.Printf("NumGoroutine: %v\n", runtime.NumGoroutine())
+	common.Debugf("NumGoroutine: %v", runtime.NumGoroutine())
 }
 
 func NewBroflake(bfOpt *BroflakeOptions, rtcOpt *WebRTCOptions, egOpt *EgressOptions) (bfconn *BroflakeConn, ui *UIImpl, err error) {
 	if bfOpt.ClientType != "desktop" && bfOpt.ClientType != "widget" {
 		err = fmt.Errorf("Invalid clientType '%v\n'", bfOpt.ClientType)
-		log.Printf(err.Error())
+		common.Debugf(err.Error())
 		return bfconn, ui, err
 	}
 

@@ -8,12 +8,12 @@ package clientcore
 
 import (
 	"context"
-	"log"
 	"net"
 	"sync"
 
-	"github.com/getlantern/broflake/common"
 	"github.com/google/uuid"
+
+	"github.com/getlantern/broflake/common"
 )
 
 type BroflakeConn struct {
@@ -54,7 +54,7 @@ func NewProducerUserStream(wg *sync.WaitGroup) (*BroflakeConn, *WorkerFSM) {
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 0
 			// (no input data)
-			log.Printf("User stream producer state 0...\n")
+			common.Debugf("User stream producer state 0...")
 			// TODO: check for a non-nil path assertion to alert the UI that we're ready to proxy?
 			select {}
 		}),

@@ -30,16 +30,16 @@ func main() {
 		proxyPort = "1080"
 	}
 
-	log.Printf("Welcome to Broflake %v\n", common.Version)
-	log.Printf("clientType: %v\n", clientType)
-	log.Printf("freddie: %v\n", freddie)
-	log.Printf("egress: %v\n", egress)
-	log.Printf("netstated: %v\n", netstated)
-	log.Printf("tag: %v\n", tag)
-	log.Printf("pprof: %v\n", pprof)
-	log.Printf("ca: %v\n", ca)
-	log.Printf("serverName: %v\n", serverName)
-	log.Printf("proxyPort: %v\n", proxyPort)
+	common.Debugf("Welcome to Broflake %v", common.Version)
+	common.Debugf("clientType: %v", clientType)
+	common.Debugf("freddie: %v", freddie)
+	common.Debugf("egress: %v", egress)
+	common.Debugf("netstated: %v", netstated)
+	common.Debugf("tag: %v", tag)
+	common.Debugf("pprof: %v", pprof)
+	common.Debugf("ca: %v", ca)
+	common.Debugf("serverName: %v", serverName)
+	common.Debugf("proxyPort: %v", proxyPort)
 
 	bfOpt := clientcore.NewDefaultBroflakeOptions()
 	bfOpt.ClientType = clientType
@@ -72,7 +72,7 @@ func main() {
 
 	if pprof != "" {
 		go func() {
-			log.Println(http.ListenAndServe("localhost:"+pprof, nil))
+			common.Debug(http.ListenAndServe("localhost:"+pprof, nil))
 		}()
 	}
 

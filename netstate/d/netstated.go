@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"sync"
 	"time"
 
-	"github.com/getlantern/broflake/netstate/client"
+	"github.com/getlantern/broflake/common"
+	netstatecl "github.com/getlantern/broflake/netstate/client"
 )
 
 type vertex string
@@ -122,7 +122,7 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Printf("Error: %v\n", err)
+		common.Debugf("Error: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400\n"))
 		return
@@ -131,7 +131,7 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 	inst := netstatecl.Instruction{}
 	err = json.Unmarshal(b, &inst)
 	if err != nil {
-		log.Printf("Error: %v\n", err)
+		common.Debugf("Error: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400\n"))
 		return
@@ -155,7 +155,7 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	log.Println(world.data)
+	common.Debug(world.data)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -186,9 +186,9 @@ func main() {
 	http.Handle("/", http.FileServer(http.Dir("./webclients/gv/public")))
 	http.HandleFunc("/exec", handleExec)
 	http.HandleFunc("/neato", handleNeato)
-	log.Printf("netstated listening on %v\n\n", srv.Addr)
+	common.Debugf("netstated listening on %v", srv.Addr)
 	err := srv.ListenAndServe()
 	if err != nil {
-		log.Println(err)
+		common.Debug(err)
 	}
 }

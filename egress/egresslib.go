@@ -8,7 +8,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"log"
 	"math/big"
 	"net"
 	"net/http"
@@ -75,7 +74,7 @@ func (q websocketPacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err error
 		for {
 			select {
 			case <-time.After(q.keepalive):
-				log.Printf("%v PING\n", q.addr)
+				common.Debugf("%v PING", q.addr)
 				q.w.Ping(context.Background())
 			case <-readDone:
 				return
@@ -96,7 +95,7 @@ func (q websocketPacketConn) WriteTo(p []byte, addr net.Addr) (n int, err error)
 }
 
 func (q websocketPacketConn) Close() error {
-	defer log.Printf("Closed a WebSocket connection! (%v total)\n", atomic.AddUint64(&nClients, ^uint64(0)))
+	defer common.Debugf("Closed a WebSocket connection! (%v total)", atomic.AddUint64(&nClients, ^uint64(0)))
 	defer nClientsCounter.Add(context.Background(), -1)
 	return q.w.Close(websocket.StatusNormalClosure, "")
 }
@@ -169,7 +168,7 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", r.RemoteAddr)
 	if err != nil {
-		log.Printf("Error resolving TCPAddr: %v\n", err)
+		common.Debugf("Error resolving TCPAddr: %v", err)
 		return
 	}
 
@@ -186,25 +185,25 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Accepted a new WebSocket connection! (%v total)\n", atomic.AddUint64(&nClients, 1))
+	common.Debugf("Accepted a new WebSocket connection! (%v total)", atomic.AddUint64(&nClients, 1))
 	nClientsCounter.Add(context.Background(), 1)
 
 	listener, err := quic.Listen(wspconn, l.tlsConfig, &common.QUICCfg)
 	if err != nil {
-		log.Printf("Error creating QUIC listener: %v\n", err)
+		common.Debugf("Error creating QUIC listener: %v", err)
 		return
 	}
 
 	for {
 		conn, err := listener.Accept(context.Background())
 		if err != nil {
-			log.Printf("%v QUIC listener error (%v), closing!\n", wspconn.addr, err)
+			common.Debugf("%v QUIC listener error (%v), closing!", wspconn.addr, err)
 			listener.Close()
 			break
 		}
 
 		nQUICConnectionsCounter.Add(context.Background(), 1)
-		log.Printf("%v accepted a new QUIC connection!\n", wspconn.addr)
+		common.Debugf("%v accepted a new QUIC connection!", wspconn.addr)
 
 		go func() {
 			for {
@@ -214,19 +213,19 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 					// We interpret an error while accepting a stream to indicate an unrecoverable error with
 					// the QUIC connection, and so we close the QUIC connection altogether
 					errString := fmt.Sprintf("%v stream error (%v), closing QUIC connection!", wspconn.addr, err)
-					log.Printf("%v\n", errString)
+					common.Debugf("%v", errString)
 					conn.CloseWithError(quic.ApplicationErrorCode(42069), errString)
 					nQUICConnectionsCounter.Add(context.Background(), -1)
 					return
 				}
 
-				log.Printf("Accepted a new QUIC stream! (%v total)\n", atomic.AddUint64(&nQUICStreams, 1))
+				common.Debugf("Accepted a new QUIC stream! (%v total)", atomic.AddUint64(&nQUICStreams, 1))
 				nQUICStreamsCounter.Add(context.Background(), 1)
 
 				l.connections <- common.QUICStreamNetConn{
 					Stream: stream,
 					OnClose: func() {
-						defer log.Printf("Closed a QUIC stream! (%v total)\n", atomic.AddUint64(&nQUICStreams, ^uint64(0)))
+						defer common.Debugf("Closed a QUIC stream! (%v total)", atomic.AddUint64(&nQUICStreams, ^uint64(0)))
 						nQUICStreamsCounter.Add(context.Background(), -1)
 					},
 					AddrLocal:  l.addr,
@@ -269,7 +268,7 @@ func NewListener(ctx context.Context, ll net.Listener, certPEM, keyPEM string) (
 		func(ctx context.Context, o metric.Observer) error {
 			b := atomic.LoadUint64(&nIngressBytes)
 			o.ObserveInt64(nIngressBytesCounter, int64(b))
-			log.Printf("Ingress bytes: %v\n", b)
+			common.Debugf("Ingress bytes: %v", b)
 			atomic.StoreUint64(&nIngressBytes, uint64(0))
 			return nil
 		},
@@ -288,13 +287,13 @@ func NewListener(ctx context.Context, ll net.Listener, certPEM, keyPEM string) (
 			return nil, fmt.Errorf("Unable to load cert/key from PEM for broflake: %v", err)
 		}
 
-		log.Printf("Broflake using cert %v and key %v\n", certPEM, keyPEM)
+		common.Debugf("Broflake using cert %v and key %v", certPEM, keyPEM)
 		tlsConfig = &tls.Config{
 			Certificates: []tls.Certificate{cert},
 			NextProtos:   []string{"broflake"},
 		}
 	} else {
-		log.Printf("!!! WARNING !!! No certfile and/or keyfile specified, generating an insecure TLSConfig!\n")
+		common.Debugf("!!! WARNING !!! No certfile and/or keyfile specified, generating an insecure TLSConfig!")
 		tlsConfig = generateTLSConfig()
 	}
 
@@ -313,7 +312,7 @@ func NewListener(ctx context.Context, ll net.Listener, certPEM, keyPEM string) (
 	}
 
 	http.Handle("/ws", otelhttp.NewHandler(http.HandlerFunc(l.handleWebsocket), "/ws"))
-	log.Printf("Egress server listening for WebSocket connections on %v\n", ll.Addr())
+	common.Debugf("Egress server listening for WebSocket connections on %v", ll.Addr())
 	go func() {
 		err := srv.Serve(ll)
 		panic(fmt.Sprintf("stopped listening and serving for some reason: %v", err))
