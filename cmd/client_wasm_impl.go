@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	log.Printf("wasm client started...")
+	common.Debugf("wasm client started...")
 
 	// A constructor is exposed to JS. Some (but not all) defaults are forcibly overridden by passing
 	// args. You *must* pass valid values for all of these args:
@@ -52,11 +52,11 @@ func main() {
 
 			_, ui, err := clientcore.NewBroflake(&bfOpt, rtcOpt, egOpt)
 			if err != nil {
-				log.Printf("newBroflake error: %v\n", err)
+				common.Debugf("newBroflake error: %v", err)
 				return nil
 			}
 
-			log.Printf("Built new Broflake API: %v\n", ui.ID)
+			common.Debugf("Built new Broflake API: %v", ui.ID)
 			return js.Global().Get(ui.ID)
 		}),
 	)

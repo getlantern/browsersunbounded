@@ -4,14 +4,14 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
 	"sync"
 
-	"github.com/getlantern/broflake/common"
 	"github.com/lucas-clemente/quic-go"
+
+	"github.com/getlantern/broflake/common"
 )
 
 type ReliableStreamLayer interface {
@@ -75,7 +75,7 @@ func (c *QUICLayer) DialAndMaintainQUICConnection() {
 			for {
 				select {
 				case <-c.ctx.Done():
-					log.Printf("Cancelling QUIC dialer!\n")
+					common.Debugf("Cancelling QUIC dialer!")
 					return
 				default:
 					// Do nothing
@@ -84,7 +84,7 @@ func (c *QUICLayer) DialAndMaintainQUICConnection() {
 				var err error
 				conn, err = quic.Dial(c.bfconn, common.DebugAddr("NELSON WUZ HERE"), "DEBUG", c.tlsConfig, &common.QUICCfg)
 				if err != nil {
-					log.Printf("QUIC dial failed (%v), retrying...\n", err)
+					common.Debugf("QUIC dial failed (%v), retrying...", err)
 					continue
 				}
 				break
@@ -93,12 +93,12 @@ func (c *QUICLayer) DialAndMaintainQUICConnection() {
 			c.mx.Lock()
 			c.eventualConn.set(conn)
 			c.mx.Unlock()
-			log.Println("QUIC connection established, ready to proxy!")
+			common.Debug("QUIC connection established, ready to proxy!")
 
 			// State 2 of 2: Connection established, block until we detect a half open or a context cancellation
 			_, err := conn.AcceptStream(c.ctx)
 			if err != nil {
-				log.Printf("QUIC connection error (%v), closing!\n", err)
+				common.Debugf("QUIC connection error (%v), closing!", err)
 				conn.CloseWithError(42069, "")
 			}
 

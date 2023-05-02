@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/elazarl/goproxy"
+
 	"github.com/getlantern/broflake/clientcore"
+	"github.com/getlantern/broflake/common"
 )
 
 const (
@@ -38,7 +40,7 @@ func runLocalProxy(port string, bfconn *clientcore.BroflakeConn, ca, sn string) 
 		certPool.AppendCertsFromPEM(pem)
 	} else {
 		insecureSkipVerify = true
-		log.Printf("!!! WARNING !!! No root CA cert specified, using insecure TLS!")
+		common.Debugf("!!! WARNING !!! No root CA cert specified, using insecure TLS!")
 	}
 
 	ql, err := clientcore.NewQUICLayer(
@@ -46,7 +48,7 @@ func runLocalProxy(port string, bfconn *clientcore.BroflakeConn, ca, sn string) 
 		&clientcore.QUICLayerOptions{ServerName: sn, InsecureSkipVerify: insecureSkipVerify, CA: certPool},
 	)
 	if err != nil {
-		log.Printf("Cannot start local HTTP proxy: failed to create QUIC layer: %v", err)
+		common.Debugf("Cannot start local HTTP proxy: failed to create QUIC layer: %v", err)
 		return
 	}
 
@@ -55,8 +57,8 @@ func runLocalProxy(port string, bfconn *clientcore.BroflakeConn, ca, sn string) 
 
 	proxy.OnRequest().DoFunc(
 		func(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
-			log.Println("HTTP proxy just saw a request:")
-			log.Println(r)
+			common.Debug("HTTP proxy just saw a request:")
+			common.Debug(r)
 			return r, nil
 		},
 	)
@@ -64,10 +66,10 @@ func runLocalProxy(port string, bfconn *clientcore.BroflakeConn, ca, sn string) 
 	addr := fmt.Sprintf("%v:%v", ip, port)
 
 	go func() {
-		log.Printf("Starting HTTP CONNECT proxy on %v...\n", addr)
+		common.Debugf("Starting HTTP CONNECT proxy on %v...", addr)
 		err := http.ListenAndServe(addr, proxy)
 		if err != nil {
-			log.Printf("HTTP CONNECT proxy error: %v\n", err)
+			common.Debugf("HTTP CONNECT proxy error: %v", err)
 		}
 	}()
 }
