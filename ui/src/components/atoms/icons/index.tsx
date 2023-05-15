@@ -29,7 +29,7 @@ const Github = () => {
 
 const Bell = () => {
 	const {theme} = useContext(AppContext).settings
-	const color = theme === Themes.DARK ? COLORS.grey1 : COLORS.grey
+	const color = theme === Themes.LIGHT ? COLORS.grey1 : COLORS.grey6
 	return (
 		<svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg">
 			<path
