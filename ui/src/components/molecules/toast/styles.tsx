@@ -2,14 +2,15 @@ import styled from 'styled-components'
 import {COLORS, SHADOWS, Themes} from '../../../constants'
 
 const Container = styled.div`
-  position: fixed;
+  //position: fixed;
+  position: absolute;
   transition: opacity 250ms ease-out, top 250ms ease-out;
   opacity: ${(props: { show: boolean }) => props.show ? 1 : 0};
   right: 0;
   z-index: 1000;
-  background: ${({theme}: { theme: Themes }) => theme === Themes.DARK ? COLORS.grey5 : COLORS.grey1};
-  border: 1px solid ${({theme}: { theme: Themes }) => theme === Themes.DARK ? COLORS.grey5 : COLORS.grey2};
-  box-shadow: ${({theme}: {theme: Themes}) => theme === Themes.DARK ? SHADOWS.dark : SHADOWS.light};
+  background: ${({theme}: { theme: Themes }) => theme === Themes.LIGHT ? COLORS.grey5 : COLORS.grey1};
+  border: 1px solid ${({theme}: { theme: Themes }) => theme === Themes.LIGHT ? COLORS.grey5 : COLORS.grey2};
+  box-shadow: ${({theme}: {theme: Themes}) => theme === Themes.LIGHT ? SHADOWS.dark : SHADOWS.light};
   border-radius: 32px;
   padding: 12px;
   display: flex;
