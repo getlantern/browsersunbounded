@@ -4,10 +4,10 @@
 package main
 
 import (
-	"log"
 	"syscall/js"
 
 	"github.com/getlantern/broflake/clientcore"
+	"github.com/getlantern/broflake/common"
 )
 
 func main() {
