@@ -29,7 +29,7 @@ const Switch = ({onToggle, checked, disabled, loading}: Props) => {
 					checked={checked}
 					disabled={disabled}
 					theme={theme}
-					loading={loading}
+					$loading={loading}
 				/>
 				{
 					loading && (

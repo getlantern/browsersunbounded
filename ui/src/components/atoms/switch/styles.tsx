@@ -23,7 +23,7 @@ interface Props {
 	disabled: boolean
 	checked: boolean
 	theme: Themes
-	loading: boolean
+	$loading: boolean
 }
 
 const Slider = styled.span`
@@ -47,7 +47,7 @@ const Slider = styled.span`
     width: 17px;
     left: 3.5px;
     bottom: 3.5px;
-    background-color: ${({loading}: Props) => loading ? 'transparent' : COLORS.white};
+    background-color: ${({$loading}: Props) => $loading ? 'transparent' : COLORS.white};
     border-radius: 50%;
     transition: transform 250ms;
     transform: translateX(${({checked}: Props) => checked ? '16px' : 0});
