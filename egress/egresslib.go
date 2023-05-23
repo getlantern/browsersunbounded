@@ -17,9 +17,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/quic-go/quic-go"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/global"
-	"go.opentelemetry.io/otel/metric/instrument"
 	"nhooyr.io/websocket"
 
 	"github.com/getlantern/broflake/common"
@@ -44,12 +43,12 @@ var nQUICStreams uint64
 var nIngressBytes uint64
 
 // Otel instruments
-var nClientsCounter instrument.Int64UpDownCounter
+var nClientsCounter metric.Int64UpDownCounter
 
 // TODO: weirdly, we report the number of open QUIC conections to otel but we don't maintain an atomic value to log it?
-var nQUICConnectionsCounter instrument.Int64UpDownCounter
-var nQUICStreamsCounter instrument.Int64UpDownCounter
-var nIngressBytesCounter instrument.Int64ObservableUpDownCounter
+var nQUICConnectionsCounter metric.Int64UpDownCounter
+var nQUICStreamsCounter metric.Int64UpDownCounter
+var nIngressBytesCounter metric.Int64ObservableUpDownCounter
 
 // webSocketPacketConn wraps a websocket.Conn as a net.PacketConn
 type websocketPacketConn struct {
@@ -238,7 +237,7 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 
 func NewListener(ctx context.Context, ll net.Listener, certPEM, keyPEM string) (net.Listener, error) {
 	closeFuncMetric := telemetry.EnableOTELMetrics(ctx)
-	m := global.Meter("github.com/getlantern/broflake/egress")
+	m := otel.Meter("github.com/getlantern/broflake/egress")
 	var err error
 	nClientsCounter, err = m.Int64UpDownCounter("concurrent-websockets")
 	if err != nil {
