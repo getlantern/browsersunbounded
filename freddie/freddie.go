@@ -184,6 +184,9 @@ func handleSignalPost(w http.ResponseWriter, r *http.Request) {
 	// response or a nil body if they failed to respond
 	w.WriteHeader(http.StatusOK)
 
+	// Flush the header because the client FSM can short circuit certain states on a 200 OK
+	w.(http.Flusher).Flush()
+
 	select {
 	case res := <-reqChan:
 		w.Write([]byte(fmt.Sprintf("%v\n", res)))
