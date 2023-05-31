@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"go.opentelemetry.io/otel/metric/global"
-	"go.opentelemetry.io/otel/metric/instrument"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
 	"golang.org/x/mod/semver"
 
 	"github.com/getlantern/broflake/common"
@@ -28,7 +28,7 @@ const (
 var consumerTable = userTable{Data: make(map[string]chan string)}
 var signalTable = userTable{Data: make(map[string]chan string)}
 
-var nConcurrentReqs instrument.Int64UpDownCounter
+var nConcurrentReqs metric.Int64UpDownCounter
 
 type userTable struct {
 	Data map[string]chan string
@@ -221,7 +221,7 @@ func main() {
 	closeFuncMetric := telemetry.EnableOTELMetrics(ctx)
 	defer func() { _ = closeFuncMetric(ctx) }()
 
-	m := global.Meter("github.com/getlantern/broflake/freddie")
+	m := otel.Meter("github.com/getlantern/broflake/freddie")
 	var err error
 	nConcurrentReqs, err = m.Int64UpDownCounter("concurrent-reqs")
 	if err != nil {
