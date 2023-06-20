@@ -1,4 +1,4 @@
-import {Chrome, Firefox, Heart, Menu as MenuIcon, More, Twitter} from '../../atoms/icons'
+import {Chrome, Firefox, Heart, Menu as MenuIcon, More} from '../../atoms/icons'
 import {MenuItem, MenuWrapper, StyledButton} from './styles'
 import {Dispatch, SetStateAction, useContext, useEffect, useRef, useState} from 'react'
 import useClickOutside from '../../../hooks/useClickOutside'
@@ -23,7 +23,7 @@ const menuItems = (connected: number | string) => [
 		href: 'https://chrome.google.com/webstore/detail/lantern-network/jonhnkjdlimggpmbehgkgpjgphoepfdj/',
 		icon: <Chrome/>
 	},
-	// {
+	// { // @todo re-enable this when we determine the better ux see https://github.com/getlantern/engineering/issues/207
 	// 	key: 'twitter',
 	// 	label: 'Share',
 	// 	href: connectedTwitterLink(connected),

@@ -36,7 +36,7 @@
   "scripts": {
     "dev:web": "react-scripts start",
     "dev:ext": "cd extension && NODE_ENV=development webextension-toolbox dev --config extension/webextension-toolbox.config.js",
-    "build:web": "GENERATE_SOURCEMAP=false node ./scripts/build.js",
+    "build:web": "NODE_ENV=production GENERATE_SOURCEMAP=false node ./scripts/build.js",
     "build:ext": "cd extension && NODE_ENV=production webextension-toolbox build --config extension/webextension-toolbox.config.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject",

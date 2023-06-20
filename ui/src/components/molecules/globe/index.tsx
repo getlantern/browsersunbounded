@@ -15,9 +15,9 @@ import Shadow from './shadow'
 import ToolTip from '../toolTip'
 import {useGeo} from '../../../hooks/useGeo'
 import {Themes} from '../../../constants'
-import {useEmitterState} from '../../../hooks/useStateEmitter'
-import {sharingEmitter} from '../../../utils/wasmInterface'
-import {countries} from "../../../utils/countries";
+// import {useEmitterState} from '../../../hooks/useStateEmitter'
+// import {sharingEmitter} from '../../../utils/wasmInterface'
+// import {countries} from "../../../utils/countries";
 // import InteractAnim from './interactAnim'
 
 interface Props {
@@ -25,7 +25,7 @@ interface Props {
 }
 
 const Globe = ({target}: Props) => {
-	const sharing = useEmitterState(sharingEmitter)
+	// const sharing = useEmitterState(sharingEmitter)
 	const {width, settings} = useContext(AppContext)
 	const {theme, title} = settings
 	const size = width < BREAKPOINT ? 250 : 400
@@ -34,9 +34,9 @@ const Globe = ({target}: Props) => {
 	const count = arc ? arc.workerIdxArr.length : 0
 	const globe = useRef()
 	const container = useRef()
-	const {arcs, points, country} = useGeo()
+	const {arcs, points} = useGeo()
 	const [altitude, setAltitude] = useState(14)
-	const lastAnimation = useRef(0)
+	// const lastAnimation = useRef(0)
 	// const [interacted, setInteracted] = useState(false)
 
 	const ghostArcs = useMemo(() => {
@@ -47,20 +47,20 @@ const Globe = ({target}: Props) => {
 		})
 	}, [arcs])
 
-	useEffect(() => {
-		if (!globe.current) return
-		const now = Date.now()
-		if (sharing && country && (now - lastAnimation.current) > 5000) {
-			const userLoc = countries[country]
-			globe.current.pointOfView({
-				lat: 20, // equator
-				lng: points.length === 0 ? userLoc.longitude : points[points.length - 1].lng,
-				altitude: 2.5
-			}, 1000)
-			lastAnimation.current = now
-		}
-		// alert(points[points.length - 1])
-	}, [sharing, country, points])
+	// useEffect(() => { // @todo re-enable this when we determine the better ux see https://github.com/getlantern/engineering/issues/216
+	// 	if (!globe.current) return
+	// 	const now = Date.now()
+	// 	if (sharing && country && (now - lastAnimation.current) > 5000) {
+	// 		const userLoc = countries[country]
+	// 		globe.current.pointOfView({
+	// 			lat: 20, // equator
+	// 			lng: points.length === 0 ? userLoc.longitude : points[points.length - 1].lng,
+	// 			altitude: 2.5
+	// 		}, 1000)
+	// 		lastAnimation.current = now
+	// 	}
+	// 	// alert(points[points.length - 1])
+	// }, [sharing, country, points])
 
 	useEffect(() => {
 		if (!globe.current) return
@@ -163,6 +163,7 @@ const Globe = ({target}: Props) => {
 				show={!!arc}
 				container={container}
 			/>
+			{/*@todo re-enable this after we determine better UX see https://github.com/getlantern/engineering/issues/215*/}
 			{/*{*/}
 			{/*	isSetup && !interacted && (*/}
 			{/*		<InteractAnim />*/}
