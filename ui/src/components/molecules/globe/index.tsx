@@ -6,7 +6,7 @@
 
 	Also see the patches dir for changes to the shader program that are not exposed through the react-globe api.
  ***/
-import GlobeComponent from 'react-globe.gl' // @todo lazy load
+import GlobeComponent from 'react-globe.gl'
 import {Container} from './styles'
 import {useContext, useEffect, useMemo, useRef, useState} from 'react'
 import {AppContext} from '../../../context'
@@ -18,7 +18,7 @@ import {Themes} from '../../../constants'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
 import {sharingEmitter} from '../../../utils/wasmInterface'
 import {countries} from "../../../utils/countries";
-import InteractAnim from './interactAnim'
+// import InteractAnim from './interactAnim'
 
 interface Props {
 	target: Targets
@@ -37,7 +37,7 @@ const Globe = ({target}: Props) => {
 	const {arcs, points, country} = useGeo()
 	const [altitude, setAltitude] = useState(14)
 	const lastAnimation = useRef(0)
-	const [interacted, setInteracted] = useState(false)
+	// const [interacted, setInteracted] = useState(false)
 
 	const ghostArcs = useMemo(() => {
 		if (!arcs) return []
@@ -117,8 +117,8 @@ const Globe = ({target}: Props) => {
 			size={size}
 			$title={title}
 			active={!!arc}
-			onMouseDown={() => setInteracted(true)}
-			onTouchStart={() => setInteracted(true)}
+			// onMouseDown={() => setInteracted(true)}
+			// onTouchStart={() => setInteracted(true)}
 			onMouseEnter={() => setRotateSpeed(1)}
 			onMouseLeave={() => setRotateSpeed(1.5)}
 		>
@@ -163,11 +163,11 @@ const Globe = ({target}: Props) => {
 				show={!!arc}
 				container={container}
 			/>
-			{
-				isSetup && !interacted && (
-					<InteractAnim />
-				)
-			}
+			{/*{*/}
+			{/*	isSetup && !interacted && (*/}
+			{/*		<InteractAnim />*/}
+			{/*	)*/}
+			{/*}*/}
 		</Container>
 	)
 }
