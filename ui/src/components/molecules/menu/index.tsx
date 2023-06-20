@@ -5,7 +5,7 @@ import useClickOutside from '../../../hooks/useClickOutside'
 import {AppContext} from '../../../context'
 import {COLORS, Layouts, Targets, Themes} from '../../../constants'
 import {isFirefox} from '../../../utils/userAgent'
-import {connectedTwitterLink} from '../../../utils/share'
+// import {connectedTwitterLink} from '../../../utils/share'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
 import {lifetimeConnectionsEmitter} from '../../../utils/wasmInterface'
 import {humanizeCount} from '../../../utils/humanize'
@@ -23,12 +23,12 @@ const menuItems = (connected: number | string) => [
 		href: 'https://chrome.google.com/webstore/detail/lantern-network/jonhnkjdlimggpmbehgkgpjgphoepfdj/',
 		icon: <Chrome/>
 	},
-	{
-		key: 'twitter',
-		label: 'Share',
-		href: connectedTwitterLink(connected),
-		icon: <Twitter/>
-	},
+	// {
+	// 	key: 'twitter',
+	// 	label: 'Share',
+	// 	href: connectedTwitterLink(connected),
+	// 	icon: <Twitter/>
+	// },
 	{
 		key: 'donate',
 		label: 'Donate to Lantern',

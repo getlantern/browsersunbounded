@@ -13,7 +13,7 @@ import {
 } from '../../../utils/wasmInterface'
 import {humanizeCount} from '../../../utils/humanize'
 import {LifetimeConnectionsWrapper} from './styles'
-import TwitterLink from '../../atoms/twitterLink'
+// import TwitterLink from '../../atoms/twitterLink'
 // import useSample from '../../../hooks/useSample'
 
 export const Connections = () => {
@@ -72,7 +72,7 @@ const Stats = () => {
 							<Text>
 								Total people helped to date:
 							</Text>
-							<TwitterLink connections={lifetimeConnections} />
+							{/*<TwitterLink connections={lifetimeConnections} />*/}
 						</LifetimeConnectionsWrapper>
 					)
 				}
