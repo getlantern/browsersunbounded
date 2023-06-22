@@ -3,7 +3,7 @@ import {MenuItem, MenuWrapper, StyledButton} from './styles'
 import {Dispatch, SetStateAction, useContext, useEffect, useRef, useState} from 'react'
 import useClickOutside from '../../../hooks/useClickOutside'
 import {AppContext} from '../../../context'
-import {COLORS, Layouts, Targets, Themes} from '../../../constants'
+import {APP_STORE_LINKS, COLORS, Layouts, Targets, Themes} from '../../../constants'
 import {isFirefox} from '../../../utils/userAgent'
 // import {connectedTwitterLink} from '../../../utils/share'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
@@ -14,13 +14,13 @@ const menuItems = (connected: number | string) => [
 	{
 		key: 'firefox',
 		label: 'Install Firefox Extension',
-		href: 'https://addons.mozilla.org/en-US/firefox/addon/lantern-network/',
+		href: APP_STORE_LINKS.firefox,
 		icon: <Firefox/>
 	},
 	{
 		key: 'chrome',
 		label: 'Install Chrome Extension',
-		href: 'https://chrome.google.com/webstore/detail/lantern-network/jonhnkjdlimggpmbehgkgpjgphoepfdj/',
+		href: APP_STORE_LINKS.chrome,
 		icon: <Chrome/>
 	},
 	// { // @todo re-enable this when we determine the better ux see https://github.com/getlantern/engineering/issues/207

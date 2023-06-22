@@ -1,15 +1,13 @@
 import styled from 'styled-components'
 
 interface Props {
-	size: number
 	active: boolean
-	$title: boolean
+	offset: number
+	size: number
 }
 const Container = styled.div`
   width: 100%;
   height: 100%;
-  min-height: 250px; // sm breakpoint
-  max-height: 350px; // lg breakpoint
   display: flex;
   justify-content: center;
   align-items: center;
@@ -18,7 +16,7 @@ const Container = styled.div`
 
   > div {
     position: absolute;
-    top: ${({size, $title}: Props) => size === 250 ? -10 : $title ? -40 : -80}px; // ugly offset to match figma @todo try to fix this with flexbox
+    top: ${({offset}: Props) => offset}px; // ugly offset to match figma @todo try to fix this with flexbox
     cursor: ${({active}: Props) => active ? 'pointer': 'all-scroll'};
   }
 

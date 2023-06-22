@@ -111,3 +111,8 @@ export const WASM_CLIENT_CONFIG = {
 	egressAddr: process.env.REACT_APP_EGRESS_ADDR!,
 	egressEndpoint: process.env.REACT_APP_EGRESS_ENDPOINT!
 }
+
+export const APP_STORE_LINKS = {
+	chrome: 'https://chrome.google.com/webstore/detail/lantern-network/jonhnkjdlimggpmbehgkgpjgphoepfdj/',
+	firefox: 'https://addons.mozilla.org/en-US/firefox/addon/lantern-network/'
+}

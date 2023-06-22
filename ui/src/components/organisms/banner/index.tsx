@@ -14,6 +14,7 @@ import {useLatch} from '../../../hooks/useLatch'
 import ExpandCollapse from '../../atoms/expandCollapse'
 import LogoLink from '../../atoms/logoLink'
 import Title from '../../molecules/title'
+import ExtensionCta from '../../molecules/extensionCta'
 
 const Globe = lazy(() => import('../../molecules/globe'))
 
@@ -130,6 +131,11 @@ const Banner = () => {
 									/>
 								</Row>
 								<Stats/>
+								{
+									!menu && (
+										<ExtensionCta />
+									)
+								}
 								<div
 									style={{width: '100%', height: !title && width > BREAKPOINT ? 80 : 24}}
 								/>

@@ -24,10 +24,18 @@ interface Props {
 	target: Targets
 }
 
+const calcOffset = (size: number, title: boolean, menu: boolean) => {
+	if (size === 250) return -10
+	let offset = -10
+	if (title) offset += 40
+	if (menu) offset -= 40
+	return offset
+}
+
 const Globe = ({target}: Props) => {
 	// const sharing = useEmitterState(sharingEmitter)
 	const {width, settings} = useContext(AppContext)
-	const {theme, title} = settings
+	const {theme, title, menu} = settings
 	const size = width < BREAKPOINT ? 250 : 400
 	const isSetup = useRef(false)
 	const [arc, setArc] = useState(null)
@@ -114,9 +122,13 @@ const Globe = ({target}: Props) => {
 	return (
 		<Container
 			ref={container}
+			offset={calcOffset(size, title, menu)}
 			size={size}
-			$title={title}
 			active={!!arc}
+			style={{
+				minHeight: 250, // sm breakpoint
+				maxHeight: (!menu && title) ? 424 : (!menu || title) ? 400 : 350, // lg breakpoint
+			}}
 			// onMouseDown={() => setInteracted(true)}
 			// onTouchStart={() => setInteracted(true)}
 			onMouseEnter={() => setRotateSpeed(1)}

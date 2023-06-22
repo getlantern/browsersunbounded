@@ -34,7 +34,7 @@ const Suspense = () => {
 		<Container
 			size={size}
 			active={false}
-			$title={false}
+			offset={-10}
 		>
 			{/*@todo globe loading ui*/}
 			<Loading
