@@ -48,7 +48,7 @@ func main() {
 		tlsKey = string(key)
 	}
 
-	ll, err := egress.NewListener(ctx, l, tlsCert, tlsKey)
+	ll, err := egress.NewWebSocketListener(ctx, l, tlsCert, tlsKey)
 	if err != nil {
 		panic(err)
 	}
