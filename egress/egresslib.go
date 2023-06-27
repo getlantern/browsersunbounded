@@ -169,6 +169,10 @@ func (l proxyListener) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			CompressionMode:    websocket.CompressionDisabled,
 		},
 	)
+	if err != nil {
+		common.Debugf("Could not accept WebSocket connection: %v", err)
+		return
+	}
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", r.RemoteAddr)
 	if err != nil {
@@ -184,10 +188,6 @@ func (l proxyListener) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer wspconn.Close()
-
-	if err != nil {
-		return
-	}
 
 	common.Debugf("Accepted a new WebSocket connection! (%v total)", atomic.AddUint64(&nClients, 1))
 	nClientsCounter.Add(context.Background(), 1)
@@ -246,7 +246,7 @@ func (l proxyListener) handleWebTransport(w http.ResponseWriter, r *http.Request
 func NewWebTransportListener(ctx context.Context, ll net.Listener, certPEM, keyPEM string, handlerFunc func(http.ResponseWriter, *http.Request)) (net.Listener, error) {
 	l, err := newProxyListener(ll, certPEM, keyPEM, "/wt", "webtransport")
 	if err != nil {
-		return nil, fmt.Errorf("Unable to create proxy listener %w", err)
+		return nil, fmt.Errorf("unable to create proxy listener %w", err)
 	}
 	return newListener(ctx, ll, certPEM, keyPEM, l.handleWebTransport, l)
 }
@@ -254,7 +254,7 @@ func NewWebTransportListener(ctx context.Context, ll net.Listener, certPEM, keyP
 func NewWebSocketListener(ctx context.Context, ll net.Listener, certPEM, keyPEM string) (net.Listener, error) {
 	l, err := newProxyListener(ll, certPEM, keyPEM, "/ws", "websocket")
 	if err != nil {
-		return nil, fmt.Errorf("Unable to create proxy listener %w", err)
+		return nil, fmt.Errorf("unable to create proxy listener %w", err)
 	}
 	return newListener(ctx, ll, certPEM, keyPEM, l.handleWebSocket, l)
 }
@@ -262,7 +262,7 @@ func NewWebSocketListener(ctx context.Context, ll net.Listener, certPEM, keyPEM 
 func newProxyListener(ll net.Listener, certPEM, keyPEM, path, name string) (*proxyListener, error) {
 	tlsConfig, err := tlsConfig(certPEM, keyPEM)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to load tlsconfig %w", err)
+		return nil, fmt.Errorf("unable to load tlsconfig %w", err)
 	}
 
 	// We use this wrapped listener to enable our local HTTP proxy to listen for WebSocket connections
@@ -339,7 +339,7 @@ func tlsConfig(certPEM, keyPEM string) (*tls.Config, error) {
 	if certPEM != "" && keyPEM != "" {
 		cert, err := tls.X509KeyPair([]byte(certPEM), []byte(keyPEM))
 		if err != nil {
-			return nil, fmt.Errorf("Unable to load cert/key from PEM for broflake: %v", err)
+			return nil, fmt.Errorf("unable to load cert/key from PEM for broflake: %v", err)
 		}
 
 		common.Debugf("Broflake using cert %v and key %v", certPEM, keyPEM)
