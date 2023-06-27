@@ -22,6 +22,8 @@ import (
 	"nhooyr.io/websocket"
 
 	"github.com/getlantern/broflake/common"
+	"github.com/getlantern/quicwrapper"
+	"github.com/getlantern/quicwrapper/webt"
 	"github.com/getlantern/telemetry"
 )
 
@@ -240,47 +242,42 @@ func (l proxyListener) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (l proxyListener) handleWebTransport(w http.ResponseWriter, r *http.Request) {
-}
-
-func NewWebTransportListener(ctx context.Context, ll net.Listener, certPEM, keyPEM string, handlerFunc func(http.ResponseWriter, *http.Request)) (net.Listener, error) {
-	l, err := newProxyListener(ll, certPEM, keyPEM, "/wt", "webtransport")
-	if err != nil {
-		return nil, fmt.Errorf("unable to create proxy listener %w", err)
+func NewWebTransportListener(ctx context.Context, addr, certPEM, keyPEM string) (net.Listener, error) {
+	config := &quicwrapper.Config{
+		MaxIncomingStreams:      1000,
+		DisablePathMTUDiscovery: true,
 	}
-	return newListener(ctx, ll, certPEM, keyPEM, l.handleWebTransport, l)
+
+	cert, err := tls.LoadX509KeyPair(certPEM, keyPEM)
+	if err != nil {
+		return nil, fmt.Errorf("unable to load certificate and key from %s and %s: %s", certPEM, keyPEM, err)
+	}
+	options := &webt.ListenOptions{
+		Addr:       addr,
+		TLSConfig:  &tls.Config{Certificates: []tls.Certificate{cert}},
+		QuicConfig: config,
+	}
+
+	return webt.ListenAddr(options)
 }
 
 func NewWebSocketListener(ctx context.Context, ll net.Listener, certPEM, keyPEM string) (net.Listener, error) {
-	l, err := newProxyListener(ll, certPEM, keyPEM, "/ws", "websocket")
-	if err != nil {
-		return nil, fmt.Errorf("unable to create proxy listener %w", err)
-	}
-	return newListener(ctx, ll, certPEM, keyPEM, l.handleWebSocket, l)
-}
-
-func newProxyListener(ll net.Listener, certPEM, keyPEM, path, name string) (*proxyListener, error) {
 	tlsConfig, err := tlsConfig(certPEM, keyPEM)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load tlsconfig %w", err)
 	}
-
 	// We use this wrapped listener to enable our local HTTP proxy to listen for WebSocket connections
-	return &proxyListener{
+	l := &proxyListener{
 		Listener:    &net.TCPListener{},
 		connections: make(chan net.Conn, 2048),
 		tlsConfig:   tlsConfig,
 		addr:        ll.Addr(),
-		path:        path,
-		name:        name,
-	}, nil
-}
-
-func newListener(ctx context.Context, ll net.Listener, certPEM, keyPEM string, handlerFunc func(http.ResponseWriter, *http.Request), l *proxyListener) (net.Listener, error) {
+		path:        "/ws",
+		name:        "websocket",
+	}
 	closeFuncMetric := telemetry.EnableOTELMetrics(ctx)
 	l.closeMetrics = closeFuncMetric
 	m := otel.Meter("github.com/getlantern/broflake/egress")
-	var err error
 	nClientsCounter, err = m.Int64UpDownCounter(fmt.Sprintf("concurrent-%ss", l.name))
 	if err != nil {
 		closeFuncMetric(ctx)
@@ -324,8 +321,9 @@ func newListener(ctx context.Context, ll net.Listener, certPEM, keyPEM string, h
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
+	srv.SetKeepAlivesEnabled(true)
 
-	http.Handle(l.path, otelhttp.NewHandler(http.HandlerFunc(handlerFunc), l.path))
+	http.Handle(l.path, otelhttp.NewHandler(http.HandlerFunc(l.handleWebSocket), l.path))
 	common.Debugf("Egress server listening for WebSocket connections on %v", ll.Addr())
 	go func() {
 		err := srv.Serve(ll)
