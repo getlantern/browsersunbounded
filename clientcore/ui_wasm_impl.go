@@ -20,7 +20,7 @@ type UIImpl struct {
 func (ui *UIImpl) Init(bf *BroflakeEngine) {
 	ui.BroflakeEngine = bf
 
-	// The notion of 'ID' exists solely to avoID collisions in the JS namespace
+	// The notion of 'ID' exists solely to avoid collisions in the JS namespace
 	ui.ID = strings.Replace("L4NT3RN"+uuid.NewString(), "-", "", -1)
 
 	// Construct the JavaScript API for this Broflake instance
@@ -81,7 +81,7 @@ func (ui UIImpl) OnDownstreamChunk(size int, workerIdx int) {
 }
 
 // 'downstreamThroughput' fires N times per second, where N is determined by the uiRefreshHz
-// hyperparameter. 'bytesPerSec is the current systemwIDe inbound throughput
+// hyperparameter. 'bytesPerSec is the current systemwide inbound throughput
 func (ui UIImpl) OnDownstreamThroughput(bytesPerSec int) {
 	detail := map[string]interface{}{"bytesPerSec": bytesPerSec}
 	ui.fireEvent("downstreamThroughput", detail)
