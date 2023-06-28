@@ -31,6 +31,7 @@ func (b *BroflakeEngine) stop() {
 
 	go func() {
 		b.wg.Wait()
+		common.Debug("■ Broflake stopped.")
 		b.ui.OnReady()
 	}()
 }
