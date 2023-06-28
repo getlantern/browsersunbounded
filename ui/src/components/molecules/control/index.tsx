@@ -1,13 +1,12 @@
 import {Text} from '../../atoms/typography'
 import Switch from '../../atoms/switch'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
-import {readyEmitter, sharingEmitter} from '../../../utils/wasmInterface'
+import {sharingEmitter} from '../../../utils/wasmInterface'
 import Info from '../info'
 import {TextInfo} from './styles'
 import {useContext, useState} from 'react'
 import {AppContext} from '../../../context'
 import {COLORS, Targets} from '../../../constants'
-import {pushNotification} from '../notification'
 
 interface Props {
 	onToggle?: (s: boolean) => void
@@ -37,7 +36,6 @@ const Control = ({onToggle, info = false}: Props) => {
 		if (share) {
 			await wasmInterface.buildNewClient(mock)
 			wasmInterface.start()
-			pushNotification({text: 'Sharing your connection'})
 		}
 		if (!share) wasmInterface.stop()
 		if (onToggle) onToggle(share)

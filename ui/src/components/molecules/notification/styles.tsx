@@ -11,6 +11,7 @@ export const Container = styled.div`
   box-shadow: ${SHADOWS.light};
 	padding: 8px 16px;
   transition: opacity 300ms ease-out, bottom 300ms ease-out;
+	pointer-events: none;
 `
 
 export const Text = styled.p`
