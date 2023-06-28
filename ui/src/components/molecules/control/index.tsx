@@ -35,7 +35,7 @@ const Control = ({onToggle, info = false}: Props) => {
 	const _onToggle = async (share: boolean) => {
 		if (needsInit) await init()
 		if (share) {
-			await wasmInterface.buildNewClient()
+			await wasmInterface.buildNewClient(mock)
 			wasmInterface.start()
 			pushNotification({text: 'Sharing your connection'})
 		}
