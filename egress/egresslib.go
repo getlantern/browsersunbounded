@@ -243,18 +243,17 @@ func (l proxyListener) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func NewWebTransportListener(ctx context.Context, addr, certPEM, keyPEM string) (net.Listener, error) {
+	tlsConfig, err := tlsConfig(certPEM, keyPEM)
+	if err != nil {
+		return nil, fmt.Errorf("unable to load tlsconfig %w", err)
+	}
 	config := &quicwrapper.Config{
 		MaxIncomingStreams:      1000,
 		DisablePathMTUDiscovery: true,
 	}
-
-	cert, err := tls.LoadX509KeyPair(certPEM, keyPEM)
-	if err != nil {
-		return nil, fmt.Errorf("unable to load certificate and key from %s and %s: %s", certPEM, keyPEM, err)
-	}
 	options := &webt.ListenOptions{
 		Addr:       addr,
-		TLSConfig:  &tls.Config{Certificates: []tls.Certificate{cert}},
+		TLSConfig:  tlsConfig,
 		QuicConfig: config,
 	}
 
