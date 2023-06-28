@@ -142,19 +142,23 @@ export class WasmInterface {
 		return this.instance
 	}
 
-	buildNewClient = () => {
-		this.wasmClient = globalThis.newBroflake(
-			WASM_CLIENT_CONFIG.type,
-			WASM_CLIENT_CONFIG.cTableSz,
-			WASM_CLIENT_CONFIG.pTableSz,
-			WASM_CLIENT_CONFIG.busBufSz,
-			WASM_CLIENT_CONFIG.netstated,
-			WASM_CLIENT_CONFIG.discoverySrv,
-			WASM_CLIENT_CONFIG.discoverySrvEndpoint,
-			WASM_CLIENT_CONFIG.tag,
-			WASM_CLIENT_CONFIG.egressAddr,
-			WASM_CLIENT_CONFIG.egressEndpoint
-		)
+	buildNewClient = (mock = false) => {
+		if (mock) { // fake it till you make it
+			this.wasmClient = new MockWasmClient(this)
+		} else {
+			this.wasmClient = globalThis.newBroflake(
+				WASM_CLIENT_CONFIG.type,
+				WASM_CLIENT_CONFIG.cTableSz,
+				WASM_CLIENT_CONFIG.pTableSz,
+				WASM_CLIENT_CONFIG.busBufSz,
+				WASM_CLIENT_CONFIG.netstated,
+				WASM_CLIENT_CONFIG.discoverySrv,
+				WASM_CLIENT_CONFIG.discoverySrvEndpoint,
+				WASM_CLIENT_CONFIG.tag,
+				WASM_CLIENT_CONFIG.egressAddr,
+				WASM_CLIENT_CONFIG.egressEndpoint
+			)
+		}
 		this.initListeners()
 	}
 
