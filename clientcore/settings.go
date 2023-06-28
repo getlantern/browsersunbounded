@@ -45,7 +45,7 @@ type EgressOptions struct {
 	ErrorBackoff   time.Duration
 }
 
-func NewDefaultEgressOptions() *EgressOptions {
+func NewDefaultWebSocketEgressOptions() *EgressOptions {
 	return &EgressOptions{
 		Addr:           "ws://localhost:8000",
 		Endpoint:       "/ws",
@@ -60,6 +60,7 @@ type BroflakeOptions struct {
 	PTableSize  int
 	BusBufferSz int
 	Netstated   string
+	Browser     string
 }
 
 func NewDefaultBroflakeOptions() *BroflakeOptions {
