@@ -15,6 +15,7 @@ import Shadow from './shadow'
 import ToolTip from '../toolTip'
 import {useGeo} from '../../../hooks/useGeo'
 import {Themes} from '../../../constants'
+import {Notification} from '../notification'
 // import {useEmitterState} from '../../../hooks/useStateEmitter'
 // import {sharingEmitter} from '../../../utils/wasmInterface'
 // import {countries} from "../../../utils/countries";
@@ -175,6 +176,7 @@ const Globe = ({target}: Props) => {
 				show={!!arc}
 				container={container}
 			/>
+			<Notification />
 			{/*@todo re-enable this after we determine better UX see https://github.com/getlantern/engineering/issues/215*/}
 			{/*{*/}
 			{/*	isSetup && !interacted && (*/}

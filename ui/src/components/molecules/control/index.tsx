@@ -7,6 +7,7 @@ import {TextInfo} from './styles'
 import {useContext, useState} from 'react'
 import {AppContext} from '../../../context'
 import {COLORS, Targets} from '../../../constants'
+import {pushNotification} from '../notification'
 
 interface Props {
 	onToggle?: (s: boolean) => void
@@ -36,6 +37,7 @@ const Control = ({onToggle, info = false}: Props) => {
 		if (share) {
 			await wasmInterface.buildNewClient()
 			wasmInterface.start()
+			pushNotification({text: 'Sharing your connection'})
 		}
 		if (!share) wasmInterface.stop()
 		if (onToggle) onToggle(share)
