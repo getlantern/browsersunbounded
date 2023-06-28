@@ -14,7 +14,7 @@ interface Props {
 }
 
 const Control = ({onToggle, info = false}: Props) => {
-	const ready = useEmitterState(readyEmitter)
+	const ready = true // useEmitterState(readyEmitter)
 	const sharing = useEmitterState(sharingEmitter)
 	const {wasmInterface, settings} = useContext(AppContext)
 	const {mock, target} = settings
@@ -33,7 +33,10 @@ const Control = ({onToggle, info = false}: Props) => {
 
 	const _onToggle = async (share: boolean) => {
 		if (needsInit) await init()
-		if (share) wasmInterface.start()
+		if (share) {
+			await wasmInterface.buildNewClient()
+			wasmInterface.start()
+		}
 		if (!share) wasmInterface.stop()
 		if (onToggle) onToggle(share)
 	}

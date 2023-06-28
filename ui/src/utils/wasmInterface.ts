@@ -120,8 +120,9 @@ export class WasmInterface {
 		// this dumb state is needed to prevent multiple calls to initialize from react hot reload dev server 🥵
 		if (this.initializing || this.instance) { // already initialized or initializing
 			console.warn('Wasm client has already been initialized or is initializing, aborting init.')
-			return
+		  return
 		}
+
 		this.initializing = true
 		this.target = target
 		if (mock) { // fake it till you make it
@@ -133,27 +134,32 @@ export class WasmInterface {
 			)
 			this.instance = res.instance
 			this.go.run(this.instance)
-			this.wasmClient = globalThis.newBroflake(
-				WASM_CLIENT_CONFIG.type,
-				WASM_CLIENT_CONFIG.cTableSz,
-				WASM_CLIENT_CONFIG.pTableSz,
-				WASM_CLIENT_CONFIG.busBufSz,
-				WASM_CLIENT_CONFIG.netstated,
-				WASM_CLIENT_CONFIG.discoverySrv,
-				WASM_CLIENT_CONFIG.discoverySrvEndpoint,
-				WASM_CLIENT_CONFIG.tag,
-				WASM_CLIENT_CONFIG.egressAddr,
-				WASM_CLIENT_CONFIG.egressEndpoint
-			)
-		}
+			this.buildNewClient()
+    }
 		this.initListeners()
 		this.handleReady()
 		this.initializing = false
 		return this.instance
 	}
 
+	buildNewClient = () => {
+		this.wasmClient = globalThis.newBroflake(
+			WASM_CLIENT_CONFIG.type,
+			WASM_CLIENT_CONFIG.cTableSz,
+			WASM_CLIENT_CONFIG.pTableSz,
+			WASM_CLIENT_CONFIG.busBufSz,
+			WASM_CLIENT_CONFIG.netstated,
+			WASM_CLIENT_CONFIG.discoverySrv,
+			WASM_CLIENT_CONFIG.discoverySrvEndpoint,
+			WASM_CLIENT_CONFIG.tag,
+			WASM_CLIENT_CONFIG.egressAddr,
+			WASM_CLIENT_CONFIG.egressEndpoint
+		)
+		this.initListeners()
+	}
+
 	start = () => {
-		if (!this.ready) return console.warn('Wasm client is not in ready state, aborting start')
+		// if (!this.ready) return console.warn('Wasm client is not in ready state, aborting start')
 		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting start.')
 		// if the widget is running in an extension popup window, send message to the offscreen window
 		if (this.target === Targets.EXTENSION_POPUP) {
