@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -112,7 +111,8 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			common.Debugf("Consumer state 1...")
 
 			// Listen for genesis messages
-			req, err := http.NewRequest(
+			req, err := http.NewRequestWithContext(
+				ctx,
 				"GET",
 				options.DiscoverySrv+options.Endpoint,
 				nil,
@@ -259,7 +259,8 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				"type":    {strconv.Itoa(int(common.SignalMsgOffer))},
 			}
 
-			req, err := http.NewRequest(
+			req, err := http.NewRequestWithContext(
+				ctx,
 				"POST",
 				options.DiscoverySrv+options.Endpoint,
 				strings.NewReader(form.Encode()),
@@ -292,9 +293,19 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 
 			// The HTTP request is complete
-			answerBytes, err := ioutil.ReadAll(res.Body)
-			if err != nil {
+			var answerBytes []byte
+			br := NewBodyReader(&res.Body)
+			go br.Read()
+
+			select {
+			case answerBytes = <-br.readComplete:
+				// Do nothing, we'll advance to the next state
+			case <-br.readErr:
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
+			case <-ctx.Done():
+				// Borked!
+				peerConnection.Close() // TODO: there's an err we should handle here
+				return 0, []interface{}{}
 			}
 
 			// TODO: Freddie sends back a 0-length body when nobody replied to our message. Is that the
@@ -385,7 +396,8 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				"type":    {strconv.Itoa(int(common.SignalMsgICE))},
 			}
 
-			req, err := http.NewRequest(
+			req, err := http.NewRequestWithContext(
+				ctx,
 				"POST",
 				options.DiscoverySrv+options.Endpoint,
 				strings.NewReader(form.Encode()),

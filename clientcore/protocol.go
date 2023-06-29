@@ -3,6 +3,7 @@ package clientcore
 
 import (
 	"context"
+	"io"
 	"sync"
 
 	"github.com/getlantern/broflake/common"
@@ -72,3 +73,30 @@ func (fsm *WorkerFSM) Stop() {
 // TODO: a state's number simply corresponds to its index in WorkerFSM.state, but we perform no
 // sanity checking of state indices.
 type FSMstate func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{})
+
+// BodyReader is a convenience wrapper around io.ReadAll, intended for use inside of FSMstates. It
+// provides the channels required to race the result of io.ReadAll against other signal(s). It was 
+// motivated by the long-polling HTTP requests made by producer and consumer workers which must be
+// bound by those workers' contexts.
+type BodyReader struct {
+	body         *io.ReadCloser
+	readComplete chan []byte
+	readErr      chan error
+}
+
+func NewBodyReader(b *io.ReadCloser) *BodyReader {
+	return &BodyReader{
+		body:         b,
+		readComplete: make(chan []byte, 0),
+		readErr:      make(chan error, 0),
+	}
+}
+
+func (r BodyReader) Read() {
+	bodyBytes, err := io.ReadAll(*r.body)
+	if err != nil {
+		r.readErr <- err
+		return
+	}
+	r.readComplete <- bodyBytes
+}
