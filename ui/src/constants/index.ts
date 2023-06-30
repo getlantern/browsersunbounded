@@ -101,8 +101,8 @@ export const AUTO_UPDATE_URL = 'https://embed.lantern.io/asset-manifest.json'
 
 export const WASM_CLIENT_CONFIG = {
 	type: 'widget',
-	cTableSz: 10,
-	pTableSz: 10,
+	cTableSz: 5,
+	pTableSz: 5,
 	busBufSz: 4096,
 	netstated: '',
 	discoverySrv: process.env.REACT_APP_DISCOVERY_SRV!,
