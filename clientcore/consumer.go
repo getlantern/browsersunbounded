@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"io"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -293,19 +294,10 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 
 			// The HTTP request is complete
-			var answerBytes []byte
-			br := NewBodyReader(&res.Body)
-			go br.Read()
-
-			select {
-			case answerBytes = <-br.readComplete:
-				// Do nothing, we'll advance to the next state
-			case <-br.readErr:
+			answerBytes, err := io.ReadAll(res.Body)
+			if err != nil {
+				common.Debugf("Error reading body: %v\n", err)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
-			case <-ctx.Done():
-				// Borked!
-				peerConnection.Close() // TODO: there's an err we should handle here
-				return 0, []interface{}{}
 			}
 
 			// TODO: Freddie sends back a 0-length body when nobody replied to our message. Is that the
