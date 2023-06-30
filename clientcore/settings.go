@@ -55,12 +55,12 @@ func NewDefaultWebSocketEgressOptions() *EgressOptions {
 }
 
 type BroflakeOptions struct {
-	ClientType  string
-	CTableSize  int
-	PTableSize  int
-	BusBufferSz int
-	Netstated   string
-	Browser     string
+	ClientType   string
+	CTableSize   int
+	PTableSize   int
+	BusBufferSz  int
+	Netstated    string
+	WebTransport bool
 }
 
 func NewDefaultBroflakeOptions() *BroflakeOptions {

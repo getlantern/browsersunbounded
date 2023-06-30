@@ -99,6 +99,15 @@ export const POPUP = 'popup'
 
 export const AUTO_UPDATE_URL = 'https://embed.lantern.io/asset-manifest.json'
 
+const supportsWebTransport = () => {
+	try {
+		return 'WebTransport' in window
+	}
+	catch (e) {
+		return false
+	}
+}
+
 export const WASM_CLIENT_CONFIG = {
 	type: 'widget',
 	cTableSz: 10,
@@ -109,5 +118,6 @@ export const WASM_CLIENT_CONFIG = {
 	discoverySrvEndpoint: process.env.REACT_APP_DISCOVERY_ENDPOINT!,
 	tag: '',
 	egressAddr: process.env.REACT_APP_EGRESS_ADDR!,
-	egressEndpoint: process.env.REACT_APP_EGRESS_ENDPOINT!
+	egressEndpoint: process.env.REACT_APP_EGRESS_ENDPOINT!,
+	webTransport: supportsWebTransport(),
 }

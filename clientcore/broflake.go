@@ -94,14 +94,12 @@ func NewBroflake(bfOpt *BroflakeOptions, rtcOpt *WebRTCOptions, egOpt *EgressOpt
 		}
 		cTable = NewWorkerTable(cfsms)
 		var pfsms []WorkerFSM
-		switch bfOpt.Browser {
-		case "chrome":
+		if bfOpt.WebTransport {
 			// Chrome widget peers consume connectivity from an egress server over WebTransport
 			for i := 0; i < bfOpt.PTableSize; i++ {
 				pfsms = append(pfsms, *NewEgressConsumerWebTransport(egOpt, &wgReady))
 			}
-		default:
-
+		} else {
 			// Widget peers consume connectivity from an egress server over WebSocket
 			for i := 0; i < bfOpt.PTableSize; i++ {
 				pfsms = append(pfsms, *NewEgressConsumerWebSocket(egOpt, &wgReady))
