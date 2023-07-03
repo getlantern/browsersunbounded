@@ -184,8 +184,15 @@ func handleSignalPost(w http.ResponseWriter, r *http.Request) {
 	// response or a nil body if they failed to respond
 	w.WriteHeader(http.StatusOK)
 
-	// Flush the header because the client FSM can short circuit certain states on a 200 OK
-	w.(http.Flusher).Flush()
+	// XXX: If the sender has just sent a SignalMsgICE, there are no more steps in the signaling
+	// handshake, so we'll close the request immediately. Being aware of message contents here is
+	// very un-Freddie-like! We previously implemented this short circuit behavior on the client side,
+	// but it required a Flush() here to push the status header to the client. The Flush() confuses
+	// the browser and breaks Golang context contracts in wasm build targets, so we live with this hack.
+	if common.SignalMsgType(msgType) == common.SignalMsgICE {
+		w.Write(nil)
+		return
+	}
 
 	select {
 	case res := <-reqChan:
