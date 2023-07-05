@@ -49,7 +49,7 @@ const Stats = () => {
 			<Row
 				borderBottom
 			>
-				<Text>{'People you are helping connect' + (width > BREAKPOINT ? ' to the open Internet:' : ':')}</Text>
+				<Text>{'People you are helping connect' + (width > BREAKPOINT ? ' to the open internet:' : ':')}</Text>
 				<Text>{currentConnections}</Text>
 			</Row>
 			{/*<Row*/}

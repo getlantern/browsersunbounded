@@ -20,4 +20,5 @@ export const Text = styled.p`
   font-weight: 500;
   font-size: 14px;
   line-height: 16px;
+	color: ${COLORS.blue5};
 `
