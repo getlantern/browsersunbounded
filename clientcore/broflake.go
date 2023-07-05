@@ -23,6 +23,7 @@ func NewBroflakeEngine(cTable, pTable *WorkerTable, ui UI, wg *sync.WaitGroup) *
 func (b *BroflakeEngine) start() {
 	b.cTable.Start()
 	b.pTable.Start()
+	common.Debug("▶ Broflake started!")
 }
 
 func (b *BroflakeEngine) stop() {
@@ -31,6 +32,7 @@ func (b *BroflakeEngine) stop() {
 
 	go func() {
 		b.wg.Wait()
+		common.Debug("■ Broflake stopped.")
 		b.ui.OnReady()
 	}()
 }

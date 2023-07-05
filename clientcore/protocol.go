@@ -53,7 +53,7 @@ func (fsm *WorkerFSM) Start() {
 		for {
 			select {
 			case <-fsm.ctx.Done():
-				common.Debug("Stopping WorkerFSM...")
+				common.Debug("End of last state, stopping WorkerFSM...")
 				return
 			default:
 				fsm.currentState, fsm.nextInput = fsm.state[fsm.currentState](fsm.ctx, fsm.com, fsm.nextInput)

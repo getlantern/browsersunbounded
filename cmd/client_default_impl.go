@@ -45,11 +45,9 @@ func main() {
 	bfOpt.ClientType = clientType
 	bfOpt.Netstated = netstated
 
-	// For MVP, the browser widget is configured for a concurrency of 10, so we might as well kick
-	// the tires on the native binary widget at concurrency 10 too
 	if clientType == "widget" {
-		bfOpt.CTableSize = 10
-		bfOpt.PTableSize = 10
+		bfOpt.CTableSize = 5
+		bfOpt.PTableSize = 5
 	}
 
 	rtcOpt := clientcore.NewDefaultWebRTCOptions()

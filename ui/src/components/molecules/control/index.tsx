@@ -14,7 +14,7 @@ interface Props {
 }
 
 const Control = ({onToggle, info = false}: Props) => {
-	const ready = useEmitterState(readyEmitter)
+	const ready = useEmitterState(readyEmitter) // true
 	const sharing = useEmitterState(sharingEmitter)
 	const {wasmInterface, settings} = useContext(AppContext)
 	const {mock, target} = settings

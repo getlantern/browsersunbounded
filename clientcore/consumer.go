@@ -8,7 +8,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -112,7 +112,8 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			common.Debugf("Consumer state 1...")
 
 			// Listen for genesis messages
-			req, err := http.NewRequest(
+			req, err := http.NewRequestWithContext(
+				ctx,
 				"GET",
 				options.DiscoverySrv+options.Endpoint,
 				nil,
@@ -259,7 +260,8 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				"type":    {strconv.Itoa(int(common.SignalMsgOffer))},
 			}
 
-			req, err := http.NewRequest(
+			req, err := http.NewRequestWithContext(
+				ctx,
 				"POST",
 				options.DiscoverySrv+options.Endpoint,
 				strings.NewReader(form.Encode()),
@@ -292,8 +294,9 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 
 			// The HTTP request is complete
-			answerBytes, err := ioutil.ReadAll(res.Body)
+			answerBytes, err := io.ReadAll(res.Body)
 			if err != nil {
+				common.Debugf("Error reading body: %v\n", err)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
 
@@ -385,7 +388,8 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				"type":    {strconv.Itoa(int(common.SignalMsgICE))},
 			}
 
-			req, err := http.NewRequest(
+			req, err := http.NewRequestWithContext(
+				ctx,
 				"POST",
 				options.DiscoverySrv+options.Endpoint,
 				strings.NewReader(form.Encode()),
