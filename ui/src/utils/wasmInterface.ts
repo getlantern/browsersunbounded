@@ -159,11 +159,10 @@ export class WasmInterface {
 				WASM_CLIENT_CONFIG.egressEndpoint
 			)
 		}
-		this.initListeners()
 	}
 
 	start = () => {
-		// if (!this.ready) return console.warn('Wasm client is not in ready state, aborting start')
+		if (!this.ready) return console.warn('Wasm client is not in ready state, aborting start')
 		if (!this.wasmClient) return console.warn('Wasm client has not been initialized, aborting start.')
 		// if the widget is running in an extension popup window, send message to the offscreen window
 		if (this.target === Targets.EXTENSION_POPUP) {
