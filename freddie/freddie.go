@@ -110,7 +110,7 @@ func handleSignalGet(w http.ResponseWriter, r *http.Request) {
 	consumerID := uuid.NewString()
 	consumerChan := consumerTable.Add(consumerID)
 	defer consumerTable.Delete(consumerID)
-	common.Debugf("New consumer listening (%v) | total consumers: %v", consumerID, consumerTable.Size())
+	// common.Debugf("New consumer listening (%v) | total consumers: %v", consumerID, consumerTable.Size())
 
 	// TODO: Matchmaking would happen here. (Just be selective about which consumers you broadcast
 	// to, and you've implemented matchmaking!) If consumerTable was an indexed datastore, we could
@@ -124,7 +124,7 @@ func handleSignalGet(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(fmt.Sprintf("%v\n", msg)))
 			w.(http.Flusher).Flush()
 		case <-timeoutChan:
-			common.Debugf("Consumer %v timeout, bye bye!", consumerID)
+			// common.Debugf("Consumer %v timeout, bye bye!", consumerID)
 			return
 		}
 	}
@@ -147,13 +147,13 @@ func handleSignalPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.Debugf(
-		"New msg (%v) -> %v: %v | total open messages: %v",
-		reqID,
-		sendTo,
-		data,
-		signalTable.Size(),
-	)
+	// common.Debugf(
+	// 	"New msg (%v) -> %v: %v | total open messages: %v",
+	// 	reqID,
+	// 	sendTo,
+	// 	data,
+	// 	signalTable.Size(),
+	// )
 
 	// Package the message
 	msg, err := json.Marshal(
@@ -198,7 +198,7 @@ func handleSignalPost(w http.ResponseWriter, r *http.Request) {
 	case res := <-reqChan:
 		w.Write([]byte(fmt.Sprintf("%v\n", res)))
 	case <-time.After(msgTTL * time.Second):
-		common.Debugf("Msg %v received no reply, bye bye!", reqID)
+		// common.Debugf("Msg %v received no reply, bye bye!", reqID)
 		w.Write(nil)
 	}
 }
