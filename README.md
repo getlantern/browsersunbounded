@@ -153,6 +153,19 @@ Links:
 #### UI quickstart for devs
 
 1. Work from the ui dir: `cd ui`
+2. Install deps: `yarn`
+
+Development:
+1. Copy the example env: `cp .env.development.example .env.development`
+2. Start the dev server: `yarn dev:web` and open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+
+Production:
+1. Copy the example env: `cp .env.production.example .env.production`
+2. Build and deploy prod bundle to Github page: `yarn deploy`
+
+#### UI deep dive for devs
+
+1. Work from the ui dir: `cd ui`
 
 2. Configure your .env file: `cp .env.development.example .env.development` 
    1. Set `REACT_APP_WIDGET_WASM_URL` to your intended hosted `widget.wasm` file. If you are serving it from `client` in [step #8](#arrow_forward-quickstart-for-devs), use [http://localhost:9000/widget.wasm](http://localhost:9000/widget.wasm). If you ran `./build_web.sh` ([step #7](#arrow_forward-quickstart-for-devs)) you can also use `/widget.wasm`. To config for prod point to a publicly hosted `widget.wasm` e.g. `https://embed.lantern.io/widget.wasm`. If you know you know, if not, you likely want to use `/widget.wasm`.
