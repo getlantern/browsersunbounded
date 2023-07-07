@@ -161,7 +161,7 @@ Development:
 
 Production:
 1. Copy the example env: `cp .env.production.example .env.production`
-2. Deploy the prod bundle: `yarn deploy`
+2. Build and deploy prod bundle to Github page: `yarn deploy`
 
 #### UI deep dive for devs
 
