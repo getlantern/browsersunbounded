@@ -99,6 +99,9 @@ export const POPUP = 'popup'
 
 export const AUTO_UPDATE_URL = 'https://embed.lantern.io/asset-manifest.json'
 
+// XXX nelson 7/6/2023: We've found that widget concurrency (cTableSz and pTableSz) should be 
+// <= the browser's limit on concurrent HTTP requests, which is ~6. That's because each widget
+// worker creates HTTP requests, and we can't trust the browser to properly handle excess requests.
 export const WASM_CLIENT_CONFIG = {
 	type: 'widget',
 	cTableSz: 5,
