@@ -10,11 +10,14 @@ interface Props {
 }
 
 const Switch = ({onToggle, checked, disabled, loading}: Props) => {
-	const {theme} = useContext(AppContext).settings
+	const {theme, menu, collapse} = useContext(AppContext).settings
+	const isLarge = !menu && !collapse
 
 	return (
 		<Container>
-			<Label>
+			<Label
+				style={isLarge ? {height: 30, width: 52} : {}}
+			>
 				<Input
 					type={'checkbox'}
 					onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -30,6 +33,7 @@ const Switch = ({onToggle, checked, disabled, loading}: Props) => {
 					disabled={disabled}
 					theme={theme}
 					$loading={loading}
+					$isLarge={isLarge}
 				/>
 				{
 					loading && (

@@ -5,12 +5,12 @@ import useExitIntent from '../../../hooks/useExitIntent'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
 import {sharingEmitter} from '../../../utils/wasmInterface'
 import {AppContext} from '../../../context'
-import {COLORS, Targets, Themes} from '../../../constants'
+import {COLORS, Layouts, Targets, Themes} from '../../../constants'
 
 const Toast = () => {
 	const {exit, target} = useContext(AppContext).settings
 	const sharing = useEmitterState(sharingEmitter)
-	const {theme} = useContext(AppContext).settings
+	const {theme, layout} = useContext(AppContext).settings
 	const [show, setShow] = useState(sharing)
 	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -30,13 +30,18 @@ const Toast = () => {
 
 	useExitIntent(exit ? toggleShow : () => null)
 
+	const top = show ? 0 : -10
+	const bannerStyle = {
+		left: 0,
+		right: 'unset',
+		top: top,
+	}
+
 	return (
 		<Container
 			show={show}
 			aria-hidden={!show}
-			style={{
-				top: show ? 0 : -10
-			}}
+			style={layout === Layouts.BANNER ? bannerStyle : {top}}
 			theme={theme}
 			onTouchStart={() => setShow(false)}
 			onMouseDown={() => setShow(false)}

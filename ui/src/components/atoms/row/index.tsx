@@ -11,13 +11,14 @@ interface Props {
 }
 
 const Row = ({children, borderTop = false, borderBottom = true, backgroundColor = COLORS.transparent}: Props) => {
-	const {theme} = useContext(AppContext).settings
+	const {theme, menu} = useContext(AppContext).settings
 	return (
 		<Container
 			borderTop={borderTop}
 			borderBottom={borderBottom}
 			backgroundColor={backgroundColor}
 			theme={theme}
+			style={menu ? {height: 48} : {height: 60}}
 		>
 			{children}
 		</Container>

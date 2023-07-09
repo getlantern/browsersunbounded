@@ -24,6 +24,7 @@ interface Props {
 	checked: boolean
 	theme: Themes
 	$loading: boolean
+	$isLarge: boolean
 }
 
 const Slider = styled.span`
@@ -43,14 +44,14 @@ const Slider = styled.span`
   &:before {
     position: absolute;
     content: "";
-    height: 17px;
-    width: 17px;
+    height: ${props => props.$isLarge ? 23 : 17}px;
+    width: ${props => props.$isLarge ? 23 : 17}px;
     left: 3.5px;
     bottom: 3.5px;
     background-color: ${({$loading}: Props) => $loading ? 'transparent' : COLORS.white};
     border-radius: 50%;
     transition: transform 250ms;
-    transform: translateX(${({checked}: Props) => checked ? '16px' : 0});
+    transform: translateX(${({checked, $isLarge}: Props) => checked ? $isLarge ? '22px' : '16px' : 0});
   }
 `
 
