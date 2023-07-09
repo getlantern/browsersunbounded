@@ -137,7 +137,7 @@ const Banner = () => {
 									)
 								}
 								<div
-									style={{width: '100%', height: !title && width > BREAKPOINT ? 80 : 24}}
+									style={{width: '100%', height: !title && width > BREAKPOINT ? 60 : 24}}
 								/>
 								{/*<div*/}
 								{/*	style={{paddingLeft: 8, paddingRight: 8}}*/}

@@ -11,5 +11,5 @@ export const Container = styled.div`
   align-items: center;
   flex-direction: column;
 	gap: 8px;
-  border: 1px solid ${COLORS.grey2};
+  border: 1px solid ${props => props.theme === Themes.LIGHT ? COLORS.grey2 : COLORS.grey4};
 `
