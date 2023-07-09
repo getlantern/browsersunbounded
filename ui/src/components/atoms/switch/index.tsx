@@ -37,7 +37,9 @@ const Switch = ({onToggle, checked, disabled, loading}: Props) => {
 				/>
 				{
 					loading && (
-						<LoadingSpinner />
+						<LoadingSpinner
+							$isLarge={isLarge}
+						/>
 					)
 				}
 			</Label>

@@ -60,8 +60,8 @@ const LoadingSpinner = styled.div`
   border-top: 2.5px solid ${COLORS.white};
   border-right: 2.5px solid ${COLORS.white};
   border-radius: 50%;
-  width: 17px;
-  height: 17px;
+  height: ${(props: {$isLarge: boolean}) => props.$isLarge ? 23 : 17}px;
+  width: ${(props: {$isLarge: boolean}) => props.$isLarge ? 23 : 17}px;
   animation: spin 1s linear infinite;
   position: absolute;
   top: 3.5px;
