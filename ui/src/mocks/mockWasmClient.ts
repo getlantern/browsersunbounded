@@ -11,9 +11,9 @@ import {
  	when the MOCK_DATA env flag is set to true. The mock client fires fake events at a regular intervals.
  ***/
 
-const defaultConnections: Connection[] = [...Array(5)].map((_, i) => (
-	{state: -1, addr: mockAddr[i], workerIdx: i}
-))
+const defaultConnections: Connection[] = [...Array(mockAddr.length)].map((_, i) => {
+	return {state: -1, addr: mockAddr[i], workerIdx: i}
+})
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -46,7 +46,7 @@ class MockWasmClient implements WasmClient {
 			})
 			// fire fake throughput events
 			this.wasmInterface.handleThroughput({detail: {bytesPerSec: throughput}})
-			if ((this.tick === 0 || this.tick % 10 === 0) && active.length !== 5) {
+			if ((this.tick === 0 || this.tick % 10 === 0) && active.length !== mockAddr.length) {
 				this.connections = this.connections.map((_, i) => (
 					{state: i === active.length ? 1 : this.connections[i].state, addr: mockAddr[i], workerIdx: i}
 				))

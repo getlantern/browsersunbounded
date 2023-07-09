@@ -3,6 +3,8 @@ import {usePrevious} from './usePrevious'
 import {Connection, connectionsEmitter} from '../utils/wasmInterface'
 import {useEmitterState} from './useStateEmitter'
 import {countries} from "../utils/countries";
+import useQueuedState from './useQueuedState'
+import {pushNotification, removeNotification} from '../components/molecules/notification'
 
 type ISO = keyof typeof countries
 
@@ -95,7 +97,12 @@ export const useGeo = () => {
 	const [arcs, setArcs] = useState<Arch[]>([])
 	const activeArcs = useMemo(() => arcs.filter(a => a.workerIdxArr.length > 0), [arcs])
 	const country = useRef<ISO>()
-	const connections = useEmitterState(connectionsEmitter)
+	const rawConnections = useEmitterState(connectionsEmitter)
+	const queuedConnections = useQueuedState(rawConnections, 1000) // only update every 1 seconds
+	const connections = useMemo(() => {
+		const active = [...rawConnections].some(c => c.state === 1)
+		return active ? queuedConnections : rawConnections
+	}, [rawConnections, queuedConnections])
 	const prevConnections = usePrevious(connections)
 
 	const updateArcs = useCallback(async (connections: Connection[]) => {
@@ -115,6 +122,10 @@ export const useGeo = () => {
 		const removedConnections = connections.filter(c => c.state === -1)
 		decrementArcs(arcs, removedConnections)
 
+		removedConnections.forEach(con => {
+			removeNotification(con.workerIdx)
+		})
+
 		const addedConnections = connections.filter(c => c.state === 1)
 		const geos = await geoLookupAll(addedConnections)
 		incrementArcs(arcs, geos)
@@ -122,10 +133,20 @@ export const useGeo = () => {
 		const newGeos = geos.filter(geo => !arcs.some(a => a.iso === geo.iso))
 		const newArcs = createArcs(newGeos, country.current)
 
-		setArcs([
-			...arcs,
-			...newArcs
-		])
+		const updatedArcs = [...arcs, ...newArcs]
+		setArcs(updatedArcs)
+
+		// dispatch push notifications if there is a single new connection (not a sync)
+		if (geos.length === 1) {
+			const country = updatedArcs.find(a => a.iso === geos[0].iso)?.country
+			if (!country) return
+			pushNotification({
+				id: geos[0].workerIdx,
+				text: `New connection: ${country.split(',')[0]}`,
+				autoHide: true,
+			})
+		}
+
 	}, [arcs])
 
 	useEffect(() => {

@@ -11,4 +11,5 @@ export const Container = styled.div`
   align-items: center;
   flex-direction: column;
 	gap: 8px;
+  border: 1px solid ${COLORS.grey2};
 `
