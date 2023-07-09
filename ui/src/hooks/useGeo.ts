@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {usePrevious} from './usePrevious'
-import {Connection, connectionsEmitter} from '../utils/wasmInterface'
+import {Connection, connectionsEmitter, sharingEmitter} from '../utils/wasmInterface'
 import {useEmitterState} from './useStateEmitter'
 import {countries} from "../utils/countries";
 import useQueuedState from './useQueuedState'
@@ -99,11 +99,12 @@ export const useGeo = () => {
 	const country = useRef<ISO>()
 	const rawConnections = useEmitterState(connectionsEmitter)
 	const queuedConnections = useQueuedState(rawConnections, 1000) // only update every 1 seconds
+	const active = [...rawConnections].some(c => c.state === 1)
 	const connections = useMemo(() => {
-		const active = [...rawConnections].some(c => c.state === 1)
 		return active ? queuedConnections : rawConnections
 	}, [rawConnections, queuedConnections])
 	const prevConnections = usePrevious(connections)
+	const sharing = useEmitterState(sharingEmitter)
 
 	const updateArcs = useCallback(async (connections: Connection[]) => {
 		/***
@@ -164,6 +165,15 @@ export const useGeo = () => {
 		})
 		updateArcs(updatedConnections).then(null)
 	}, [prevConnections, connections, updateArcs])
+
+	useEffect(() => {
+		if (sharing && !active) pushNotification({
+			id: -1,
+			text: 'Waiting for connections',
+			ellipse: true,
+		})
+		else removeNotification(-1)
+	}, [sharing, active])
 
 	const points = useMemo<Point[]>(() => {
 		return activeArcs.map(arc => {
