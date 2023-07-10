@@ -28,7 +28,8 @@ const (
 var consumerTable = userTable{Data: make(map[string]chan string)}
 var signalTable = userTable{Data: make(map[string]chan string)}
 
-var nConcurrentReqs metric.Int64UpDownCounter
+var nConcurrentPostReqs metric.Int64UpDownCounter
+var nConcurrentGetReqs metric.Int64UpDownCounter
 
 type userTable struct {
 	Data map[string]chan string
@@ -73,8 +74,6 @@ func (t *userTable) Size() int {
 }
 
 func handleSignal(w http.ResponseWriter, r *http.Request) {
-	nConcurrentReqs.Add(context.Background(), 1)
-	defer nConcurrentReqs.Add(context.Background(), -1)
 	enableCors(&w)
 
 	// Handle preflight requests
@@ -107,6 +106,9 @@ func handleSignal(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/signal is the producer advertisement stream
 func handleSignalGet(w http.ResponseWriter, r *http.Request) {
+	nConcurrentGetReqs.Add(context.Background(), 1)
+	defer nConcurrentGetReqs.Add(context.Background(), -1)
+
 	consumerID := uuid.NewString()
 	consumerChan := consumerTable.Add(consumerID)
 	defer consumerTable.Delete(consumerID)
@@ -132,6 +134,9 @@ func handleSignalGet(w http.ResponseWriter, r *http.Request) {
 
 // POST /v1/signal is how all signaling messaging is performed
 func handleSignalPost(w http.ResponseWriter, r *http.Request) {
+	nConcurrentPostReqs.Add(context.Background(), 1)
+	defer nConcurrentPostReqs.Add(context.Background(), -1)
+
 	reqID := uuid.NewString()
 	reqChan := signalTable.Add(reqID)
 	defer signalTable.Delete(reqID)
@@ -230,7 +235,11 @@ func main() {
 
 	m := otel.Meter("github.com/getlantern/broflake/freddie")
 	var err error
-	nConcurrentReqs, err = m.Int64UpDownCounter("concurrent-reqs")
+	nConcurrentGetReqs, err = m.Int64UpDownCounter("concurrent-get-reqs")
+	if err != nil {
+		panic(err)
+	}
+	nConcurrentPostReqs, err = m.Int64UpDownCounter("concurrent-post-reqs")
 	if err != nil {
 		panic(err)
 	}
