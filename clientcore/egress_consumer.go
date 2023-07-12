@@ -6,6 +6,8 @@ package clientcore
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"net"
 	"sync"
 	"time"
@@ -14,6 +16,7 @@ import (
 
 	"github.com/getlantern/broflake/common"
 	"github.com/getlantern/quicwrapper/webt"
+	"github.com/quic-go/quic-go/http3"
 	"github.com/quic-go/webtransport-go"
 )
 
@@ -143,18 +146,33 @@ func NewEgressConsumerWebTransport(options *EgressOptions, wg *sync.WaitGroup) *
 			ctx, cancel := context.WithTimeout(ctx, options.ConnectTimeout)
 			defer cancel()
 
-			var d webtransport.Dialer
+			rootCAs, _ := x509.SystemCertPool()
+			if rootCAs == nil {
+				rootCAs = x509.NewCertPool()
+			}
+			if ok := rootCAs.AppendCertsFromPEM(options.CACert); !ok {
+				common.Debugf("Couldn't add root certificate: %v", options.CACert)
+			}
+
+			var d webtransport.Dialer = webtransport.Dialer{}
+			d.RoundTripper = &http3.RoundTripper{
+				TLSClientConfig: &tls.Config{
+					RootCAs: rootCAs,
+				},
+			}
+
+			url := options.Addr + options.Endpoint
 
 			// TODO: We ideally should create a single session and reuse it for all streams.
-			httpResponse, session, err := d.Dial(ctx, options.Addr+options.Endpoint, nil)
+			httpResponse, session, err := d.Dial(ctx, url, nil)
 			if err != nil {
-				common.Debugf("Couldn't connect to egress server at %v: %v", options.Addr, err)
+				common.Debugf("Couldn't connect to egress server at %v: %v", url, err)
 				<-time.After(options.ErrorBackoff)
 				return 0, []interface{}{}
 			}
 			stream, err := session.OpenStream()
 			if err != nil {
-				common.Debugf("Couldn't open stream to egress server at %v: %v", options.Addr, err)
+				common.Debugf("Couldn't open stream to egress server at %v: %v", url, err)
 				<-time.After(options.ErrorBackoff)
 				return 0, []interface{}{}
 			}

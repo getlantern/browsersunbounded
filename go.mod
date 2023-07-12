@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819
 	github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65
-	github.com/getlantern/quicwrapper v0.0.0-20230628202137-869099385a2a
+	github.com/getlantern/quicwrapper v0.0.0-20230712142605-583786d9d29c
 	github.com/getlantern/telemetry v0.0.0-20230523155019-be7c1d8cd8cb
 	github.com/google/uuid v1.3.0
 	github.com/pion/webrtc/v3 v3.2.10

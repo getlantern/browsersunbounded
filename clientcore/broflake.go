@@ -62,7 +62,11 @@ func NewBroflake(bfOpt *BroflakeOptions, rtcOpt *WebRTCOptions, egOpt *EgressOpt
 	}
 
 	if egOpt == nil {
-		egOpt = NewDefaultWebSocketEgressOptions()
+		if bfOpt.WebTransport {
+			egOpt = NewDefaultWebTransportEgressOptions()
+		} else {
+			egOpt = NewDefaultWebSocketEgressOptions()
+		}
 	}
 
 	// The boot DAG:

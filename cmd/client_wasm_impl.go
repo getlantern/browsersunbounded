@@ -33,13 +33,14 @@ func main() {
 	js.Global().Set(
 		"newBroflake",
 		js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+			webTransport := args[5].Bool()
 			bfOpt := clientcore.BroflakeOptions{
 				ClientType:   args[0].String(),
 				CTableSize:   args[1].Int(),
 				PTableSize:   args[2].Int(),
 				BusBufferSz:  args[3].Int(),
 				Netstated:    args[4].String(),
-				WebTransport: args[5].Bool(),
+				WebTransport: webTransport,
 			}
 
 			rtcOpt := clientcore.NewDefaultWebRTCOptions()
@@ -47,7 +48,12 @@ func main() {
 			rtcOpt.Endpoint = args[7].String()
 			rtcOpt.Tag = args[8].String()
 
-			egOpt := clientcore.NewDefaultEgressOptions()
+			var egOpt *clientcore.EgressOptions
+			if webTransport {
+				clientcore.NewDefaultWebTransportEgressOptions()
+			} else {
+				clientcore.NewDefaultWebSocketEgressOptions()
+			}
 			egOpt.Addr = args[9].String()
 			egOpt.Endpoint = args[10].String()
 

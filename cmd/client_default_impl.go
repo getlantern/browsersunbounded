@@ -42,6 +42,7 @@ func main() {
 	common.Debugf("proxyPort: %v", proxyPort)
 
 	bfOpt := clientcore.NewDefaultBroflakeOptions()
+	bfOpt.WebTransport = true
 	bfOpt.ClientType = clientType
 	bfOpt.Netstated = netstated
 
@@ -59,7 +60,7 @@ func main() {
 		rtcOpt.DiscoverySrv = freddie
 	}
 
-	egOpt := clientcore.NewDefaultWebSocketEgressOptions()
+	egOpt := clientcore.NewDefaultWebTransportEgressOptions()
 
 	if egress != "" {
 		egOpt.Addr = egress
