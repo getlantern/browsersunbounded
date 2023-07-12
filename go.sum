@@ -104,8 +104,8 @@ github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6/go.mod h1:D5ao98qkA
 github.com/getlantern/ops v0.0.0-20220713155959-1315d978fff7/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
 github.com/getlantern/ops v0.0.0-20230424193308-26325dfed3cf h1:q8nsH0Lx9fP8HY6T9rA1zogvOzO9JtbUI5BXkh7wxxI=
 github.com/getlantern/ops v0.0.0-20230424193308-26325dfed3cf/go.mod h1:R7HfJVLsnSeqaDWkiUlU+ANBjac4oYmXGrrps8vW7CM=
-github.com/getlantern/quicwrapper v0.0.0-20230712142605-583786d9d29c h1:awAL8a8bst/fDsq6lPVizKkU8T3ag1s541Eiq2u71RQ=
-github.com/getlantern/quicwrapper v0.0.0-20230712142605-583786d9d29c/go.mod h1:VIVKENhDaV5T+KPMHPHr3nev4JjxdLE7X6HreEOpnY8=
+github.com/getlantern/quicwrapper v0.0.0-20230712153452-6632f7a4b6ed h1:FYrAH+aOLB6Kbvq/wamYDgsixQGmdgauZyDyVQqPojI=
+github.com/getlantern/quicwrapper v0.0.0-20230712153452-6632f7a4b6ed/go.mod h1:TLDFfHyQWi3IK/82KHJZOEfcgJLb6tQHcnVpGrQ2ojA=
 github.com/getlantern/telemetry v0.0.0-20230523155019-be7c1d8cd8cb h1:6XZ3Q4oD6A1Tjq6QLgzzQrdQ8FvulzW16HhNQOSECAM=
 github.com/getlantern/telemetry v0.0.0-20230523155019-be7c1d8cd8cb/go.mod h1:nGOdDc0aD/LRTaY2SGKQ7nsYcWFXrhgkrhIhJuYN614=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
@@ -309,8 +309,8 @@ github.com/quic-go/qtls-go1-19 v0.3.2 h1:tFxjCFcTQzK+oMxG6Zcvp4Dq8dx4yD3dDiIiyc8
 github.com/quic-go/qtls-go1-19 v0.3.2/go.mod h1:ySOI96ew8lnoKPtSqx2BlI5wCpUVPT05RMAlajtnyOI=
 github.com/quic-go/qtls-go1-20 v0.2.2 h1:WLOPx6OY/hxtTxKV1Zrq20FtXtDEkeY00CGQm8GEa3E=
 github.com/quic-go/qtls-go1-20 v0.2.2/go.mod h1:JKtK6mjbAVcUTN/9jZpvLbGxvdWIKS8uT7EiStoU1SM=
-github.com/quic-go/quic-go v0.36.0 h1:JIrO7p7Ug6hssFcARjWDiqS2RAKJHCiwPxBAA989rbI=
-github.com/quic-go/quic-go v0.36.0/go.mod h1:zPetvwDlILVxt15n3hr3Gf/I3mDf7LpLKPhR4Ez0AZQ=
+github.com/quic-go/quic-go v0.36.1 h1:WsG73nVtnDy1TiACxFxhQ3TqaW+DipmqzLEtNlAwZyY=
+github.com/quic-go/quic-go v0.36.1/go.mod h1:zPetvwDlILVxt15n3hr3Gf/I3mDf7LpLKPhR4Ez0AZQ=
 github.com/quic-go/webtransport-go v0.5.2 h1:GA6Bl6oZY+g/flt00Pnu0XtivSD8vukOu3lYhJjnGEk=
 github.com/quic-go/webtransport-go v0.5.2/go.mod h1:OhmmgJIzTTqXK5xvtuX0oBpLV2GkLWNDA+UeTGJXErU=
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
