@@ -11,7 +11,6 @@ import (
 	"math/big"
 	"net"
 	"net/http"
-	"os"
 	"sync/atomic"
 	"time"
 
@@ -243,8 +242,8 @@ func (l proxyListener) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewWebTransportListener(ctx context.Context, addr, certFile, keyFile string) (net.Listener, error) {
-	tlsConfig, err := tlsConfigFromFiles(certFile, keyFile)
+func NewWebTransportListener(ctx context.Context, addr, certPEM, keyPEM string) (net.Listener, error) {
+	tlsConfig, err := tlsConfig(certPEM, keyPEM)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load tlsconfig %w", err)
 	}
@@ -330,18 +329,6 @@ func NewWebSocketListener(ctx context.Context, ll net.Listener, certPEM, keyPEM 
 	}()
 
 	return l, nil
-}
-
-func tlsConfigFromFiles(certFile, keyFile string) (*tls.Config, error) {
-	certPem, err := os.ReadFile(certFile)
-	if err != nil {
-		return nil, fmt.Errorf("unable to load certfile %v: %w", certFile, err)
-	}
-	keyPem, err := os.ReadFile(keyFile)
-	if err != nil {
-		return nil, fmt.Errorf("unable to load keyfile %v: %w", keyFile, err)
-	}
-	return tlsConfig(string(certPem), string(keyPem))
 }
 
 func tlsConfig(certPEM, keyPEM string) (*tls.Config, error) {
