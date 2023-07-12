@@ -350,8 +350,6 @@ func tlsConfig(certPEM, keyPEM string) (*tls.Config, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unable to load cert/key from PEM for broflake: %v", err)
 		}
-
-		common.Debugf("Broflake using cert %v and key %v", certPEM, keyPEM)
 		return &tls.Config{
 			Certificates: []tls.Certificate{cert},
 			NextProtos:   []string{"broflake"},
