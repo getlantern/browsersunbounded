@@ -6,7 +6,7 @@
 
 	Also see the patches dir for changes to the shader program that are not exposed through the react-globe api.
  ***/
-import GlobeComponent from 'react-globe.gl' // @todo lazy load
+import GlobeComponent from 'react-globe.gl'
 import {Container} from './styles'
 import {useContext, useEffect, useMemo, useRef, useState} from 'react'
 import {AppContext} from '../../../context'
@@ -15,29 +15,38 @@ import Shadow from './shadow'
 import ToolTip from '../toolTip'
 import {useGeo} from '../../../hooks/useGeo'
 import {Themes} from '../../../constants'
-import {useEmitterState} from '../../../hooks/useStateEmitter'
-import {sharingEmitter} from '../../../utils/wasmInterface'
-import {countries} from "../../../utils/countries";
-import InteractAnim from './interactAnim'
+import {Notification} from '../notification'
+// import {useEmitterState} from '../../../hooks/useStateEmitter'
+// import {sharingEmitter} from '../../../utils/wasmInterface'
+// import {countries} from "../../../utils/countries";
+// import InteractAnim from './interactAnim'
 
 interface Props {
 	target: Targets
 }
 
+const calcOffset = (size: number, title: boolean, menu: boolean) => {
+	if (size === 250) return -10
+	let offset = -10
+	if (title) offset += 40
+	if (menu) offset -= 40
+	return offset
+}
+
 const Globe = ({target}: Props) => {
-	const sharing = useEmitterState(sharingEmitter)
+	// const sharing = useEmitterState(sharingEmitter)
 	const {width, settings} = useContext(AppContext)
-	const {theme, title} = settings
+	const {theme, title, menu} = settings
 	const size = width < BREAKPOINT ? 250 : 400
 	const isSetup = useRef(false)
 	const [arc, setArc] = useState(null)
 	const count = arc ? arc.workerIdxArr.length : 0
 	const globe = useRef()
 	const container = useRef()
-	const {arcs, points, country} = useGeo()
+	const {arcs, points} = useGeo()
 	const [altitude, setAltitude] = useState(14)
-	const lastAnimation = useRef(0)
-	const [interacted, setInteracted] = useState(false)
+	// const lastAnimation = useRef(0)
+	// const [interacted, setInteracted] = useState(false)
 
 	const ghostArcs = useMemo(() => {
 		if (!arcs) return []
@@ -47,20 +56,20 @@ const Globe = ({target}: Props) => {
 		})
 	}, [arcs])
 
-	useEffect(() => {
-		if (!globe.current) return
-		const now = Date.now()
-		if (sharing && country && (now - lastAnimation.current) > 5000) {
-			const userLoc = countries[country]
-			globe.current.pointOfView({
-				lat: 20, // equator
-				lng: points.length === 0 ? userLoc.longitude : points[points.length - 1].lng,
-				altitude: 2.5
-			}, 1000)
-			lastAnimation.current = now
-		}
-		// alert(points[points.length - 1])
-	}, [sharing, country, points])
+	// useEffect(() => { // @todo re-enable this when we determine the better ux see https://github.com/getlantern/engineering/issues/216
+	// 	if (!globe.current) return
+	// 	const now = Date.now()
+	// 	if (sharing && country && (now - lastAnimation.current) > 5000) {
+	// 		const userLoc = countries[country]
+	// 		globe.current.pointOfView({
+	// 			lat: 20, // equator
+	// 			lng: points.length === 0 ? userLoc.longitude : points[points.length - 1].lng,
+	// 			altitude: 2.5
+	// 		}, 1000)
+	// 		lastAnimation.current = now
+	// 	}
+	// 	// alert(points[points.length - 1])
+	// }, [sharing, country, points])
 
 	useEffect(() => {
 		if (!globe.current) return
@@ -114,11 +123,15 @@ const Globe = ({target}: Props) => {
 	return (
 		<Container
 			ref={container}
+			offset={calcOffset(size, title, menu)}
 			size={size}
-			$title={title}
 			active={!!arc}
-			onMouseDown={() => setInteracted(true)}
-			onTouchStart={() => setInteracted(true)}
+			style={{
+				minHeight: 250, // sm breakpoint
+				maxHeight: (!menu && title) ? 424 : (!menu || title) ? 400 : 350, // lg breakpoint
+			}}
+			// onMouseDown={() => setInteracted(true)}
+			// onTouchStart={() => setInteracted(true)}
 			onMouseEnter={() => setRotateSpeed(1)}
 			onMouseLeave={() => setRotateSpeed(1.5)}
 		>
@@ -163,11 +176,13 @@ const Globe = ({target}: Props) => {
 				show={!!arc}
 				container={container}
 			/>
-			{
-				isSetup && !interacted && (
-					<InteractAnim />
-				)
-			}
+			<Notification />
+			{/*@todo re-enable this after we determine better UX see https://github.com/getlantern/engineering/issues/215*/}
+			{/*{*/}
+			{/*	isSetup && !interacted && (*/}
+			{/*		<InteractAnim />*/}
+			{/*	)*/}
+			{/*}*/}
 		</Container>
 	)
 }

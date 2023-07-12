@@ -8,7 +8,7 @@ import (
 )
 
 // Must be a valid semver
-var Version = "v0.0.1"
+var Version = "v0.0.2"
 
 var VersionHeader = "X-BF-Version"
 

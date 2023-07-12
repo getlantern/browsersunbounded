@@ -6,7 +6,7 @@ package clientcore
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -150,7 +150,8 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				"type":    {strconv.Itoa(int(common.SignalMsgGenesis))},
 			}
 
-			req, err := http.NewRequest(
+			req, err := http.NewRequestWithContext(
+				ctx,
 				"POST",
 				options.DiscoverySrv+options.Endpoint,
 				strings.NewReader(form.Encode()),
@@ -181,8 +182,9 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 
 			// The HTTP request is complete
-			offerBytes, err := ioutil.ReadAll(res.Body)
+			offerBytes, err := io.ReadAll(res.Body)
 			if err != nil {
+				common.Debugf("Error reading body: %v\n", err)
 				return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 			}
 
@@ -277,7 +279,8 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				"type":    {strconv.Itoa(int(common.SignalMsgAnswer))},
 			}
 
-			req, err := http.NewRequest(
+			req, err := http.NewRequestWithContext(
+				ctx,
 				"POST",
 				options.DiscoverySrv+options.Endpoint,
 				strings.NewReader(form.Encode()),
@@ -317,8 +320,9 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 
 			// The HTTP request is complete
-			iceBytes, err := ioutil.ReadAll(res.Body)
+			iceBytes, err := io.ReadAll(res.Body)
 			if err != nil {
+				common.Debugf("Error reading body: %v\n", err)
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}

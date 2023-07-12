@@ -1,11 +1,11 @@
-import {Chrome, Firefox, Heart, Menu as MenuIcon, More, Twitter} from '../../atoms/icons'
+import {Chrome, Firefox, Heart, Menu as MenuIcon, More} from '../../atoms/icons'
 import {MenuItem, MenuWrapper, StyledButton} from './styles'
 import {Dispatch, SetStateAction, useContext, useEffect, useRef, useState} from 'react'
 import useClickOutside from '../../../hooks/useClickOutside'
 import {AppContext} from '../../../context'
-import {COLORS, Layouts, Targets, Themes} from '../../../constants'
+import {APP_STORE_LINKS, COLORS, Layouts, Targets, Themes} from '../../../constants'
 import {isFirefox} from '../../../utils/userAgent'
-import {connectedTwitterLink} from '../../../utils/share'
+// import {connectedTwitterLink} from '../../../utils/share'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
 import {lifetimeConnectionsEmitter} from '../../../utils/wasmInterface'
 import {humanizeCount} from '../../../utils/humanize'
@@ -14,21 +14,21 @@ const menuItems = (connected: number | string) => [
 	{
 		key: 'firefox',
 		label: 'Install Firefox Extension',
-		href: 'https://addons.mozilla.org/en-US/firefox/addon/lantern-network/',
+		href: APP_STORE_LINKS.firefox,
 		icon: <Firefox/>
 	},
 	{
 		key: 'chrome',
 		label: 'Install Chrome Extension',
-		href: 'https://chrome.google.com/webstore/detail/lantern-network/jonhnkjdlimggpmbehgkgpjgphoepfdj/',
+		href: APP_STORE_LINKS.chrome,
 		icon: <Chrome/>
 	},
-	{
-		key: 'twitter',
-		label: 'Share',
-		href: connectedTwitterLink(connected),
-		icon: <Twitter/>
-	},
+	// { // @todo re-enable this when we determine the better ux see https://github.com/getlantern/engineering/issues/207
+	// 	key: 'twitter',
+	// 	label: 'Share',
+	// 	href: connectedTwitterLink(connected),
+	// 	icon: <Twitter/>
+	// },
 	{
 		key: 'donate',
 		label: 'Donate to Lantern',

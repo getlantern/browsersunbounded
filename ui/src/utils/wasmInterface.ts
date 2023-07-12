@@ -121,8 +121,9 @@ export class WasmInterface {
 		// this dumb state is needed to prevent multiple calls to initialize from react hot reload dev server 🥵
 		if (this.initializing || this.instance) { // already initialized or initializing
 			console.warn('Wasm client has already been initialized or is initializing, aborting init.')
-			return
+		  return
 		}
+
 		this.initializing = true
 		this.target = target
 		if (mock) { // fake it till you make it
@@ -134,6 +135,18 @@ export class WasmInterface {
 			)
 			this.instance = res.instance
 			this.go.run(this.instance)
+			this.buildNewClient()
+    }
+		this.initListeners()
+		this.handleReady()
+		this.initializing = false
+		return this.instance
+	}
+
+	buildNewClient = (mock = false) => {
+		if (mock) { // fake it till you make it
+			this.wasmClient = new MockWasmClient(this)
+		} else {
 			this.wasmClient = globalThis.newBroflake(
 				WASM_CLIENT_CONFIG.type,
 				WASM_CLIENT_CONFIG.cTableSz,
@@ -148,10 +161,6 @@ export class WasmInterface {
 				WASM_CLIENT_CONFIG.webTransport,
 			)
 		}
-		this.initListeners()
-		this.handleReady()
-		this.initializing = false
-		return this.instance
 	}
 
 	start = () => {

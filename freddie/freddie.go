@@ -28,7 +28,8 @@ const (
 var consumerTable = userTable{Data: make(map[string]chan string)}
 var signalTable = userTable{Data: make(map[string]chan string)}
 
-var nConcurrentReqs metric.Int64UpDownCounter
+var nConcurrentPostReqs metric.Int64UpDownCounter
+var nConcurrentGetReqs metric.Int64UpDownCounter
 
 type userTable struct {
 	Data map[string]chan string
@@ -73,8 +74,6 @@ func (t *userTable) Size() int {
 }
 
 func handleSignal(w http.ResponseWriter, r *http.Request) {
-	nConcurrentReqs.Add(context.Background(), 1)
-	defer nConcurrentReqs.Add(context.Background(), -1)
 	enableCors(&w)
 
 	// Handle preflight requests
@@ -107,10 +106,13 @@ func handleSignal(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/signal is the producer advertisement stream
 func handleSignalGet(w http.ResponseWriter, r *http.Request) {
+	nConcurrentGetReqs.Add(context.Background(), 1)
+	defer nConcurrentGetReqs.Add(context.Background(), -1)
+
 	consumerID := uuid.NewString()
 	consumerChan := consumerTable.Add(consumerID)
 	defer consumerTable.Delete(consumerID)
-	common.Debugf("New consumer listening (%v) | total consumers: %v", consumerID, consumerTable.Size())
+	// common.Debugf("New consumer listening (%v) | total consumers: %v", consumerID, consumerTable.Size())
 
 	// TODO: Matchmaking would happen here. (Just be selective about which consumers you broadcast
 	// to, and you've implemented matchmaking!) If consumerTable was an indexed datastore, we could
@@ -124,7 +126,7 @@ func handleSignalGet(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(fmt.Sprintf("%v\n", msg)))
 			w.(http.Flusher).Flush()
 		case <-timeoutChan:
-			common.Debugf("Consumer %v timeout, bye bye!", consumerID)
+			// common.Debugf("Consumer %v timeout, bye bye!", consumerID)
 			return
 		}
 	}
@@ -132,6 +134,9 @@ func handleSignalGet(w http.ResponseWriter, r *http.Request) {
 
 // POST /v1/signal is how all signaling messaging is performed
 func handleSignalPost(w http.ResponseWriter, r *http.Request) {
+	nConcurrentPostReqs.Add(context.Background(), 1)
+	defer nConcurrentPostReqs.Add(context.Background(), -1)
+
 	reqID := uuid.NewString()
 	reqChan := signalTable.Add(reqID)
 	defer signalTable.Delete(reqID)
@@ -147,13 +152,13 @@ func handleSignalPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.Debugf(
-		"New msg (%v) -> %v: %v | total open messages: %v",
-		reqID,
-		sendTo,
-		data,
-		signalTable.Size(),
-	)
+	// common.Debugf(
+	// 	"New msg (%v) -> %v: %v | total open messages: %v",
+	// 	reqID,
+	// 	sendTo,
+	// 	data,
+	// 	signalTable.Size(),
+	// )
 
 	// Package the message
 	msg, err := json.Marshal(
@@ -184,14 +189,21 @@ func handleSignalPost(w http.ResponseWriter, r *http.Request) {
 	// response or a nil body if they failed to respond
 	w.WriteHeader(http.StatusOK)
 
-	// Flush the header because the client FSM can short circuit certain states on a 200 OK
-	w.(http.Flusher).Flush()
+	// XXX: If the sender has just sent a SignalMsgICE, there are no more steps in the signaling
+	// handshake, so we'll close the request immediately. Being aware of message contents here is
+	// very un-Freddie-like! We previously implemented this short circuit behavior on the client side,
+	// but it required a Flush() here to push the status header to the client. The Flush() confuses
+	// the browser and breaks Golang context contracts in wasm build targets, so we live with this hack.
+	if common.SignalMsgType(msgType) == common.SignalMsgICE {
+		w.Write(nil)
+		return
+	}
 
 	select {
 	case res := <-reqChan:
 		w.Write([]byte(fmt.Sprintf("%v\n", res)))
 	case <-time.After(msgTTL * time.Second):
-		common.Debugf("Msg %v received no reply, bye bye!", reqID)
+		// common.Debugf("Msg %v received no reply, bye bye!", reqID)
 		w.Write(nil)
 	}
 }
@@ -223,7 +235,11 @@ func main() {
 
 	m := otel.Meter("github.com/getlantern/broflake/freddie")
 	var err error
-	nConcurrentReqs, err = m.Int64UpDownCounter("concurrent-reqs")
+	nConcurrentGetReqs, err = m.Int64UpDownCounter("concurrent-get-reqs")
+	if err != nil {
+		panic(err)
+	}
+	nConcurrentPostReqs, err = m.Int64UpDownCounter("concurrent-post-reqs")
 	if err != nil {
 		panic(err)
 	}
