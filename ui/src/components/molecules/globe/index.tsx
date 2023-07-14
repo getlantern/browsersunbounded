@@ -120,6 +120,9 @@ const Globe = ({target}: Props) => {
 	// 	animate()
 	// }, [])
 
+	const colorInterpolatorBlue = t => `rgba(0, 188, 212,${Math.sqrt(1-t)})`;
+	const colorInterpolatorYellow = t => `rgba(255, 193, 7,${Math.sqrt(1-t)})`;
+
 	return (
 		<Container
 			ref={container}
@@ -152,24 +155,29 @@ const Globe = ({target}: Props) => {
 				backgroundImageUrl={null}
 				globeImageUrl={theme === Themes.DARK ? UV_MAP_PATH_DARK : UV_MAP_PATH_LIGHT}
 				arcsData={[...arcs, ...ghostArcs]}
-				arcColor={arc => arc.ghost ? 'rgba(255, 255, 255, 0)' : ['rgba(0, 188, 212, 0.75)', 'rgba(255, 193, 7, 0.75)']}
+				arcColor={arc => arc.ghost ? 'rgba(255, 255, 255, 0)' : ['rgba(0, 188, 212, 0.0)', 'rgba(0, 188, 212, 0.75)', 'rgba(0, 188, 212, 0.75)', 'rgba(255, 193, 7, 0.75)', 'rgba(255, 193, 7, 0.0)']}
 				arcDashLength={1}
 				arcDashGap={0.5}
 				arcDashInitialGap={1}
-				arcDashAnimateTime={arc => arc.ghost ? 0 : 500}
+				arcDashAnimateTime={arc => arc.ghost ? 0 : 1000}
 				arcsTransitionDuration={0}
-				arcStroke={arc => arc.ghost ? 10 : 2.5}
+				arcStroke={arc => arc.ghost ? 10 : 2}
 				arcAltitudeAutoScale={0.3}
 				onArcHover={setArc}
 				pointsData={points}
-				pointColor={() => COLORS.green}
-				pointRadius={1.5}
+				pointColor={p => p.origin ? 'rgba(0, 188, 212, 0.25)' : 'rgba(255, 193, 7, 0.25)'}
+				pointRadius={2}
 				pointAltitude={0}
 				pointsTransitionDuration={500}
 				onZoom={zoom => {
 					let smooth = Math.round(zoom.altitude * 10) / 10
 					if (smooth !== altitude) setAltitude(smooth)
 				}}
+				ringsData={points}
+				ringColor={p => p.origin ? colorInterpolatorBlue : colorInterpolatorYellow}
+				// ringMaxRadius={4}
+				// ringRepeatPeriod={1000}
+				ringPropagationSpeed={1}
 			/>
 			<ToolTip
 				text={!!arc && `${count} ${count === 1 ? 'person' : 'people'} from ${arc.country.split(',')[0]}`}
