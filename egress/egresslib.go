@@ -11,6 +11,7 @@ import (
 	"math/big"
 	"net"
 	"net/http"
+	"os"
 	"sync/atomic"
 	"time"
 
@@ -331,7 +332,28 @@ func NewWebSocketListener(ctx context.Context, ll net.Listener, certPEM, keyPEM 
 	return l, nil
 }
 
-func tlsConfig(certPEM, keyPEM string) (*tls.Config, error) {
+func tlsConfig(cert, key string) (*tls.Config, error) {
+	if config, err := tlsConfigFromPEM(cert, key); err == nil {
+		return config, nil
+	} else {
+		common.Debugf("Unable to load tlsconfig from PEM...trying file paths: %v", err)
+		return tlsConfigFromFiles(cert, key)
+	}
+}
+
+func tlsConfigFromFiles(certFile, keyFile string) (*tls.Config, error) {
+	certPem, err := os.ReadFile(certFile)
+	if err != nil {
+		return nil, fmt.Errorf("unable to load certfile %v: %w", certFile, err)
+	}
+	keyPem, err := os.ReadFile(keyFile)
+	if err != nil {
+		return nil, fmt.Errorf("unable to load keyfile %v: %w", keyFile, err)
+	}
+	return tlsConfigFromPEM(string(certPem), string(keyPem))
+}
+
+func tlsConfigFromPEM(certPEM, keyPEM string) (*tls.Config, error) {
 	if certPEM != "" && keyPEM != "" {
 		cert, err := tls.X509KeyPair([]byte(certPEM), []byte(keyPEM))
 		if err != nil {
