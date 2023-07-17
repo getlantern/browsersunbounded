@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/pion/webrtc/v3"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/getlantern/broflake/common"
 )
@@ -454,6 +455,12 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				return 5, []interface{}{peerConnection, d, connectionChange, connectionClosed}
 			case <-time.After(options.NATFailTimeout):
 				common.Debugf("NAT failure, aborting!")
+
+				if options.OtelEnabled {
+					_, span := options.OtelTracer.Start(context.Background(), "nat_failure", trace.WithAttributes())
+					span.End()
+				}
+
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}

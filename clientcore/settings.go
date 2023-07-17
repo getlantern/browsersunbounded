@@ -6,6 +6,8 @@ import (
 	"math/rand"
 	"net/http"
 	"time"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 type WebRTCOptions struct {
@@ -20,6 +22,8 @@ type WebRTCOptions struct {
 	HttpClient     *http.Client
 	Patience       time.Duration
 	ErrorBackoff   time.Duration
+	OtelEnabled    bool
+	OtelTracer     trace.Tracer
 }
 
 func NewDefaultWebRTCOptions() *WebRTCOptions {
@@ -35,6 +39,8 @@ func NewDefaultWebRTCOptions() *WebRTCOptions {
 		HttpClient:     &http.Client{},
 		Patience:       500 * time.Millisecond,
 		ErrorBackoff:   5 * time.Second,
+		OtelEnabled:    false,
+		OtelTracer:     otel.GetTracerProvider().Tracer("broflake"),
 	}
 }
 
