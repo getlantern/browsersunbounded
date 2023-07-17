@@ -6,11 +6,12 @@ import {Text} from '../../atoms/typography'
 
 const ExtensionCta = () => {
 	const {settings} = useContext(AppContext)
-	const {theme} = settings
+	const {theme, menu} = settings
 
 	return (
 		<Container
 			theme={theme}
+			$menu={menu}
 		>
 			<ExtensionButton />
 			<Text

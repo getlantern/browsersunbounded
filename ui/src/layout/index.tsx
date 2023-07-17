@@ -12,7 +12,7 @@ const Layout = ({children}: Props) => {
 	const {setWidth, settings} = useContext(AppContext)
 	const [ref, {width}, handleSize] = useElementSize()
 	const fontLoaded = useRef(false)
-	const {theme, layout} = settings
+	const {theme, layout, menu} = settings
 
 	useEffect(() => setWidth(width), [width, setWidth])
 
@@ -42,6 +42,7 @@ const Layout = ({children}: Props) => {
 		<AppWrapper
 			layout={layout}
 			theme={theme}
+			$menu={menu}
 			ref={ref}
 		>
 			{children}

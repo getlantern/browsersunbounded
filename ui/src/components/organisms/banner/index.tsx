@@ -42,7 +42,7 @@ const Banner = () => {
 					{
 						!expanded && width > 650 && (
 							<Item
-								style={{backgroundColor: settings.theme === Themes.LIGHT ? COLORS.white : COLORS.grey6}}
+								style={{backgroundColor: settings.theme === Themes.LIGHT ? menu ? COLORS.white : COLORS.grey1 : COLORS.grey6}}
 								theme={settings.theme}
 							>
 								<Control
@@ -76,7 +76,7 @@ const Banner = () => {
 				{
 					!expanded && width <= 650 && (
 						<Item
-							style={{backgroundColor: settings.theme === Themes.LIGHT ? COLORS.white : COLORS.grey6}}
+							style={{backgroundColor: settings.theme === Themes.LIGHT ? menu ? COLORS.white : COLORS.grey1 : COLORS.grey6}}
 							theme={settings.theme}
 						>
 							<Control
@@ -124,7 +124,7 @@ const Banner = () => {
 								<Row
 									borderTop
 									borderBottom
-									backgroundColor={settings.theme === Themes.DARK ? COLORS.grey6 : COLORS.white}
+									backgroundColor={settings.theme === Themes.DARK ? COLORS.grey6 : menu ? COLORS.white : COLORS.grey1}
 								>
 									<Control
 										onToggle={onToggle}
