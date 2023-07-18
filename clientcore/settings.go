@@ -11,6 +11,10 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+func BroflakeTracer() trace.Tracer {
+	return otel.GetTracerProvider().Tracer("broflake")
+}
+
 type WebRTCOptions struct {
 	DiscoverySrv   string
 	Endpoint       string
@@ -23,7 +27,6 @@ type WebRTCOptions struct {
 	HttpClient     *http.Client
 	Patience       time.Duration
 	ErrorBackoff   time.Duration
-	OtelTracer     trace.Tracer
 }
 
 func NewDefaultWebRTCOptions() *WebRTCOptions {
@@ -39,7 +42,6 @@ func NewDefaultWebRTCOptions() *WebRTCOptions {
 		HttpClient:     &http.Client{},
 		Patience:       500 * time.Millisecond,
 		ErrorBackoff:   5 * time.Second,
-		OtelTracer:     otel.GetTracerProvider().Tracer("broflake"),
 	}
 }
 

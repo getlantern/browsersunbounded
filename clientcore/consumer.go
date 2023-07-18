@@ -455,7 +455,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				return 5, []interface{}{peerConnection, d, connectionChange, connectionClosed}
 			case <-time.After(options.NATFailTimeout):
 				common.Debugf("NAT failure, aborting!")
-				_, span := options.OtelTracer.Start(context.Background(), "nat_failure", trace.WithAttributes())
+				_, span := BroflakeTracer().Start(context.Background(), "nat_failure", trace.WithAttributes())
 				span.End()
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
