@@ -18,6 +18,7 @@ require (
 require (
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/enobufs/go-nats v0.0.1 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -41,8 +42,11 @@ require (
 	github.com/pion/sdp/v3 v3.0.6 // indirect
 	github.com/pion/srtp/v2 v2.0.15 // indirect
 	github.com/pion/stun v0.6.0 // indirect
+	github.com/pion/transport v0.14.1 // indirect
 	github.com/pion/transport/v2 v2.2.1 // indirect
+	github.com/pion/turn v1.3.5 // indirect
 	github.com/pion/turn/v2 v2.1.0 // indirect
+	github.com/pkg/errors v0.8.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/quic-go/qtls-go1-19 v0.3.2 // indirect
 	github.com/quic-go/qtls-go1-20 v0.2.2 // indirect
