@@ -2,6 +2,8 @@ module github.com/getlantern/broflake
 
 go 1.19
 
+replace github.com/enobufs/go-nats => github.com/noahlevenson/go-nats v0.0.0-20230719201010-73f7fa7e3b61
+
 require (
 	github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819
 	github.com/getlantern/telemetry v0.0.0-20230523155019-be7c1d8cd8cb
@@ -44,7 +46,7 @@ require (
 	github.com/pion/stun v0.6.0 // indirect
 	github.com/pion/transport v0.14.1 // indirect
 	github.com/pion/transport/v2 v2.2.1 // indirect
-	github.com/pion/turn v1.3.5 // indirect
+	github.com/pion/turn v1.3.7 // indirect
 	github.com/pion/turn/v2 v2.1.0 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
