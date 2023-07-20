@@ -16,6 +16,7 @@ import ToolTip from '../toolTip'
 import {useGeo} from '../../../hooks/useGeo'
 import {Themes} from '../../../constants'
 import {Notification} from '../notification'
+import * as THREE from 'three'
 // import {useEmitterState} from '../../../hooks/useStateEmitter'
 // import {sharingEmitter} from '../../../utils/wasmInterface'
 // import {countries} from "../../../utils/countries";
@@ -32,6 +33,46 @@ const calcOffset = (size: number, title: boolean, menu: boolean) => {
 	if (menu) offset -= 40
 	return offset
 }
+
+
+const createGradientTexture = (blue = true) => {
+	const size = 100; // The size of the texture
+	const canvas = document.createElement('canvas');
+	canvas.width = size;
+	canvas.height = size;
+
+	const context = canvas.getContext('2d');
+	const gradient = context.createRadialGradient(
+		size / 2,
+		size / 2,
+		0,
+		size / 2,
+		size / 2,
+		size / 2
+	);
+
+	gradient.addColorStop(0, blue ? 'rgba(0, 188, 212, 1)' : 'rgba(255, 193, 7, 1)');
+	gradient.addColorStop(1, blue ? 'rgba(0, 188, 212, 0)' : 'rgba(255, 193, 7, 0)');
+	context.fillStyle = gradient;
+	context.fillRect(0, 0, size, size);
+
+	return new THREE.CanvasTexture(canvas);
+}
+
+const gradientTextureBlue = createGradientTexture(true);
+const gradientTextureYellow = createGradientTexture(false);
+const materialBlue = new THREE.MeshLambertMaterial({
+	map: gradientTextureBlue,
+	blending: THREE.NormalBlending,
+	transparent: true,
+	name: 'blue'
+});
+const materialYellow = new THREE.MeshLambertMaterial({
+	map: gradientTextureYellow,
+	blending: THREE.NormalBlending,
+	transparent: true,
+	name: 'yellow'
+});
 
 const Globe = ({target}: Props) => {
 	// const sharing = useEmitterState(sharingEmitter)
@@ -103,25 +144,34 @@ const Globe = ({target}: Props) => {
 		controls.autoRotateSpeed = speed
 	}
 
-	// useEffect(() => {
-	// 	const animate = () => {
-	// 		requestAnimationFrame(animate)
-	// 		const scene = globe.current.scene()
-	// 		const fromKapsule = scene.children.find(obj3d => obj3d.type === 'Group')
-	// 		if (!fromKapsule) return
-	// 		const lineSegmentGroups = fromKapsule.children[0].children
-	// 		lineSegmentGroups.forEach(group => {
-	// 			const lineSegments = group.children.find(obj3d => obj3d.type === 'LineSegments')
-	// 			if (lineSegments) {
-	// 				// @todo
-	// 			}
-	// 		})
-	// 	}
-	// 	animate()
-	// }, [])
+	useEffect(() => {
+		const animate = () => {
+			requestAnimationFrame(animate)
+			if (!globe.current) return
+			const scene = globe.current?.scene()
+			if (!scene) return
+			// scene.children.forEach(obj3d => console.log(obj3d.type))
+			const fromKapsule = scene.children.find(obj3d => obj3d.type === 'Group')
+			if (!fromKapsule) return
+			const lineSegmentGroups = fromKapsule.children[0].children
+			lineSegmentGroups.forEach(group => {
+				const lineSegments = group.children.find(obj3d => obj3d.type === 'LineSegments')
+				if (lineSegments) {
+					// @todo
+				}
+			})
 
-	const colorInterpolatorBlue = t => `rgba(0, 188, 212,${Math.sqrt(1-t)})`;
-	const colorInterpolatorYellow = t => `rgba(255, 193, 7,${Math.sqrt(1-t)})`;
+			const pointMeshes = fromKapsule.children[0].children[1].children
+			pointMeshes.forEach(mesh => {
+				if (mesh.material.color.r === 0 || mesh.material.name === 'blue') mesh.material = materialBlue
+				else mesh.material = materialYellow
+			})
+		}
+		animate()
+	}, [])
+
+	// const colorInterpolatorBlue = t => `rgba(0, 188, 212,${Math.sqrt(1-t)})`;
+	// const colorInterpolatorYellow = t => `rgba(255, 193, 7,${Math.sqrt(1-t)})`;
 
 	return (
 		<Container
@@ -166,18 +216,18 @@ const Globe = ({target}: Props) => {
 				onArcHover={setArc}
 				pointsData={points}
 				pointColor={p => p.origin ? 'rgba(0, 188, 212, 0.25)' : 'rgba(255, 193, 7, 0.25)'}
-				pointRadius={2}
+				pointRadius={4}
 				pointAltitude={0}
 				pointsTransitionDuration={500}
 				onZoom={zoom => {
 					let smooth = Math.round(zoom.altitude * 10) / 10
 					if (smooth !== altitude) setAltitude(smooth)
 				}}
-				ringsData={points}
-				ringColor={p => p.origin ? colorInterpolatorBlue : colorInterpolatorYellow}
-				// ringMaxRadius={4}
-				// ringRepeatPeriod={1000}
-				ringPropagationSpeed={1}
+				// ringsData={rings}
+				// ringColor={p => p.origin ? colorInterpolatorBlue : colorInterpolatorYellow}
+				// // ringMaxRadius={4}
+				// // ringRepeatPeriod={1000}
+				// ringPropagationSpeed={1}
 			/>
 			<ToolTip
 				text={!!arc && `${count} ${count === 1 ? 'person' : 'people'} from ${arc.country.split(',')[0]}`}

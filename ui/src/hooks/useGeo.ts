@@ -98,6 +98,7 @@ const incrementArcs = (arcs: Arch[], geos: GeoLookup[]) => {
 export const useGeo = () => {
 	const [arcs, setArcs] = useState<Arch[]>([])
 	const [points, setPoints] = useState<Point[]>([])
+	const [rings, setRings] = useState<Point[]>([])
 	const activeArcs = useMemo(() => arcs.filter(a => a.workerIdxArr.length > 0), [arcs])
 	const country = useRef<ISO>()
 	const rawConnections = useEmitterState(connectionsEmitter)
@@ -180,12 +181,13 @@ export const useGeo = () => {
 
 	useEffect(() => {
 		if (activeArcs.length === 0) {
-			setPoints([])
+			setRings([])
+			setTimeout(() => setPoints([]), 0)
 			return
 		}
-		const newPoints = []
+		const newPoints: Point[] = []
 		activeArcs.forEach(arc => {
-			if (!points.some(p => p.id === arc.workerIdxArr[0])) {
+			if (!points.some(p => arc.workerIdxArr.includes(p.id))) {
 				newPoints.push({
 					lng: arc.endLng,
 					lat: arc.endLat,
@@ -202,13 +204,16 @@ export const useGeo = () => {
 			})
 		}
 		const oldPoints = points.filter(p => p.id === -1 || activeArcs.some(a => a.workerIdxArr[0] === p.id))
-		setPoints([...oldPoints, ...newPoints])
+		const oldRings = rings.filter(p => p.id === -1 || activeArcs.some(a => a.workerIdxArr[0] === p.id))
+		setRings([...oldPoints, ...newPoints])
+		setTimeout( () => setPoints([...oldRings, ...newPoints]), 0)
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [activeArcs.length])
 
 	return {
 		arcs: activeArcs,
 		points: points,
+		rings: rings,
 		country: country.current
 	}
 }
