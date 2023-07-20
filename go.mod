@@ -2,10 +2,11 @@ module github.com/getlantern/broflake
 
 go 1.19
 
-replace github.com/enobufs/go-nats => github.com/noahlevenson/go-nats v0.0.0-20230719201010-73f7fa7e3b61
+replace github.com/enobufs/go-nats => github.com/noahlevenson/go-nats v0.0.0-20230720174341-49df1f749775
 
 require (
 	github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819
+	github.com/enobufs/go-nats v0.0.1
 	github.com/getlantern/telemetry v0.0.0-20230523155019-be7c1d8cd8cb
 	github.com/google/uuid v1.3.0
 	github.com/pion/webrtc/v3 v3.2.6
@@ -13,6 +14,7 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.42.0
 	go.opentelemetry.io/otel v1.16.0
 	go.opentelemetry.io/otel/metric v1.16.0
+	go.opentelemetry.io/otel/trace v1.16.0
 	golang.org/x/mod v0.8.0
 	nhooyr.io/websocket v1.8.7
 )
@@ -20,7 +22,6 @@ require (
 require (
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/enobufs/go-nats v0.0.1 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -60,7 +61,6 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.16.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.16.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v0.39.0 // indirect
-	go.opentelemetry.io/otel/trace v1.16.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db // indirect
