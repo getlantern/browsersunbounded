@@ -84,7 +84,7 @@ const Globe = ({target}: Props) => {
 	const count = arc ? arc.workerIdxArr.length : 0
 	const globe = useRef()
 	const container = useRef()
-	const {arcs, points} = useGeo()
+	const {arcs, points, rings} = useGeo()
 	const [altitude, setAltitude] = useState(14)
 	// const lastAnimation = useRef(0)
 	// const [interacted, setInteracted] = useState(false)
@@ -170,8 +170,8 @@ const Globe = ({target}: Props) => {
 		animate()
 	}, [])
 
-	// const colorInterpolatorBlue = t => `rgba(0, 188, 212,${Math.sqrt(1-t)})`;
-	// const colorInterpolatorYellow = t => `rgba(255, 193, 7,${Math.sqrt(1-t)})`;
+	const colorInterpolatorBlue = t => `rgba(0, 188, 212,${Math.sqrt(1-t)})`;
+	const colorInterpolatorYellow = t => `rgba(255, 193, 7,${Math.sqrt(1-t)})`;
 
 	return (
 		<Container
@@ -205,7 +205,7 @@ const Globe = ({target}: Props) => {
 				backgroundImageUrl={null}
 				globeImageUrl={theme === Themes.DARK ? UV_MAP_PATH_DARK : UV_MAP_PATH_LIGHT}
 				arcsData={[...arcs, ...ghostArcs]}
-				arcColor={arc => arc.ghost ? 'rgba(255, 255, 255, 0)' : ['rgba(0, 188, 212, 0.0)', 'rgba(0, 188, 212, 0.75)', 'rgba(0, 188, 212, 0.75)', 'rgba(255, 193, 7, 0.75)', 'rgba(255, 193, 7, 0.0)']}
+				arcColor={arc => arc.ghost ? 'rgba(255, 255, 255, 0)' : ['rgba(0, 188, 212, 0.75)', 'rgba(0, 188, 212, 0.75)', 'rgba(255, 193, 7, 0.75)']}
 				arcDashLength={1}
 				arcDashGap={0.5}
 				arcDashInitialGap={1}
