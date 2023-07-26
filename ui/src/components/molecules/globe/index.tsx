@@ -144,34 +144,66 @@ const Globe = ({target}: Props) => {
 		controls.autoRotateSpeed = speed
 	}
 
+	// useEffect(() => {
+	// 	const animate = () => {
+	// 		requestAnimationFrame(animate)
+	// 		if (!globe.current) return
+	// 		const scene = globe.current?.scene()
+	// 		if (!scene) return
+	// 		// scene.children.forEach(obj3d => console.log(obj3d.type))
+	// 		const fromKapsule = scene.children.find(obj3d => obj3d.type === 'Group')
+	// 		if (!fromKapsule) return
+	// 		const lineSegmentGroups = fromKapsule.children[0].children
+	// 		lineSegmentGroups.forEach(group => {
+	// 			const lineSegments = group.children.find(obj3d => obj3d.type === 'LineSegments')
+	// 			if (lineSegments) {
+	// 				// @todo
+	// 			}
+	// 		})
+	//
+	// 		const pointMeshes = fromKapsule.children[0].children[1].children
+	//
+	// 		pointMeshes.forEach(mesh => {
+	// 			if (mesh.material.color.r === 0 || mesh.material.name === 'blue') mesh.material = materialBlue
+	// 			else mesh.material = materialYellow
+	// 		})
+	// 	}
+	// 	animate()
+	// }, [])
+
 	useEffect(() => {
-		const animate = () => {
-			requestAnimationFrame(animate)
+		setTimeout(() => {
 			if (!globe.current) return
 			const scene = globe.current?.scene()
 			if (!scene) return
-			// scene.children.forEach(obj3d => console.log(obj3d.type))
 			const fromKapsule = scene.children.find(obj3d => obj3d.type === 'Group')
 			if (!fromKapsule) return
-			const lineSegmentGroups = fromKapsule.children[0].children
-			lineSegmentGroups.forEach(group => {
-				const lineSegments = group.children.find(obj3d => obj3d.type === 'LineSegments')
-				if (lineSegments) {
-					// @todo
-				}
-			})
-
 			const pointMeshes = fromKapsule.children[0].children[1].children
+			const uuids = pointMeshes.map(mesh => mesh.uuid)
+			const clonedMeshes = scene.children.filter(obj3d => obj3d.name === 'clone')
+			const clonedUuids = clonedMeshes.map(mesh => mesh.uuid)
+			// clone pointMeshes with custom material and add to scene
 			pointMeshes.forEach(mesh => {
-				if (mesh.material.color.r === 0 || mesh.material.name === 'blue') mesh.material = materialBlue
-				else mesh.material = materialYellow
+				const uuid = mesh.uuid
+				if (clonedUuids.map(id => id.replace('-clone', '')).includes(uuid)) return
+				const clonedMesh = mesh.clone()
+				if (mesh.material.color.r === 0 || mesh.material.name === 'blue') clonedMesh.material = materialBlue
+				else clonedMesh.material = materialYellow
+				clonedMesh.uuid = uuid + '-clone'
+				clonedMesh.name = 'clone'
+				scene.add(clonedMesh)
 			})
-		}
-		animate()
-	}, [])
 
-	const colorInterpolatorBlue = t => `rgba(0, 188, 212,${Math.sqrt(1-t)})`;
-	const colorInterpolatorYellow = t => `rgba(255, 193, 7,${Math.sqrt(1-t)})`;
+			// remove clonedMeshes that are no longer in pointMeshes
+			clonedMeshes.forEach(mesh => {
+				const uuid = mesh.uuid
+				if (!uuids.includes(uuid.replace('-clone', ''))) scene.remove(mesh)
+			});
+		}, 50)
+	}, [points])
+
+	// const colorInterpolatorBlue = t => `rgba(0, 188, 212,${Math.sqrt(1-t)})`;
+	// const colorInterpolatorYellow = t => `rgba(255, 193, 7,${Math.sqrt(1-t)})`;
 
 	return (
 		<Container
@@ -215,7 +247,7 @@ const Globe = ({target}: Props) => {
 				arcAltitudeAutoScale={0.3}
 				onArcHover={setArc}
 				pointsData={points}
-				pointColor={p => p.origin ? 'rgba(0, 188, 212, 0.25)' : 'rgba(255, 193, 7, 0.25)'}
+				pointColor={p => p.origin ? 'rgba(0, 188, 212, 0.05)' : 'rgba(255, 193, 7, 0.05)'}
 				pointRadius={4}
 				pointAltitude={0}
 				pointsTransitionDuration={500}
