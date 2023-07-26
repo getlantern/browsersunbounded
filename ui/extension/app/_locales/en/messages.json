@@ -8,7 +8,7 @@
     "description": "The short_name (maximum of 12 characters recommended) is a short version of the app's name."
   },
   "appDescription": {
-    "message": "Use your internet connection to fight censorship.",
+    "message": "Use your browser to fight global internet censorship.",
     "description": "The description of the application"
   }
 }

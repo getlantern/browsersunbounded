@@ -24,3 +24,11 @@ export const Wrapper = styled.div`
 		color: ${({theme}: {theme: Themes}) => theme === Themes.DARK ? COLORS.altBrand : COLORS.brand};
 	}
 `
+
+export const LinkWrapper = styled.span`
+  margin-left: 8px;
+  a {
+    color: ${COLORS.blue4};
+    text-decoration: underline;
+  }
+`

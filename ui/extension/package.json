@@ -1,7 +1,7 @@
 {
   "name": "lantern-network-extension",
   "version": "0.0.0.3",
-  "description": "Use your internet connection to fight censorship.",
+  "description": "Use your browser to fight global internet censorship.",
   "author": "Echo",
   "scripts": {
     "dev": "webextension-toolbox dev",

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "homepage": "https://embed.lantern.io",
-  "description": "Use your internet connection to fight censorship.",
+  "description": "Use your browser to fight global internet censorship.",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",

@@ -1,12 +1,12 @@
 import {Info as InfoIcon} from '../../atoms/icons'
-import {StyledButton, Wrapper} from './styles'
+import {LinkWrapper, StyledButton, Wrapper} from './styles'
 import {Text} from '../../atoms/typography'
 import {useContext, useState} from 'react'
 import { Popover } from 'react-tiny-popover'
 import {AppContext} from '../../../context'
 
 const Info = () => {
-	const {theme, keepText} = useContext(AppContext).settings
+	const {theme, keepText, infoLink} = useContext(AppContext).settings
 	const [active, setActive] = useState(false)
 	return (
 		<>
@@ -20,9 +20,10 @@ const Info = () => {
 						theme={theme}
 					>
 						<Text>
-							{'Sharing your connection enables people living with censorship to access the open internet.'}
+							{'Join our network of digital volunteers and help unblock the internet around the world.'}
 							{/*<a href={'https://lantern.io'} target={'_blank'} rel={'noreferrer'}>Lantern</a>.*/}
 							{ keepText && ' Keep this site open to continue sharing your connection.' }
+							{ infoLink.length && <LinkWrapper dangerouslySetInnerHTML={{__html: infoLink}} />}
 						</Text>
 					</Wrapper>
 				}

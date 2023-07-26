@@ -42,9 +42,9 @@ const Control = ({onToggle, info = false}: Props) => {
 		<>
 			<TextInfo>
 				<Text
-					style={{minWidth: 160, fontWeight: 'bold'}}
+					style={{minWidth: 90, fontWeight: 'bold'}}
 				>
-					Connection sharing: <span style={{color: sharing ? COLORS.green : COLORS.error}}>{sharing ? 'ON' : 'OFF'}</span>
+					Status: <span style={{color: sharing ? COLORS.green : COLORS.error}}>{sharing ? 'ON' : 'OFF'}</span>
 				</Text>
 				{ info && <Info /> }
 			</TextInfo>

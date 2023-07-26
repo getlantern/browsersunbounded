@@ -14,7 +14,7 @@ const Title = ({style = {}}: Props) => {
 		<Text
 			style={{color, margin: 0, ...style}}
 		>
-			{'Use your internet connection to fight censorship'}
+			{'Use your browser to fight global internet censorship'}
 		</Text>
 	)
 }
