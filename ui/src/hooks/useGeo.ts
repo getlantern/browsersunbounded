@@ -208,7 +208,7 @@ export const useGeo = () => {
 		setRings([...oldPoints, ...newPoints])
 		setTimeout( () => setPoints([...oldRings, ...newPoints]), 0)
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [activeArcs.length])
+	}, [activeArcs])
 
 	return {
 		arcs: activeArcs,
