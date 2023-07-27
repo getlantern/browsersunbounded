@@ -119,7 +119,12 @@ const Banner = () => {
 								<div
 									style={{marginBottom: 24}}
 								>
-									<About/>
+									<About
+										style={{
+											fontSize: 14,
+											lineHeight: `28px`
+									}}
+									/>
 								</div>
 								<Row
 									borderTop

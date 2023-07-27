@@ -10,11 +10,10 @@ import GlobeComponent from 'react-globe.gl'
 import {Container} from './styles'
 import {useContext, useEffect, useMemo, useRef, useState} from 'react'
 import {AppContext} from '../../../context'
-import {BREAKPOINT, COLORS, Targets, UV_MAP_PATH_DARK, UV_MAP_PATH_LIGHT} from '../../../constants'
+import {BREAKPOINT, COLORS, Targets, Themes, UV_MAP_PATH_DARK, UV_MAP_PATH_LIGHT} from '../../../constants'
 import Shadow from './shadow'
 import ToolTip from '../toolTip'
 import {useGeo} from '../../../hooks/useGeo'
-import {Themes} from '../../../constants'
 import {Notification} from '../notification'
 import * as THREE from 'three'
 // import {useEmitterState} from '../../../hooks/useStateEmitter'
@@ -231,13 +230,13 @@ const Globe = ({target}: Props) => {
 				enablePointerInteraction={true}
 				waitForGlobeReady={true}
 				showAtmosphere={true}
-				atmosphereColor={COLORS.brand}
-				atmosphereAltitude={.25}
+				atmosphereColor={theme === Themes.LIGHT ? COLORS.altBrand : COLORS.brand}
+				atmosphereAltitude={theme === Themes.LIGHT ? 0.2 : 0.25}
 				backgroundColor={'rgba(0,0,0,0)'}
 				backgroundImageUrl={null}
 				globeImageUrl={theme === Themes.DARK ? UV_MAP_PATH_DARK : UV_MAP_PATH_LIGHT}
 				arcsData={[...arcs, ...ghostArcs]}
-				arcColor={arc => arc.ghost ? 'rgba(255, 255, 255, 0)' : ['rgba(0, 188, 212, 0.75)', 'rgba(0, 188, 212, 0.75)', 'rgba(255, 193, 7, 0.75)']}
+				arcColor={arc => arc.ghost ? 'rgba(255, 255, 255, 0)' : ['rgba(0, 188, 212, 0.75)', 'rgba(255, 193, 7, 0.75)']}
 				arcDashLength={1}
 				arcDashGap={0.5}
 				arcDashInitialGap={1}

@@ -16,7 +16,7 @@ const ExtensionCta = () => {
 			<ExtensionButton />
 			<Text
 				style={{
-					fontSize: 12,
+					fontSize: 14,
 					lineHeight: '20px'
 				}}
 			>

@@ -22,8 +22,8 @@ const Info = () => {
 						<Text>
 							{'Join our network of digital volunteers and help unblock the internet around the world.'}
 							{/*<a href={'https://lantern.io'} target={'_blank'} rel={'noreferrer'}>Lantern</a>.*/}
-							{ keepText && ' Keep this site open to continue sharing your connection.' }
-							{ infoLink.length && <LinkWrapper dangerouslySetInnerHTML={{__html: infoLink}} />}
+							{ !!keepText && ' Keep this site open to continue sharing your connection.' }
+							{ !!infoLink.length && <LinkWrapper dangerouslySetInnerHTML={{__html: infoLink}} />}
 						</Text>
 					</Wrapper>
 				}
