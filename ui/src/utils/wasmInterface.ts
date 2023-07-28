@@ -80,7 +80,8 @@ declare global {
 		netstated: string,
     discoverySrv: string,
     discoverySrvEndpoint: string,
-		tag: string,
+    stunBatchSize: number,
+    tag: string,
     egressAddr: string,
     egressEndpoint: string
 	): WasmClient
@@ -154,6 +155,7 @@ export class WasmInterface {
 				WASM_CLIENT_CONFIG.netstated,
 				WASM_CLIENT_CONFIG.discoverySrv,
 				WASM_CLIENT_CONFIG.discoverySrvEndpoint,
+				WASM_CLIENT_CONFIG.stunBatchSize,
 				WASM_CLIENT_CONFIG.tag,
 				WASM_CLIENT_CONFIG.egressAddr,
 				WASM_CLIENT_CONFIG.egressEndpoint

@@ -113,6 +113,7 @@ export const WASM_CLIENT_CONFIG = {
 	netstated: '',
 	discoverySrv: process.env.REACT_APP_DISCOVERY_SRV!,
 	discoverySrvEndpoint: process.env.REACT_APP_DISCOVERY_ENDPOINT!,
+	stunBatchSize: 2,
 	tag: '',
 	egressAddr: process.env.REACT_APP_EGRESS_ADDR!,
 	egressEndpoint: process.env.REACT_APP_EGRESS_ENDPOINT!
