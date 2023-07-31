@@ -20,7 +20,7 @@ const ExtensionCta = () => {
 					lineHeight: '20px'
 				}}
 			>
-				Help more people by installing our extension.
+				Help more people by installing our extension
 			</Text>
 		</Container>
 	)
