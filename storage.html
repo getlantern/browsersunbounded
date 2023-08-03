@@ -13,7 +13,6 @@
     <title>Lantern Network</title>
     <!-- plausible is a lightweight, open-source alternative to Google Analytics -->
     <script defer data-domain="embed.lantern.io" src="https://plausible.io/js/script.js"></script>
-    <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
     <!-- the iframe subscribes to messages posted from the widget to set and get data from localstorage -->
     <script>
         var SIGNATURE = 'lanternNetwork'
@@ -32,9 +31,6 @@
                     break
                 case 'storageSet':
                     localStorage.setItem(message.data.key, message.data.value)
-                    break
-                case 'event':
-                    window.plausible(message.data.eventName, {props: message.data.eventProperties})
                     break
             }
         }, false)
