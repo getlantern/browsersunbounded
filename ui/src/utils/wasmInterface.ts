@@ -136,9 +136,6 @@ export class WasmInterface {
 			)
 			this.instance = res.instance
 			console.log('run instance')
-			const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-			console.log('sleeping')
-			await sleep(1000)
 			this.go.run(this.instance)
 			console.log('building new client')
 			this.buildNewClient()
