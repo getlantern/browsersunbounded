@@ -130,13 +130,14 @@ export class WasmInterface {
 			this.wasmClient = new MockWasmClient(this)
 			this.instance = {} as WebAssemblyInstance
 		} else { // the real deal (wasm)
+			console.log('instantiate streaming')
 			const res = await WebAssembly.instantiateStreaming(
 				fetch(process.env.REACT_APP_WIDGET_WASM_URL!), this.go.importObject
 			)
 			this.instance = res.instance
+			console.log('run instance')
 			this.go.run(this.instance)
-			const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-			await sleep(1000) // give the wasm client time to initialize
+			console.log('building new client')
 			this.buildNewClient()
     }
 		this.initListeners()
