@@ -135,6 +135,8 @@ export class WasmInterface {
 			)
 			this.instance = res.instance
 			this.go.run(this.instance)
+			const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+			await sleep(1000) // give the wasm client time to initialize
 			this.buildNewClient()
     }
 		this.initListeners()
