@@ -17,54 +17,10 @@ import (
 	"sync"
 	"time"
 
-	goNATs "github.com/enobufs/go-nats/nats"
-	"github.com/pion/webrtc/v3"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
-
 	"github.com/getlantern/broflake/common"
+	"github.com/getlantern/broflake/otel"
+	"github.com/pion/webrtc/v3"
 )
-
-// collectAndSendNATBehaviorTelemetry attempts to perform NAT behavior discovery, trying one batch
-// of STUN servers, and sends the results in an attribute-rich Otel trace under name 'name'
-func collectAndSendNATBehaviorTelemetry(options *WebRTCOptions, name string) {
-	STUNSrvs, err := options.STUNBatch(options.STUNBatchSize)
-	if err != nil {
-		common.Debugf("Error creating STUN batch: %v", err)
-		return
-	}
-
-	var res *goNATs.DiscoverResult
-	attrs := trace.WithAttributes()
-
-	for _, s := range STUNSrvs {
-		n, err := goNATs.NewNATS(&goNATs.Config{
-			Server:  s[5:], // XXX: hackily remove the leading 'stun:' from the STUN servers in the ProxyConfig
-			Verbose: false,
-		})
-
-		if err != nil {
-			continue
-		}
-
-		res, err = n.Discover()
-
-		if err == nil {
-			attrs = trace.WithAttributes(
-				attribute.Bool("nat_is_natted", res.IsNatted),
-				attribute.String("nat_mapping_behavior", res.MappingBehavior.String()),
-				attribute.String("nat_filtering_behavior", res.FilteringBehavior.String()),
-				attribute.Bool("nat_port_preservation", res.PortPreservation),
-				attribute.String("nat_type", res.NATType),
-				attribute.String("nat_external_ip", res.ExternalIP),
-			)
-			break
-		}
-	}
-
-	_, span := BroflakeTracer().Start(context.Background(), name, attrs)
-	span.End()
-}
 
 func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 	return NewWorkerFSM(wg, []FSMstate{
@@ -492,14 +448,24 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			connectionClosed := input[3].(chan struct{})
 			common.Debugf("Consumer state 4, signaling complete!")
 
+			// XXX: Let's select some STUN servers to perform NAT behavior discovery for the purpose of
+			// sending interesting traces revealing the outcome of our NAT traversal attempt
+			STUNSrvs, err := options.STUNBatch(options.STUNBatchSize)
+			if err != nil {
+				common.Debugf("Error creating STUN batch: %v", err)
+				// Borked!
+				peerConnection.Close() // TODO: there's an err we should handle here
+				return 0, []interface{}{}
+			}
+
 			select {
 			case d := <-connectionEstablished:
 				common.Debugf("A WebRTC connection has been established!")
-				go collectAndSendNATBehaviorTelemetry(options, "nat_success")
+				go otel.CollectAndSendNATBehaviorTelemetry(STUNSrvs, "nat_success")
 				return 5, []interface{}{peerConnection, d, connectionChange, connectionClosed}
 			case <-time.After(options.NATFailTimeout):
 				common.Debugf("NAT failure, aborting!")
-				go collectAndSendNATBehaviorTelemetry(options, "nat_failure")
+				go otel.CollectAndSendNATBehaviorTelemetry(STUNSrvs, "nat_failure")
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}

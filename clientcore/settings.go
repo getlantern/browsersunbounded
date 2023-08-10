@@ -6,14 +6,7 @@ import (
 	"math/rand"
 	"net/http"
 	"time"
-
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/trace"
 )
-
-func BroflakeTracer() trace.Tracer {
-	return otel.GetTracerProvider().Tracer("broflake")
-}
 
 type WebRTCOptions struct {
 	DiscoverySrv   string
