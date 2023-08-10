@@ -7,6 +7,20 @@
     WebAssembly.instantiateStreaming(fetch("widget.wasm"), go.importObject)
         .then((result) => {
           go.run(result.instance);
+          
+          newBroflake(
+            "widget", 
+            5, 
+            5, 
+            4096, 
+            "", 
+            "http://localhost:9000", 
+            "/v1/signal", 
+            2, 
+            "", 
+            "http://localhost:8000", 
+            "/ws"
+          );
         });
     </script>
 </head>
