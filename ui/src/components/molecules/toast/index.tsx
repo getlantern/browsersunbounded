@@ -8,10 +8,10 @@ import {AppContext} from '../../../context'
 import {COLORS, Layouts, Targets, Themes} from '../../../constants'
 
 const Toast = () => {
-	const {exit, target} = useContext(AppContext).settings
+	const {exit, target, toast} = useContext(AppContext).settings
 	const sharing = useEmitterState(sharingEmitter)
 	const {theme, layout} = useContext(AppContext).settings
-	const [show, setShow] = useState(sharing)
+	const [show, setShow] = useState(toast && sharing)
 	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
 	const toggleShow = useCallback(() => {
@@ -24,9 +24,10 @@ const Toast = () => {
 	}, [sharing])
 
 	useEffect(() => {
+		if (!toast) return // disable toast if toast is disabled
 		if (target === Targets.EXTENSION_POPUP) return // disable toast on extension popup
 		toggleShow()
-	}, [sharing, toggleShow, target])
+	}, [toast, sharing, toggleShow, target])
 
 	useExitIntent(exit ? toggleShow : () => null)
 

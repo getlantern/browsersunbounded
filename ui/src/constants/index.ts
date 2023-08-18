@@ -63,6 +63,7 @@ export enum Themes {
 export interface Settings {
 	globe: boolean
 	exit: boolean
+	toast: boolean
 	mobileBg: boolean
 	desktopBg: boolean
 	layout: Layouts
@@ -83,6 +84,7 @@ export const defaultSettings: Settings = {
 	mobileBg: true,
 	desktopBg: true,
 	exit: true,
+	toast: false,
 	globe: true,
 	layout: Layouts.BANNER,
 	theme: Themes.LIGHT,
