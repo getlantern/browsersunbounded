@@ -7,19 +7,19 @@ replace github.com/enobufs/go-nats => github.com/noahlevenson/go-nats v0.0.0-202
 require (
 	github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819
 	github.com/enobufs/go-nats v0.0.1
-  github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65
-	github.com/getlantern/quicwrapper v0.0.0-20230712153452-6632f7a4b6ed
+	github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65
+	github.com/getlantern/quicwrapper v0.0.0-20230823192150-020a03e563c0
 	github.com/getlantern/telemetry v0.0.0-20230523155019-be7c1d8cd8cb
 	github.com/google/uuid v1.3.0
 	github.com/pion/webrtc/v3 v3.2.10
-	github.com/quic-go/quic-go v0.36.1
-	github.com/quic-go/webtransport-go v0.5.2
+	github.com/quic-go/quic-go v0.38.0
+	github.com/quic-go/webtransport-go v0.5.3
 	github.com/stretchr/testify v1.8.4
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.42.0
 	go.opentelemetry.io/otel v1.16.0
 	go.opentelemetry.io/otel/metric v1.16.0
 	go.opentelemetry.io/otel/trace v1.16.0
-  golang.org/x/mod v0.10.0
+	golang.org/x/mod v0.10.0
 	nhooyr.io/websocket v1.8.7
 )
 
@@ -72,8 +72,7 @@ require (
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/quic-go/qpack v0.4.0 // indirect
-	github.com/quic-go/qtls-go1-19 v0.3.2 // indirect
-	github.com/quic-go/qtls-go1-20 v0.2.2 // indirect
+	github.com/quic-go/qtls-go1-20 v0.3.2 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.16.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric v0.39.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v0.39.0 // indirect

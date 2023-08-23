@@ -12,7 +12,6 @@ export const COLORS = {
 	grey6: '#040404',
 	grey: '#707070',
 	blue5: '#012D2D',
-	blue4: '#007A7C',
 	error: '#DB1C1C',
 	brand: 'rgba(0, 122, 124, 1)',
 	altBrand: '#00BCD4',
@@ -63,7 +62,6 @@ export enum Themes {
 export interface Settings {
 	globe: boolean
 	exit: boolean
-	toast: boolean
 	mobileBg: boolean
 	desktopBg: boolean
 	layout: Layouts
@@ -77,14 +75,12 @@ export interface Settings {
 	menu: boolean
 	title: boolean
 	share: boolean
-	infoLink: string
 }
 
 export const defaultSettings: Settings = {
 	mobileBg: true,
 	desktopBg: true,
 	exit: true,
-	toast: false,
 	globe: true,
 	layout: Layouts.BANNER,
 	theme: Themes.LIGHT,
@@ -96,42 +92,22 @@ export const defaultSettings: Settings = {
 	keepText: true,
 	menu: true,
 	title: false,
-	share: false,
-	infoLink: ''
+	share: false
 }
 
 export const POPUP = 'popup'
 
 export const AUTO_UPDATE_URL = 'https://embed.lantern.io/asset-manifest.json'
 
-const supportsWebTransport = () => {
-	try {
-		return 'WebTransport' in window
-	}
-	catch (e) {
-		return false
-	}
-}
-
-// XXX nelson 7/6/2023: We've found that widget concurrency (cTableSz and pTableSz) should be 
-// <= the browser's limit on concurrent HTTP requests, which is ~6. That's because each widget
-// worker creates HTTP requests, and we can't trust the browser to properly handle excess requests.
 export const WASM_CLIENT_CONFIG = {
 	type: 'widget',
-	cTableSz: 5,
-	pTableSz: 5,
+	cTableSz: 10,
+	pTableSz: 10,
 	busBufSz: 4096,
 	netstated: '',
 	discoverySrv: process.env.REACT_APP_DISCOVERY_SRV!,
 	discoverySrvEndpoint: process.env.REACT_APP_DISCOVERY_ENDPOINT!,
-	stunBatchSize: 2,
 	tag: '',
 	egressAddr: process.env.REACT_APP_EGRESS_ADDR!,
-	egressEndpoint: process.env.REACT_APP_EGRESS_ENDPOINT!,
-	webTransport: supportsWebTransport(),
-}
-
-export const APP_STORE_LINKS = {
-	chrome: 'https://chrome.google.com/webstore/detail/lantern-network/jonhnkjdlimggpmbehgkgpjgphoepfdj/',
-	firefox: 'https://addons.mozilla.org/en-US/firefox/addon/lantern-network/'
+	egressEndpoint: process.env.REACT_APP_EGRESS_ENDPOINT!
 }
