@@ -2,9 +2,12 @@ module github.com/getlantern/broflake
 
 go 1.19
 
+replace github.com/enobufs/go-nats => github.com/noahlevenson/go-nats v0.0.0-20230720174341-49df1f749775
+
 require (
 	github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819
-	github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65
+	github.com/enobufs/go-nats v0.0.1
+  github.com/getlantern/golog v0.0.0-20230503153817-8e72de7e0a65
 	github.com/getlantern/quicwrapper v0.0.0-20230712153452-6632f7a4b6ed
 	github.com/getlantern/telemetry v0.0.0-20230523155019-be7c1d8cd8cb
 	github.com/google/uuid v1.3.0
@@ -15,7 +18,8 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.42.0
 	go.opentelemetry.io/otel v1.16.0
 	go.opentelemetry.io/otel/metric v1.16.0
-	golang.org/x/mod v0.10.0
+	go.opentelemetry.io/otel/trace v1.16.0
+  golang.org/x/mod v0.10.0
 	nhooyr.io/websocket v1.8.7
 )
 
@@ -57,8 +61,11 @@ require (
 	github.com/pion/sdp/v3 v3.0.6 // indirect
 	github.com/pion/srtp/v2 v2.0.15 // indirect
 	github.com/pion/stun v0.6.0 // indirect
+	github.com/pion/transport v0.14.1 // indirect
 	github.com/pion/transport/v2 v2.2.1 // indirect
+	github.com/pion/turn v1.3.7 // indirect
 	github.com/pion/turn/v2 v2.1.0 // indirect
+	github.com/pkg/errors v0.8.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.15.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
@@ -74,7 +81,6 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.16.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.16.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v0.39.0 // indirect
-	go.opentelemetry.io/otel/trace v1.16.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect

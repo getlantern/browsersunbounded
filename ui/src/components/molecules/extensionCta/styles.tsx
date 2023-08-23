@@ -1,9 +1,13 @@
 import styled from 'styled-components'
 import {COLORS, Themes} from '../../../constants'
 
+interface Props {
+	theme: Themes
+	$menu: boolean
+}
 export const Container = styled.div`
 	display: flex;
-	background-color: ${props => props.theme === Themes.LIGHT ? COLORS.white : COLORS.grey6};
+	background-color: ${(props: Props) => props.theme === Themes.LIGHT ? props.$menu ? COLORS.white : COLORS.grey1 : COLORS.grey6};
 	border-radius: 16px;
 	padding: 16px;
 	margin-top: 16px;
@@ -11,5 +15,5 @@ export const Container = styled.div`
   align-items: center;
   flex-direction: column;
 	gap: 8px;
-  border: 1px solid ${props => props.theme === Themes.LIGHT ? COLORS.grey2 : COLORS.grey4};
+  border: 1px solid ${(props: Props) => props.theme === Themes.LIGHT ? COLORS.grey2 : COLORS.grey4};
 `

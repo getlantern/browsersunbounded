@@ -23,8 +23,10 @@ const Control = ({onToggle, info = false}: Props) => {
 	const [loading, setLoading] = useState(false)
 
 	const init = async () => {
+		console.log(`wasmInterface: ${wasmInterface}`)
 		if (!wasmInterface) return
 		setLoading(true)
+		console.log(`initializing p2p ${mock ? '"wasm"' : 'wasm'}`)
 		const instance = await wasmInterface.initialize({mock, target})
 		if (!instance) return console.warn('wasm failed to initialize')
 		console.log(`p2p ${mock ? '"wasm"' : 'wasm'} initialized!`)
@@ -32,6 +34,7 @@ const Control = ({onToggle, info = false}: Props) => {
 	}
 
 	const _onToggle = async (share: boolean) => {
+		console.log(`onToggle: share: ${share}, ready: ${ready}, needsInit: ${needsInit}`)
 		if (needsInit) await init()
 		if (share) wasmInterface.start()
 		if (!share) wasmInterface.stop()
@@ -42,9 +45,9 @@ const Control = ({onToggle, info = false}: Props) => {
 		<>
 			<TextInfo>
 				<Text
-					style={{minWidth: 160, fontWeight: 'bold'}}
+					style={{minWidth: 90, fontWeight: 'bold'}}
 				>
-					Connection sharing: <span style={{color: sharing ? COLORS.green : COLORS.error}}>{sharing ? 'ON' : 'OFF'}</span>
+					Status: <span style={{color: sharing ? COLORS.green : COLORS.error}}>{sharing ? 'ON' : 'OFF'}</span>
 				</Text>
 				{ info && <Info /> }
 			</TextInfo>

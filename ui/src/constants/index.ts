@@ -12,6 +12,7 @@ export const COLORS = {
 	grey6: '#040404',
 	grey: '#707070',
 	blue5: '#012D2D',
+	blue4: '#007A7C',
 	error: '#DB1C1C',
 	brand: 'rgba(0, 122, 124, 1)',
 	altBrand: '#00BCD4',
@@ -62,6 +63,7 @@ export enum Themes {
 export interface Settings {
 	globe: boolean
 	exit: boolean
+	toast: boolean
 	mobileBg: boolean
 	desktopBg: boolean
 	layout: Layouts
@@ -75,12 +77,14 @@ export interface Settings {
 	menu: boolean
 	title: boolean
 	share: boolean
+	infoLink: string
 }
 
 export const defaultSettings: Settings = {
 	mobileBg: true,
 	desktopBg: true,
 	exit: true,
+	toast: false,
 	globe: true,
 	layout: Layouts.BANNER,
 	theme: Themes.LIGHT,
@@ -92,7 +96,8 @@ export const defaultSettings: Settings = {
 	keepText: true,
 	menu: true,
 	title: false,
-	share: false
+	share: false,
+	infoLink: ''
 }
 
 export const POPUP = 'popup'
@@ -119,6 +124,7 @@ export const WASM_CLIENT_CONFIG = {
 	netstated: '',
 	discoverySrv: process.env.REACT_APP_DISCOVERY_SRV!,
 	discoverySrvEndpoint: process.env.REACT_APP_DISCOVERY_ENDPOINT!,
+	stunBatchSize: 2,
 	tag: '',
 	egressAddr: process.env.REACT_APP_EGRESS_ADDR!,
 	egressEndpoint: process.env.REACT_APP_EGRESS_ENDPOINT!,

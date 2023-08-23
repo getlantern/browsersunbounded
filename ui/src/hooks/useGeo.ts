@@ -21,6 +21,8 @@ export interface Arch {
 export interface Point {
 	lng: number
 	lat: number
+	origin?: boolean
+	id: number
 }
 
 export interface GeoLookup {
@@ -95,6 +97,8 @@ const incrementArcs = (arcs: Arch[], geos: GeoLookup[]) => {
 
 export const useGeo = () => {
 	const [arcs, setArcs] = useState<Arch[]>([])
+	const [points, setPoints] = useState<Point[]>([])
+	const [rings, setRings] = useState<Point[]>([])
 	const activeArcs = useMemo(() => arcs.filter(a => a.workerIdxArr.length > 0), [arcs])
 	const country = useRef<ISO>()
 	const rawConnections = useEmitterState(connectionsEmitter)
@@ -102,7 +106,7 @@ export const useGeo = () => {
 	const active = [...rawConnections].some(c => c.state === 1)
 	const connections = useMemo(() => {
 		return active ? queuedConnections : rawConnections
-	}, [rawConnections, queuedConnections])
+	}, [rawConnections, queuedConnections, active])
 	const prevConnections = usePrevious(connections)
 	const sharing = useEmitterState(sharingEmitter)
 
@@ -175,18 +179,41 @@ export const useGeo = () => {
 		else removeNotification(-1)
 	}, [sharing, active])
 
-	const points = useMemo<Point[]>(() => {
-		return activeArcs.map(arc => {
-			return ({
-				lng: arc.endLng,
-				lat: arc.endLat
-			})
+	useEffect(() => {
+		if (activeArcs.length === 0) {
+			setRings([])
+			setTimeout(() => setPoints([]), 0)
+			return
+		}
+		const newPoints: Point[] = []
+		activeArcs.forEach(arc => {
+			if (!points.some(p => arc.workerIdxArr.includes(p.id))) {
+				newPoints.push({
+					lng: arc.endLng,
+					lat: arc.endLat,
+					id: arc.workerIdxArr[0]
+				})
+			}
 		})
+		if (activeArcs.length > 0 && !points.some(p => p.origin)) {
+			newPoints.push({
+				lng: activeArcs[0].startLng,
+				lat: activeArcs[0].startLat,
+				origin: true,
+				id: -1
+			})
+		}
+		const oldPoints = points.filter(p => p.id === -1 || activeArcs.some(a => a.workerIdxArr[0] === p.id))
+		const oldRings = rings.filter(p => p.id === -1 || activeArcs.some(a => a.workerIdxArr[0] === p.id))
+		setRings([...oldPoints, ...newPoints])
+		setTimeout( () => setPoints([...oldRings, ...newPoints]), 0)
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [activeArcs])
 
 	return {
 		arcs: activeArcs,
-		points,
+		points: points,
+		rings: rings,
 		country: country.current
 	}
 }

@@ -17,9 +17,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pion/webrtc/v3"
-
 	"github.com/getlantern/broflake/common"
+	"github.com/getlantern/broflake/otel"
+	"github.com/pion/webrtc/v3"
 )
 
 func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
@@ -448,12 +448,24 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			connectionClosed := input[3].(chan struct{})
 			common.Debugf("Consumer state 4, signaling complete!")
 
+			// XXX: Let's select some STUN servers to perform NAT behavior discovery for the purpose of
+			// sending interesting traces revealing the outcome of our NAT traversal attempt
+			STUNSrvs, err := options.STUNBatch(options.STUNBatchSize)
+			if err != nil {
+				common.Debugf("Error creating STUN batch: %v", err)
+				// Borked!
+				peerConnection.Close() // TODO: there's an err we should handle here
+				return 0, []interface{}{}
+			}
+
 			select {
 			case d := <-connectionEstablished:
 				common.Debugf("A WebRTC connection has been established!")
+				go otel.CollectAndSendNATBehaviorTelemetry(STUNSrvs, "nat_success")
 				return 5, []interface{}{peerConnection, d, connectionChange, connectionClosed}
 			case <-time.After(options.NATFailTimeout):
 				common.Debugf("NAT failure, aborting!")
+				go otel.CollectAndSendNATBehaviorTelemetry(STUNSrvs, "nat_failure")
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}

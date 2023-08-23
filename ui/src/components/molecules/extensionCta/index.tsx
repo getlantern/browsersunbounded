@@ -6,20 +6,21 @@ import {Text} from '../../atoms/typography'
 
 const ExtensionCta = () => {
 	const {settings} = useContext(AppContext)
-	const {theme} = settings
+	const {theme, menu} = settings
 
 	return (
 		<Container
 			theme={theme}
+			$menu={menu}
 		>
 			<ExtensionButton />
 			<Text
 				style={{
-					fontSize: 12,
+					fontSize: 14,
 					lineHeight: '20px'
 				}}
 			>
-				Help more people by installing our extension.
+				Help even more people by installing the extension
 			</Text>
 		</Container>
 	)

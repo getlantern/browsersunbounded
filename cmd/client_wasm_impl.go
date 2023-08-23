@@ -23,7 +23,8 @@ func main() {
 	//    BroflakeOptions.BusBufferSz,
 	//    BroflakeOptions.Netstated,
 	//    WebRTCOptions.DiscoverySrv
-	//    WebRTCOptions.Endpoint
+	//    WebRTCOptions.Endpoint,
+	//    WebRTCOptions.STUNBatchSize,
 	//    WebRTCOptions.Tag
 	//    EgressOptions.Addr
 	//    EgressOptions.Endpoint
@@ -44,16 +45,12 @@ func main() {
 			}
 
 			rtcOpt := clientcore.NewDefaultWebRTCOptions()
-			rtcOpt.DiscoverySrv = args[6].String()
-			rtcOpt.Endpoint = args[7].String()
+			rtcOpt.DiscoverySrv = args[5].String()
+			rtcOpt.Endpoint = args[6].String()
+			rtcOpt.STUNBatchSize = uint32(args[7].Int())
 			rtcOpt.Tag = args[8].String()
 
-			var egOpt *clientcore.EgressOptions
-			if webTransport {
-				clientcore.NewDefaultWebTransportEgressOptions()
-			} else {
-				clientcore.NewDefaultWebSocketEgressOptions()
-			}
+			egOpt := clientcore.NewDefaultEgressOptions()
 			egOpt.Addr = args[9].String()
 			egOpt.Endpoint = args[10].String()
 

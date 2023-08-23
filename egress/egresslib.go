@@ -32,7 +32,7 @@ import (
 // https://github.com/nhooyr/websocket/blob/master/examples/echo/server.go
 
 const (
-	websocketKeepalive = 30 * time.Second
+	websocketKeepalive = 15 * time.Second
 )
 
 // Multi-writer values used for logging and otel metrics

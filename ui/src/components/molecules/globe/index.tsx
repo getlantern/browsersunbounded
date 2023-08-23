@@ -10,12 +10,12 @@ import GlobeComponent from 'react-globe.gl'
 import {Container} from './styles'
 import {useContext, useEffect, useMemo, useRef, useState} from 'react'
 import {AppContext} from '../../../context'
-import {BREAKPOINT, COLORS, Targets, UV_MAP_PATH_DARK, UV_MAP_PATH_LIGHT} from '../../../constants'
+import {BREAKPOINT, COLORS, Targets, Themes, UV_MAP_PATH_DARK, UV_MAP_PATH_LIGHT} from '../../../constants'
 import Shadow from './shadow'
 import ToolTip from '../toolTip'
 import {useGeo} from '../../../hooks/useGeo'
-import {Themes} from '../../../constants'
 import {Notification} from '../notification'
+import * as THREE from 'three'
 // import {useEmitterState} from '../../../hooks/useStateEmitter'
 // import {sharingEmitter} from '../../../utils/wasmInterface'
 // import {countries} from "../../../utils/countries";
@@ -33,6 +33,46 @@ const calcOffset = (size: number, title: boolean, menu: boolean) => {
 	return offset
 }
 
+
+const createGradientTexture = (blue = true) => {
+	const size = 100; // The size of the texture
+	const canvas = document.createElement('canvas');
+	canvas.width = size;
+	canvas.height = size;
+
+	const context = canvas.getContext('2d');
+	const gradient = context.createRadialGradient(
+		size / 2,
+		size / 2,
+		0,
+		size / 2,
+		size / 2,
+		size / 2
+	);
+
+	gradient.addColorStop(0, blue ? 'rgba(0, 188, 212, 1)' : 'rgba(255, 193, 7, 1)');
+	gradient.addColorStop(1, blue ? 'rgba(0, 188, 212, 0)' : 'rgba(255, 193, 7, 0)');
+	context.fillStyle = gradient;
+	context.fillRect(0, 0, size, size);
+
+	return new THREE.CanvasTexture(canvas);
+}
+
+const gradientTextureBlue = createGradientTexture(true);
+const gradientTextureYellow = createGradientTexture(false);
+const materialBlue = new THREE.MeshLambertMaterial({
+	map: gradientTextureBlue,
+	blending: THREE.NormalBlending,
+	transparent: true,
+	name: 'blue'
+});
+const materialYellow = new THREE.MeshLambertMaterial({
+	map: gradientTextureYellow,
+	blending: THREE.NormalBlending,
+	transparent: true,
+	name: 'yellow'
+});
+
 const Globe = ({target}: Props) => {
 	// const sharing = useEmitterState(sharingEmitter)
 	const {width, settings} = useContext(AppContext)
@@ -43,7 +83,7 @@ const Globe = ({target}: Props) => {
 	const count = arc ? arc.workerIdxArr.length : 0
 	const globe = useRef()
 	const container = useRef()
-	const {arcs, points} = useGeo()
+	const {arcs, points, rings} = useGeo()
 	const [altitude, setAltitude] = useState(14)
 	// const lastAnimation = useRef(0)
 	// const [interacted, setInteracted] = useState(false)
@@ -106,7 +146,10 @@ const Globe = ({target}: Props) => {
 	// useEffect(() => {
 	// 	const animate = () => {
 	// 		requestAnimationFrame(animate)
-	// 		const scene = globe.current.scene()
+	// 		if (!globe.current) return
+	// 		const scene = globe.current?.scene()
+	// 		if (!scene) return
+	// 		// scene.children.forEach(obj3d => console.log(obj3d.type))
 	// 		const fromKapsule = scene.children.find(obj3d => obj3d.type === 'Group')
 	// 		if (!fromKapsule) return
 	// 		const lineSegmentGroups = fromKapsule.children[0].children
@@ -116,9 +159,50 @@ const Globe = ({target}: Props) => {
 	// 				// @todo
 	// 			}
 	// 		})
+	//
+	// 		const pointMeshes = fromKapsule.children[0].children[1].children
+	//
+	// 		pointMeshes.forEach(mesh => {
+	// 			if (mesh.material.color.r === 0 || mesh.material.name === 'blue') mesh.material = materialBlue
+	// 			else mesh.material = materialYellow
+	// 		})
 	// 	}
 	// 	animate()
 	// }, [])
+
+	useEffect(() => {
+		setTimeout(() => {
+			if (!globe.current) return
+			const scene = globe.current?.scene()
+			if (!scene) return
+			const fromKapsule = scene.children.find(obj3d => obj3d.type === 'Group')
+			if (!fromKapsule) return
+			const pointMeshes = fromKapsule.children[0].children[1].children
+			const uuids = pointMeshes.map(mesh => mesh.uuid)
+			const clonedMeshes = scene.children.filter(obj3d => obj3d.name === 'clone')
+			const clonedUuids = clonedMeshes.map(mesh => mesh.uuid)
+			// clone pointMeshes with custom material and add to scene
+			pointMeshes.forEach(mesh => {
+				const uuid = mesh.uuid
+				if (clonedUuids.map(id => id.replace('-clone', '')).includes(uuid)) return
+				const clonedMesh = mesh.clone()
+				if (mesh.material.color.r === 0 || mesh.material.name === 'blue') clonedMesh.material = materialBlue
+				else clonedMesh.material = materialYellow
+				clonedMesh.uuid = uuid + '-clone'
+				clonedMesh.name = 'clone'
+				scene.add(clonedMesh)
+			})
+
+			// remove clonedMeshes that are no longer in pointMeshes
+			clonedMeshes.forEach(mesh => {
+				const uuid = mesh.uuid
+				if (!uuids.includes(uuid.replace('-clone', ''))) scene.remove(mesh)
+			});
+		}, 50)
+	}, [points])
+
+	// const colorInterpolatorBlue = t => `rgba(0, 188, 212,${Math.sqrt(1-t)})`;
+	// const colorInterpolatorYellow = t => `rgba(255, 193, 7,${Math.sqrt(1-t)})`;
 
 	return (
 		<Container
@@ -146,8 +230,8 @@ const Globe = ({target}: Props) => {
 				enablePointerInteraction={true}
 				waitForGlobeReady={true}
 				showAtmosphere={true}
-				atmosphereColor={COLORS.brand}
-				atmosphereAltitude={.25}
+				atmosphereColor={theme === Themes.LIGHT ? COLORS.altBrand : COLORS.brand}
+				atmosphereAltitude={theme === Themes.LIGHT ? 0.2 : 0.25}
 				backgroundColor={'rgba(0,0,0,0)'}
 				backgroundImageUrl={null}
 				globeImageUrl={theme === Themes.DARK ? UV_MAP_PATH_DARK : UV_MAP_PATH_LIGHT}
@@ -156,20 +240,25 @@ const Globe = ({target}: Props) => {
 				arcDashLength={1}
 				arcDashGap={0.5}
 				arcDashInitialGap={1}
-				arcDashAnimateTime={arc => arc.ghost ? 0 : 500}
+				arcDashAnimateTime={arc => arc.ghost ? 0 : 1000}
 				arcsTransitionDuration={0}
-				arcStroke={arc => arc.ghost ? 10 : 2.5}
+				arcStroke={arc => arc.ghost ? 10 : 2}
 				arcAltitudeAutoScale={0.3}
 				onArcHover={setArc}
 				pointsData={points}
-				pointColor={() => COLORS.green}
-				pointRadius={1.5}
+				pointColor={p => p.origin ? 'rgba(0, 188, 212, 0.05)' : 'rgba(255, 193, 7, 0.05)'}
+				pointRadius={4}
 				pointAltitude={0}
 				pointsTransitionDuration={500}
 				onZoom={zoom => {
 					let smooth = Math.round(zoom.altitude * 10) / 10
 					if (smooth !== altitude) setAltitude(smooth)
 				}}
+				// ringsData={rings}
+				// ringColor={p => p.origin ? colorInterpolatorBlue : colorInterpolatorYellow}
+				// // ringMaxRadius={4}
+				// // ringRepeatPeriod={1000}
+				// ringPropagationSpeed={1}
 			/>
 			<ToolTip
 				text={!!arc && `${count} ${count === 1 ? 'person' : 'people'} from ${arc.country.split(',')[0]}`}

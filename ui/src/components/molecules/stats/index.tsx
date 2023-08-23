@@ -2,7 +2,7 @@ import {Text} from '../../atoms/typography'
 import Row from '../../atoms/row'
 import React, {useContext} from 'react'
 import {AppContext} from '../../../context'
-import {BREAKPOINT} from '../../../constants'
+// import {BREAKPOINT} from '../../../constants'
 // import {formatBytes, getIndex} from '../../../hooks/useBytesFormatLatch'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
 import {
@@ -21,7 +21,7 @@ export const Connections = () => {
 	const currentConnections = connections.filter(c => c.state === 1).length
 	return (
 		<>
-			<Text>People you are helping connect:</Text>
+			<Text>People you're helping right now:</Text>
 			<Text
 				style={{minWidth: 10}}
 			>
@@ -33,7 +33,7 @@ export const Connections = () => {
 
 
 const Stats = () => {
-	const {width, settings} = useContext(AppContext)
+	const {settings} = useContext(AppContext)
 	const {menu} = settings
 	const connections = useEmitterState(connectionsEmitter)
 	const lifetimeConnections = useEmitterState(lifetimeConnectionsEmitter)
@@ -49,7 +49,7 @@ const Stats = () => {
 			<Row
 				borderBottom
 			>
-				<Text>{'People you are helping connect' + (width > BREAKPOINT ? ' to the open internet:' : ':')}</Text>
+				<Text>{'People you\'re helping' + (true ? ' right now:' : ':')}</Text>
 				<Text>{currentConnections}</Text>
 			</Row>
 			{/*<Row*/}
