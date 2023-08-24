@@ -88,8 +88,6 @@ const Globe = ({target}: Props) => {
 	// const lastAnimation = useRef(0)
 	// const [interacted, setInteracted] = useState(false)
 
-	console.log('arcs', arcs)
-
 	const ghostArcs = useMemo(() => {
 		if (!arcs) return []
 		return arcs.map(arc => {
