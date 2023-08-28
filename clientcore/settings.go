@@ -27,7 +27,7 @@ func NewDefaultWebRTCOptions() *WebRTCOptions {
 		DiscoverySrv:   "http://localhost:9000",
 		Endpoint:       "/v1/signal",
 		GenesisAddr:    "genesis",
-		NATFailTimeout: 5 * time.Second,
+		NATFailTimeout: 25 * time.Second,
 		ICEFailTimeout: 5 * time.Second,
 		STUNBatch:      DefaultSTUNBatchFunc,
 		STUNBatchSize:  5,
