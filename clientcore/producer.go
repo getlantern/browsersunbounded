@@ -88,6 +88,14 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				connectionChange <- s
 			})
 
+			// TODO: right now we listen for ICE connection state changes only to log messages about
+			// client behavior. In the future, by passing a channel forward in the same manner as above,
+			// we could probably use the ICE connection state change event to determine the precise
+			// moment of NAT traversal failure (instead of just waiting on a timer).
+			peerConnection.OnICEConnectionStateChange(func(s webrtc.ICEConnectionState) {
+				common.Debugf("ICE connection state change: %v", s.String())
+			})
+
 			return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
 		}),
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
