@@ -29,7 +29,9 @@ class MockWasmClient implements WasmClient {
 		this.connections = defaultConnections
 	}
 
-	start = () => {
+	start = async () => {
+		const sleepMs = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+		await sleepMs(1000)
 		this.interval = setInterval(() => {
 			const active = this.connections.filter(c => c.state === 1)
 			const chunks = [...Array(active.length)].map((_, i) => (

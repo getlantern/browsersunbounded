@@ -59,14 +59,17 @@ const geoLookupAll = async (connections: Connection[]): Promise<GeoLookup[]> => 
 	return res.flat().map((iso, index) => ({iso, workerIdx: connections[index].workerIdx}))
 }
 
-const createArcs = (geos: GeoLookup[], isoCountMap: {[key: string]: number}, userIso: ISO ) => (
-	geos.map(geo => {
+const createArcs = (geos: GeoLookup[], isoCountMap: {[key: string]: number}, userIso: ISO ) => {
+	const newArcs: Arch[] = []
+	geos.forEach((geo, index) => {
 		const {workerIdx} = geo
 		const iso = geo.iso as keyof typeof countries
 		const country = countries[iso] || countries[CENSORED_ISO_FALLBACK]
 		const userCountry = countries[userIso] || countries[UNCENSORED_ISO_FALLBACK]
-		const count = isoCountMap[iso] || 1
-		return ({
+		const count = isoCountMap[iso] || geos.filter(g => g.iso === iso).length // use count from map if it exists
+		// set altitude based on count minus the number of geos with the same iso that come after this one
+		const altitudeFactor = count - geos.filter((g, i) => g.iso === iso && i > index).length
+		newArcs.push({
 			startLng: userCountry.longitude,
 			startLat: userCountry.latitude,
 			endLng: country.longitude,
@@ -74,11 +77,13 @@ const createArcs = (geos: GeoLookup[], isoCountMap: {[key: string]: number}, use
 			country: country.name,
 			iso: country.alpha2code,
 			workerIdx: workerIdx,
-			altitude: 0.3 + (count * 0.05),
+			altitude: 0.3 + (altitudeFactor * 0.05),
 			count: count
 		})
 	})
-)
+
+	return newArcs
+}
 
 const decrementArcs = (arcs: Arch[], remove: Connection[]) => {
 	const rmIds = remove.map(r => r.workerIdx)
@@ -118,6 +123,7 @@ export const useGeo = () => {
 	}, [rawConnections, queuedConnections, active])
 	const prevConnections = usePrevious(connections)
 	const sharing = useEmitterState(sharingEmitter)
+	const [updating, setUpdating] = useState(false)
 
 	const updateArcs = useCallback(async (connections: Connection[]) => {
 		/***
@@ -164,10 +170,10 @@ export const useGeo = () => {
 				autoHide: true,
 			})
 		}
-
 	}, [arcs])
 
 	useEffect(() => {
+		if (updating) return // don't update while updating 🤪doing so causes a race condition
 		if (prevConnections === connections) return // only update on changes
 		const updatedConnections = connections.filter(connection => {
 			const prevConnection = (
@@ -180,8 +186,9 @@ export const useGeo = () => {
 				prevConnection.addr !== connection.addr
 			)
 		})
-		updateArcs(updatedConnections).then(null)
-	}, [prevConnections, connections, updateArcs])
+		setUpdating(true)
+		updateArcs(updatedConnections).then(() => setUpdating(false))
+	}, [prevConnections, connections, updateArcs, updating])
 
 	useEffect(() => {
 		if (sharing && !active) pushNotification({
