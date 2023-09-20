@@ -1,5 +1,6 @@
 # wasm
 cmd/dist/bin/*
+cmd/dist/wmaker/*
 cmd/dist/public/*.wasm
 
 # misc
