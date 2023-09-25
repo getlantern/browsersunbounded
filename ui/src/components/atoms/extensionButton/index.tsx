@@ -43,7 +43,7 @@ const ExtensionButton = () => {
 					lineHeight: '24px',
 				}}
 			>
-				{`Get Lantern Network for ${isFirefox() ? 'Firefox' : 'Chrome'}`}
+				{`Get Browsers Unbounded for ${isFirefox() ? 'Firefox' : 'Chrome'}`}
 			</Text>
 		</StyledLink>
 	)

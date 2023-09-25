@@ -11,7 +11,7 @@ const AppWrapper = styled.section`
   font-family: 'Urbanist', sans-serif;
   display: flex;
   width: 100%;
-  max-width: ${({layout}: Props) => layout !== Layouts.BANNER ? '320px' : 'unset'};
+  max-width: ${({layout}: Props) => layout === Layouts.PANEL ? '330px' : layout === Layouts.FLOATING ? '360px'  : 'unset'};
   border-radius: ${({layout}: Props) => layout !== Layouts.BANNER ? layout === Layouts.FLOATING ? '32px 23px 0 0' : '32px' : '0'};
   background-color: ${({theme, $menu}: Props) => theme === Themes.DARK ? COLORS.grey5 : $menu ? COLORS.grey1 : COLORS.white };
   box-sizing: content-box;

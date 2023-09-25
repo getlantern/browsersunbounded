@@ -38,7 +38,7 @@ const menuItems = (connected: number | string) => [
 	{
 		key: 'more',
 		label: 'Learn More',
-		href: 'https://network.lantern.io',
+		href: 'https://unbounded.lantern.io',
 		icon: <More/>
 	}
 ]

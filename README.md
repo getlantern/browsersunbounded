@@ -148,7 +148,7 @@ Links:
 
 [Github pages sandbox](https://embed.lantern.io)
 
-[Lantern Network website](https://network.lantern.io)
+[Browsers Unbounded website](https://network.lantern.io)
 
 #### UI quickstart for devs
 
