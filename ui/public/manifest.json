@@ -1,6 +1,6 @@
 {
-  "short_name": "p2p web proxy",
-  "name": "lantern p2p web proxy",
+  "short_name": "Browsers Unbounded",
+  "name": "Browsers Unbounded",
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#000000",
