@@ -81,7 +81,14 @@ const init = (embeds: NodeListOf<HTMLElement>) => {
 	})
 }
 
-const getEmbeds = () => document.querySelectorAll('lantern-network') as NodeListOf<HTMLElement>
+// get all embeds on page element named "lantern-network" or "browsers-unbounded"
+const getEmbeds = () => {
+	// @todo remove legacy embeds after full migration
+	const legacy = document.querySelectorAll('lantern-network') as NodeListOf<HTMLElement>
+	const modern = document.querySelectorAll('browsers-unbounded') as NodeListOf<HTMLElement>
+	if (legacy.length) return legacy
+	return modern
+}
 
 // try to load embeds immediately
 const embeds = getEmbeds()
