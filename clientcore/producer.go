@@ -261,9 +261,9 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 
 			select {
 			case <-gatherComplete:
-				common.Debug("Ice gathering complete!")
+				common.Debug("ICE gathering complete!")
 			case <-time.After(options.ICEFailTimeout):
-				common.Debugf("Failed to gather ICE candidates!")
+				common.Debugf("Timeout, aborting ICE gathering!")
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}
