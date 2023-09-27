@@ -357,6 +357,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			select {
 			case <-gatherComplete:
 				common.Debug("ICE gathering complete!")
+				common.Debugf("Local candidates: %v", candidates)
 			case <-time.After(options.ICEFailTimeout):
 				common.Debugf("Timeout, aborting ICE gathering!")
 				// Borked!
