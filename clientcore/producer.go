@@ -355,10 +355,15 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			}
 
 			var remoteAddr net.IP
+			var hasNonHostCandidate bool
 
 			// TODO: here we assume valid candidates, but we need to handle the invalid case too
 			for _, c := range candidates.([]webrtc.ICECandidate) {
-				// TODO: webrtc.AddICECandidate accepts ICECandidateInit types, which are apparently
+				if c.Typ != webrtc.ICECandidateTypeHost {
+					hasNonHostCandidate = true
+				}
+
+				// XXX: webrtc.AddICECandidate accepts ICECandidateInit types, which are apparently
 				// just serialized ICECandidates?
 				err := peerConnection.AddICECandidate(c.ToJSON())
 				if err != nil {
@@ -375,6 +380,16 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				if parsedIP != nil && common.IsPublicAddr(parsedIP) {
 					remoteAddr = parsedIP
 				}
+			}
+
+			// As of 003c9ef0fe25677ee832e1351fb1474057a3e4c9, our signaling partner should not have sent
+			// us ICE candidates unless they contained at least one non-host type candidate. However, we
+			// perform this check on the producer side because some consumers may still on an old version.
+			if !hasNonHostCandidate {
+				common.Debugf("Signaling partner sent only host type ICE candidates, aborting!")
+				// Borked!
+				peerConnection.Close() // TODO: there's an err we should handle here
+				return 0, []interface{}{}
 			}
 
 			return 4, []interface{}{

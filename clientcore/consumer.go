@@ -362,15 +362,14 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				// If the STUN server(s) we used for this signaling attempt were blocked or unresponsive,
 				// we probably wound up with a slice of valid ICE candidates, but of only the 'host' type.
 				// We don't want to bother signaling those, so here's our escape hatch.
-				isAllHostTypeCandidates := true
+				var hasNonHostCandidate bool
 				for _, c := range candidates {
 					if c.Typ != webrtc.ICECandidateTypeHost {
-						isAllHostTypeCandidates = false
-						break
+						hasNonHostCandidate = true
 					}
 				}
 
-				if isAllHostTypeCandidates {
+				if !hasNonHostCandidate {
 					common.Debugf("Failed to gather any non-host ICE candidates, aborting!")
 					// Borked!
 					peerConnection.Close() // TODO: there's an err we should handle here
