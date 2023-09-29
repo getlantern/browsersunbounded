@@ -429,11 +429,42 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 					offer,
 				}
 			case <-time.After(options.NATFailTimeout):
-				common.Debugf("NAT failure, aborting!")
+				common.Debugf("NAT traversal timeout, aborting!")
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}
 			}
+
+			// XXX: This loop represents an alternate strategy for detecting NAT traversal success or
+			// failure based on peerConnection state changes. Notably, this strategy explicitly waits
+			// for the peerConnection failure event (instead of giving up after a timeout). This strategy
+			// is more "correct" than the one employed above, but when compared to using a short timeout
+			// value, it's very inefficient. In practice, if NAT traversal is destined to succeed, it will
+			// succeed within ~5s, but ICE often requires ~20s to conclude that a connection has failed.
+			/**
+			      for {
+			        s := <-connectionChange
+
+			        if s == webrtc.PeerConnectionStateConnected {
+			          common.Debugf("A WebRTC connection has been established!")
+			          d := <-connectionEstablished
+
+			          return 5, []interface{}{
+			            peerConnection,
+			            d,
+			            connectionChange,
+			            connectionClosed,
+			            remoteAddr,
+			            offer,
+			          }
+			        } else if s == webrtc.PeerConnectionStateFailed {
+			          common.Debugf("NAT traversal failed, aborting!")
+			          // Borked!
+							  peerConnection.Close() // TODO: there's an err we should handle here
+							  return 0, []interface{}{}
+			        }
+			      }
+			*/
 		}),
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 5
