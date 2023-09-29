@@ -122,6 +122,6 @@ export const WASM_CLIENT_CONFIG = {
 }
 
 export const APP_STORE_LINKS = {
-	chrome: 'https://chrome.google.com/webstore/detail/lantern-network/jonhnkjdlimggpmbehgkgpjgphoepfdj/',
-	firefox: 'https://addons.mozilla.org/en-US/firefox/addon/lantern-network/'
+	chrome: 'https://chrome.google.com/webstore/detail/browsers-unbounded/jonhnkjdlimggpmbehgkgpjgphoepfdj/',
+	firefox: 'https://addons.mozilla.org/en-US/firefox/addon/browsers-unbounded/'
 }

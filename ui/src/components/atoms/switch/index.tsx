@@ -26,7 +26,7 @@ const Switch = ({onToggle, checked, disabled, loading}: Props) => {
 					checked={checked}
 					aria-label={'connect'}
 					disabled={disabled}
-					name={'lantern-network-connect'}
+					name={'browsers-unbounded-connect'}
 				/>
 				<Slider
 					checked={checked}

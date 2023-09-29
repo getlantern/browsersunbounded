@@ -7,14 +7,14 @@ const popupApp = async () => {
 	// set body styles based on user theme
 	document.body.setAttribute(
 		'style',
-		`background-color: ${backgroundColor}; margin: 0; padding: 0; width: 320px; height: 584px; overflow: hidden;` // hide scrollbar on popup, inherit iframe scroll only
+		`background-color: ${backgroundColor}; margin: 0; padding: 0; width: 330px; height: 584px; overflow: hidden;` // hide scrollbar on popup, inherit iframe scroll only
 	)
 	const iframe = document.createElement('iframe')
 	iframe.src = process.env.EXTENSION_POPUP_URL!
 	// set iframe styles based on user theme
 	iframe.setAttribute(
 		'style',
-		`background-color: ${backgroundColor}; width: 324px; height: 588px; border: none; margin: 0; padding: 0;` // 4px buffer seems needed to hide unnecessary scrollbars
+		`background-color: ${backgroundColor}; width: 330px; height: 588px; border: none; margin: 0; padding: 0;` // 4px buffer seems needed to hide unnecessary scrollbars
 	)
 	document.body.appendChild(iframe)
 	await bindPopup(iframe)

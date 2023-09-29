@@ -373,9 +373,27 @@ func newFSMstate2(options *WebRTCOptions) FSMstate {
 
 		select {
 		case <-gatherComplete:
-			common.Debug("Ice gathering complete!")
+			common.Debug("ICE gathering complete!")
+			common.Debugf("Local candidates: %v", candidates)
+
+			// If the STUN server(s) we used for this signaling attempt were blocked or unresponsive,
+			// we probably wound up with a slice of valid ICE candidates, but of only the 'host' type.
+			// We don't want to bother signaling those, so here's our escape hatch.
+			var hasNonHostCandidate bool
+			for _, c := range candidates {
+				if c.Typ != webrtc.ICECandidateTypeHost {
+					hasNonHostCandidate = true
+				}
+			}
+
+			if !hasNonHostCandidate {
+				common.Debugf("Failed to gather any non-host ICE candidates, aborting!")
+				// Borked!
+				peerConnection.Close() // TODO: there's an err we should handle here
+				return 0, []interface{}{}
+			}
 		case <-time.After(options.ICEFailTimeout):
-			common.Debugf("Failed to gather ICE candidates!")
+			common.Debug("Timeout, aborting ICE gathering!")
 			// Borked!
 			peerConnection.Close() // TODO: there's an err we should handle here
 			return 0, []interface{}{}
