@@ -160,16 +160,16 @@ export const useGeo = () => {
 		const updatedArcs = [...arcs, ...newArcs]
 		setArcs(updatedArcs)
 
-		// dispatch push notifications if there is a single new connection (not a sync)
-		if (geos.length === 1) {
-			const country = updatedArcs.find(a => a.iso === geos[0].iso)?.country
+		// dispatch push notifications
+		geos.forEach(geo => {
+			const country = updatedArcs.find(a => a.iso === geo.iso)?.country
 			if (!country) return
 			pushNotification({
-				id: geos[0].workerIdx,
+				id: geo.workerIdx,
 				text: `New connection: ${country.split(',')[0]}`,
 				autoHide: true,
 			})
-		}
+		})
 	}, [arcs])
 
 	useEffect(() => {

@@ -34,7 +34,6 @@ const Control = ({onToggle, info = false}: Props) => {
 	}
 
 	const _onToggle = async (share: boolean) => {
-		console.log(`onToggle: share: ${share}, ready: ${ready}, needsInit: ${needsInit}`)
 		if (needsInit) await init()
 		if (share) wasmInterface.start()
 		if (!share) wasmInterface.stop()

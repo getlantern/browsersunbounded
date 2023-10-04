@@ -1,36 +1,38 @@
-import { useState, useEffect, useRef } from 'react';
+import {useState, useEffect, useRef} from 'react'
 
-const useQueueState = <T>(initialState: T, delay: number) => {
-	const [state, setState] = useState(initialState);
-	const queueRef = useRef<Array<T>>([]);
-	const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
-
-	const setQueuedState = (newState: T) => {
-		queueRef.current.push(newState);
-		processQueue();
-	};
-
-	const processQueue = () => {
-		if (timeoutIdRef.current === null && queueRef.current.length > 0) {
-			const nextState = queueRef.current.shift() as T;
-			setState(nextState);
-
-			timeoutIdRef.current = setTimeout(() => {
-				timeoutIdRef.current = null;
-				processQueue();
-			}, delay);
-		}
-	};
-
-	// @todo cleanup on unmount
+const useQueueState = <T>(propState: T, delay: number) => {
+	const [state, setState] = useState<T>(propState)
+	const [queue, setQueue] = useState<T[]>([])
+	const timeoutIdRef = useRef<NodeJS.Timeout | null>(null)
 
 	useEffect(() => {
-		if (state === initialState) return;
-		setQueuedState(initialState);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [initialState]);
+		if (timeoutIdRef.current === null && queue.length > 0) {
+			const [nextState, ...rest] = queue
+			setState(nextState)
+			setQueue(rest)
 
-	return state;
-};
+			timeoutIdRef.current = setTimeout(() => {
+				timeoutIdRef.current = null
+				setQueue((prevQueue) => prevQueue.slice(1)) // remove processed state from queue
+			}, delay)
+		}
+	}, [queue, delay])
 
-export default useQueueState;
+	useEffect(() => {
+		// Whenever propState changes, enqueue the new state
+		setQueue((prevQueue) => [...prevQueue, propState])
+	}, [propState])
+
+	useEffect(() => {
+		// Cleanup on unmount
+		return () => {
+			if (timeoutIdRef.current !== null) {
+				clearTimeout(timeoutIdRef.current)
+			}
+		}
+	}, [])
+
+	return state
+}
+
+export default useQueueState
