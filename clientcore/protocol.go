@@ -85,7 +85,7 @@ type STUNCache struct {
 	n    float64
 }
 
-func NewSTUNCache(srvs []string, n float64) STUNCache {
+func newSTUNCache(srvs []string, n float64) STUNCache {
 	dest := make([]string, len(srvs))
 	copy(dest, srvs)
 

@@ -43,7 +43,7 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 					return 0, []interface{}{}
 				}
 
-				scache = NewSTUNCache(allSTUNSrvs, float64(options.STUNBatchSize))
+				scache = newSTUNCache(allSTUNSrvs, float64(options.STUNBatchSize))
 				common.Debugf("Populated the STUN cache (%v servers)", scache.size())
 			}
 
