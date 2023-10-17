@@ -1,6 +1,7 @@
 import React, {ChangeEvent, useContext} from 'react'
 import {Container, Input, Label, LoadingSpinner, Slider} from './styles'
 import {AppContext} from '../../../context'
+import Tutorial from '../tutorial'
 
 interface Props {
 	onToggle: (e: boolean) => void
@@ -43,6 +44,7 @@ const Switch = ({onToggle, checked, disabled, loading}: Props) => {
 					)
 				}
 			</Label>
+			{isLarge && <Tutorial />}
 		</Container>
 	)
 }

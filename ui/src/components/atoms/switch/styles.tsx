@@ -4,6 +4,7 @@ import {COLORS, Themes} from '../../../constants'
 const Container = styled.div`
   display: flex;
   align-items: center;
+	position: relative; // for the tutorial
 `
 
 const Label = styled.label`
