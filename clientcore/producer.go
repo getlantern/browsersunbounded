@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"math"
 	"net"
 	"net/http"
 	"net/url"
@@ -21,19 +22,29 @@ import (
 )
 
 func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
+	var scache STUNCache
+
 	return NewWorkerFSM(wg, []FSMstate{
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 0
 			// (no input data)
 			common.Debugf("Producer state 0, constructing RTCPeerConnection...")
 
-			STUNSrvs, err := options.STUNBatch(options.STUNBatchSize)
-			if err != nil {
-				common.Debugf("Error creating STUN batch: %v", err)
-				return 0, []interface{}{}
+			// Populate the STUN cache if necessary
+			if scache.size() == 0 {
+				allSTUNSrvs, err := options.STUNBatch(math.MaxInt32)
+				if err != nil {
+					common.Debugf("Error creating STUN batch: %v", err)
+					return 0, []interface{}{}
+				}
+
+				scache = newSTUNCache(allSTUNSrvs, float64(options.STUNBatchSize))
+				common.Debugf("Populated the STUN cache (%v servers)", scache.size())
 			}
 
-			common.Debugf("Created STUN batch (%v/%v servers)", len(STUNSrvs), options.STUNBatchSize)
+			STUNSrvs := scache.cohort()
+			common.Debugf("Using %v/%v STUN servers: %v", len(STUNSrvs), options.STUNBatchSize, STUNSrvs)
+			common.Debugf("STUN cache size: %v", scache.size())
 
 			config := webrtc.Configuration{
 				ICEServers: []webrtc.ICEServer{
@@ -264,10 +275,15 @@ func NewProducerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 				common.Debug("ICE gathering complete!")
 			case <-time.After(options.ICEFailTimeout):
 				common.Debugf("Timeout, aborting ICE gathering!")
+				scache.drop()
+
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}
 			}
+
+			// TODO: To maintain role agnosticism, we must assume that a producer can be censored, and
+			// so we must implement the same check for non-host type ICE candidates that consumers do
 
 			// Our answer SDP with ICE candidates attached
 			finalAnswer := peerConnection.LocalDescription()
