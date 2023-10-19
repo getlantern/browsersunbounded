@@ -4,14 +4,36 @@ import {COLORS, Themes} from '../../../constants'
 const Container = styled.div`
   display: flex;
   align-items: center;
-	position: relative; // for the tutorial
 `
+
+interface LabelProps {
+	$animate: boolean
+}
 
 const Label = styled.label`
   position: relative;
   display: inline-block;
   width: 40px;
   height: 24px;
+	
+	border: 1px solid transparent;
+
+  @keyframes fadeInOut {
+    0% {
+      filter: drop-shadow(0px 0px 12px rgba(0, 134, 50, 0));
+      border: rgba(0, 134, 50, 0) 1px solid;
+    }
+    50% {
+      filter: drop-shadow(0px 0px 12px rgba(0, 134, 50, 0.80));
+      border: rgba(0, 134, 50, 1) 1px solid;
+    }
+    100% {
+      filter: drop-shadow(0px 0px 12px rgba(0, 134, 50, 0));
+      border: rgba(0, 134, 50, 0) 1px solid;
+    }
+  }
+  ${({$animate}: LabelProps) => $animate ? `animation: fadeInOut 2400ms ease-out 200ms infinite;` : ''}
+	border-radius: 34px;
 `
 
 const Input = styled.input`

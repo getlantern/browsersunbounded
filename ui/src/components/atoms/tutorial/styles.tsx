@@ -4,8 +4,9 @@ import {COLORS} from '../../../constants'
 export const Container = styled.div`
   border-radius: 32px;
   position: absolute;
-  top: 40px;
-  left: -200px;
+  top: 58px;
+  right: 0;
+  z-index: 1;
 	border: 1px solid ${COLORS.green2};
 	background: #007A02;
   padding: 6px 8px;

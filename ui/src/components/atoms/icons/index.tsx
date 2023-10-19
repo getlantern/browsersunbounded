@@ -391,10 +391,4 @@ const X = () => {
 	)
 }
 
-const Tip = () => {
-	return (
-		<></>
-	)
-}
-
 export {Twitter, Github, Lantern, Expand, Collapse, Heart, Bell, Info, Arrow, LogoLeft, Menu, Firefox, FirefoxColor, Chrome, ChromeColor, More, X}
