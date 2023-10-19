@@ -376,4 +376,19 @@ const More = () => {
 	)
 }
 
-export {Twitter, Github, Lantern, Expand, Collapse, Heart, Bell, Info, Arrow, LogoLeft, Menu, Firefox, FirefoxColor, Chrome, ChromeColor, More}
+const X = () => {
+	return (
+		<svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<g clipPath="url(#clip0_1448_168)">
+				<path d="M12.6667 4.92822L11.7267 3.98822L8 7.71489L4.27333 3.98822L3.33333 4.92822L7.06 8.65489L3.33333 12.3816L4.27333 13.3216L8 9.59489L11.7267 13.3216L12.6667 12.3816L8.93999 8.65489L12.6667 4.92822Z" fill="white"/>
+			</g>
+			<defs>
+				<clipPath id="clip0_1448_168">
+					<rect width="16" height="16" fill="white" transform="translate(0 0.654907)"/>
+				</clipPath>
+			</defs>
+		</svg>
+	)
+}
+
+export {Twitter, Github, Lantern, Expand, Collapse, Heart, Bell, Info, Arrow, LogoLeft, Menu, Firefox, FirefoxColor, Chrome, ChromeColor, More, X}

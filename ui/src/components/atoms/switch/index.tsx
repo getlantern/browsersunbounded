@@ -1,6 +1,8 @@
 import React, {ChangeEvent, useContext} from 'react'
 import {Container, Input, Label, LoadingSpinner, Slider} from './styles'
 import {AppContext} from '../../../context'
+import {useEmitterState} from '../../../hooks/useStateEmitter'
+import {tutorialOnEmitter} from '../tutorial'
 
 interface Props {
 	onToggle: (e: boolean) => void
@@ -10,6 +12,7 @@ interface Props {
 }
 
 const Switch = ({onToggle, checked, disabled, loading}: Props) => {
+	const tutorialOn = useEmitterState(tutorialOnEmitter);
 	const {theme, menu, collapse} = useContext(AppContext).settings
 	const isLarge = !menu && !collapse
 
@@ -17,6 +20,7 @@ const Switch = ({onToggle, checked, disabled, loading}: Props) => {
 		<Container>
 			<Label
 				style={isLarge ? {height: 30, width: 52} : {}}
+				$animate={isLarge && tutorialOn}
 			>
 				<Input
 					type={'checkbox'}
