@@ -15,7 +15,7 @@ import ExpandCollapse from '../../atoms/expandCollapse'
 import LogoLink from '../../atoms/logoLink'
 import Title from '../../molecules/title'
 import ExtensionCta from '../../molecules/extensionCta'
-import Tutorial from '../../atoms/tutorial'
+// import Tutorial from '../../atoms/tutorial' // removing this at request of nelson
 
 const Globe = lazy(() => import('../../molecules/globe'))
 
@@ -136,9 +136,9 @@ const Banner = () => {
 										<Control
 											onToggle={onToggle}
 										/>
-										{(!menu && !collapse) && (
-											<Tutorial />
-										)}
+										{/*{(!menu && !collapse) && (*/}
+										{/*	<Tutorial />*/}
+										{/*)}*/}
 									</>
 								</Row>
 								<Stats/>
