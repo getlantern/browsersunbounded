@@ -80,7 +80,8 @@ declare global {
 		netstated: string,
     discoverySrv: string,
     discoverySrvEndpoint: string,
-		tag: string,
+    stunBatchSize: number,
+    tag: string,
     egressAddr: string,
     egressEndpoint: string
 	): WasmClient
@@ -120,19 +121,35 @@ export class WasmInterface {
 		// this dumb state is needed to prevent multiple calls to initialize from react hot reload dev server 🥵
 		if (this.initializing || this.instance) { // already initialized or initializing
 			console.warn('Wasm client has already been initialized or is initializing, aborting init.')
-			return
+		  return
 		}
+
 		this.initializing = true
 		this.target = target
 		if (mock) { // fake it till you make it
 			this.wasmClient = new MockWasmClient(this)
 			this.instance = {} as WebAssemblyInstance
 		} else { // the real deal (wasm)
+			console.log('instantiate streaming')
 			const res = await WebAssembly.instantiateStreaming(
 				fetch(process.env.REACT_APP_WIDGET_WASM_URL!), this.go.importObject
 			)
 			this.instance = res.instance
+			console.log('run instance')
 			this.go.run(this.instance)
+			console.log('building new client')
+			this.buildNewClient()
+    }
+		this.initListeners()
+		this.handleReady()
+		this.initializing = false
+		return this.instance
+	}
+
+	buildNewClient = (mock = false) => {
+		if (mock) { // fake it till you make it
+			this.wasmClient = new MockWasmClient(this)
+		} else {
 			this.wasmClient = globalThis.newBroflake(
 				WASM_CLIENT_CONFIG.type,
 				WASM_CLIENT_CONFIG.cTableSz,
@@ -141,15 +158,12 @@ export class WasmInterface {
 				WASM_CLIENT_CONFIG.netstated,
 				WASM_CLIENT_CONFIG.discoverySrv,
 				WASM_CLIENT_CONFIG.discoverySrvEndpoint,
+				WASM_CLIENT_CONFIG.stunBatchSize,
 				WASM_CLIENT_CONFIG.tag,
 				WASM_CLIENT_CONFIG.egressAddr,
 				WASM_CLIENT_CONFIG.egressEndpoint
 			)
 		}
-		this.initListeners()
-		this.handleReady()
-		this.initializing = false
-		return this.instance
 	}
 
 	start = () => {
