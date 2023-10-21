@@ -13,7 +13,7 @@ import {AppContext} from '../../../context'
 import {BREAKPOINT, COLORS, Targets, Themes, UV_MAP_PATH_DARK, UV_MAP_PATH_LIGHT} from '../../../constants'
 import Shadow from './shadow'
 import ToolTip from '../toolTip'
-import {useGeo} from '../../../hooks/useGeo'
+import {useGeo} from '../../../hooks/useGeoFuture'
 import {Notification} from '../notification'
 import * as THREE from 'three'
 // import {useEmitterState} from '../../../hooks/useStateEmitter'
@@ -80,10 +80,10 @@ const Globe = ({target}: Props) => {
 	const size = width < BREAKPOINT ? 250 : 400
 	const isSetup = useRef(false)
 	const [arc, setArc] = useState(null)
-	const count = arc ? arc.workerIdxArr.length : 0
+	const count = arc ? arc.count : 0
 	const globe = useRef()
 	const container = useRef()
-	const {arcs, points, rings} = useGeo()
+	const {arcs, points} = useGeo()
 	const [altitude, setAltitude] = useState(14)
 	// const lastAnimation = useRef(0)
 	// const [interacted, setInteracted] = useState(false)
@@ -91,8 +91,8 @@ const Globe = ({target}: Props) => {
 	const ghostArcs = useMemo(() => {
 		if (!arcs) return []
 		return arcs.map(arc => {
-			const {endLat, endLng, startLat, startLng, workerIdxArr, country, iso} = arc
-			return ({endLat, endLng, startLat, startLng, workerIdxArr, country, iso, ghost: true})
+			const {endLat, endLng, startLat, startLng, count, country, altitude, iso} = arc
+			return ({endLat, endLng, startLat, startLng, count, country, altitude, iso, ghost: true})
 		})
 	}, [arcs])
 
@@ -243,7 +243,7 @@ const Globe = ({target}: Props) => {
 				arcDashAnimateTime={arc => arc.ghost ? 0 : 1000}
 				arcsTransitionDuration={0}
 				arcStroke={arc => arc.ghost ? 10 : 2}
-				arcAltitudeAutoScale={0.3}
+				arcAltitudeAutoScale={arc => arc.altitude}
 				onArcHover={setArc}
 				pointsData={points}
 				pointColor={p => p.origin ? 'rgba(0, 188, 212, 0.05)' : 'rgba(255, 193, 7, 0.05)'}
