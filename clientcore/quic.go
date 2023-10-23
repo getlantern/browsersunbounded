@@ -82,7 +82,7 @@ func (c *QUICLayer) DialAndMaintainQUICConnection() {
 				}
 
 				var err error
-				conn, err = quic.Dial(c.bfconn, common.DebugAddr("NELSON WUZ HERE"), "DEBUG", c.tlsConfig, &common.QUICCfg)
+				conn, err = quic.Dial(context.Background(), c.bfconn, common.DebugAddr("NELSON WUZ HERE"), c.tlsConfig, &common.QUICCfg)
 				if err != nil {
 					common.Debugf("QUIC dial failed (%v), retrying...", err)
 					continue
