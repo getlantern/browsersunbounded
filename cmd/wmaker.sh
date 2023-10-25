@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# XXX: We assume this script was executed from broflake/cmd!
+# XXX: We assume this script was executed from unbounded/cmd!
 
 set -e
 set -u
@@ -10,7 +10,7 @@ REMOTE_PORT="22"
 REMOTE_USERNAME="root"
 REMOTE_BASE_DIR="/usr/share/nginx/html"
 
-# XXX: Relative to broflake/cmd!
+# XXX: Relative to unbounded/cmd!
 BUILD_PATH="/dist/wmaker"
 
 # Don't mess with these
@@ -20,7 +20,7 @@ OUTPUT_DIR="$(pwd)${BUILD_PATH}/${UNIX_TIME}"
 
 # UI environment variables
 # XXX: If stuff's broken, make sure that these reflect the current and complete set of environment 
-# variables defined by the UI. See the .env files in /broflake/ui!
+# variables defined by the UI. See the .env files in /unbounded/ui!
 # export REACT_APP_WIDGET_WASM_URL="/widget.wasm"
 # export PUBLIC_URL="/"
 # export REACT_APP_STORAGE_URL="/storage.html"
@@ -172,11 +172,11 @@ echo "         w:::::w         w:::::w       m::::m   m::::m   m::::ma:::::aaaa:
 echo "          w:::w           w:::w        m::::m   m::::m   m::::m a::::::::::aa:::ak::::::k   k:::::kee:::::::::::::e   r:::::r            "
 echo "           www             www         mmmmmm   mmmmmm   mmmmmm  aaaaaaaaaa  aaaakkkkkkkk    kkkkkkk eeeeeeeeeeeeee   rrrrrrr            "
 echo ""
-echo "Welcome to wmaker... The Fastest Way to Create and Deploy a Test Build of the Broflake Widget!™"
+echo "Welcome to wmaker... The Fastest Way to Create and Deploy a Test Build of the Browsers Unbounded Widget!™"
 echo ""
 echo "We'll build a widget from the current branch..."
 echo ""
-echo -e "-->  broflake: ${COL_IPURPLE}$(pwd)${COL_WHITE} (${BROFLAKE_COMMIT_HASH}, ${BROFLAKE_COMMIT_COLOR}${BROFLAKE_COMMIT_STATUS}${COL_WHITE})"
+echo -e "-->  unbounded: ${COL_IPURPLE}$(pwd)${COL_WHITE} (${BROFLAKE_COMMIT_HASH}, ${BROFLAKE_COMMIT_COLOR}${BROFLAKE_COMMIT_STATUS}${COL_WHITE})"
 echo ""
 echo -e "Build ${COL_IYELLOW}# ${UNIX_TIME} ${COL_WHITE}will output to:"
 echo ""

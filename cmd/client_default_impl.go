@@ -9,8 +9,8 @@ import (
 	_ "net/http/pprof"
 	"os"
 
-	"github.com/getlantern/broflake/clientcore"
-	"github.com/getlantern/broflake/common"
+	"github.com/getlantern/unbounded/clientcore"
+	"github.com/getlantern/unbounded/common"
 )
 
 var (
@@ -30,7 +30,7 @@ func main() {
 		proxyPort = "1080"
 	}
 
-	common.Debugf("Welcome to Broflake %v", common.Version)
+	common.Debugf("Welcome to Browsers Unbounded %v", common.Version)
 	common.Debugf("clientType: %v", clientType)
 	common.Debugf("freddie: %v", freddie)
 	common.Debugf("egress: %v", egress)
@@ -41,7 +41,7 @@ func main() {
 	common.Debugf("serverName: %v", serverName)
 	common.Debugf("proxyPort: %v", proxyPort)
 
-	bfOpt := clientcore.NewDefaultBroflakeOptions()
+	bfOpt := clientcore.NewDefaultBUOptions()
 	bfOpt.ClientType = clientType
 	bfOpt.Netstated = netstated
 
@@ -63,7 +63,7 @@ func main() {
 		egOpt.Addr = egress
 	}
 
-	bfconn, _, err := clientcore.NewBroflake(bfOpt, rtcOpt, egOpt)
+	bfconn, _, err := clientcore.NewBU(bfOpt, rtcOpt, egOpt)
 	if err != nil {
 		log.Fatal(err)
 	}

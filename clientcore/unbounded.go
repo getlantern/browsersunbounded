@@ -1,4 +1,4 @@
-// broflake.go defines mid-layer abstractions for constructing and describing a Broflake instance
+// unbounded.go defines mid-layer abstractions for constructing and describing a BU instance
 package clientcore
 
 import (
@@ -6,42 +6,42 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/getlantern/broflake/common"
+	"github.com/getlantern/unbounded/common"
 )
 
-type BroflakeEngine struct {
+type BUEngine struct {
 	cTable *WorkerTable
 	pTable *WorkerTable
 	ui     UI
 	wg     *sync.WaitGroup
 }
 
-func NewBroflakeEngine(cTable, pTable *WorkerTable, ui UI, wg *sync.WaitGroup) *BroflakeEngine {
-	return &BroflakeEngine{cTable, pTable, ui, wg}
+func NewBUEngine(cTable, pTable *WorkerTable, ui UI, wg *sync.WaitGroup) *BUEngine {
+	return &BUEngine{cTable, pTable, ui, wg}
 }
 
-func (b *BroflakeEngine) start() {
+func (b *BUEngine) start() {
 	b.cTable.Start()
 	b.pTable.Start()
-	common.Debug("▶ Broflake started!")
+	common.Debug("▶ BU started!")
 }
 
-func (b *BroflakeEngine) stop() {
+func (b *BUEngine) stop() {
 	b.cTable.Stop()
 	b.pTable.Stop()
 
 	go func() {
 		b.wg.Wait()
-		common.Debug("■ Broflake stopped.")
+		common.Debug("■ BU stopped.")
 		b.ui.OnReady()
 	}()
 }
 
-func (b *BroflakeEngine) debug() {
+func (b *BUEngine) debug() {
 	common.Debugf("NumGoroutine: %v", runtime.NumGoroutine())
 }
 
-func NewBroflake(bfOpt *BroflakeOptions, rtcOpt *WebRTCOptions, egOpt *EgressOptions) (bfconn *BroflakeConn, ui *UIImpl, err error) {
+func NewBU(bfOpt *BUOptions, rtcOpt *WebRTCOptions, egOpt *EgressOptions) (bfconn *BUConn, ui *UIImpl, err error) {
 	if bfOpt.ClientType != "desktop" && bfOpt.ClientType != "widget" {
 		err = fmt.Errorf("Invalid clientType '%v\n'", bfOpt.ClientType)
 		common.Debugf(err.Error())
@@ -56,7 +56,7 @@ func NewBroflake(bfOpt *BroflakeOptions, rtcOpt *WebRTCOptions, egOpt *EgressOpt
 	var wgReady sync.WaitGroup
 
 	if bfOpt == nil {
-		bfOpt = NewDefaultBroflakeOptions()
+		bfOpt = NewDefaultBUOptions()
 	}
 
 	if rtcOpt == nil {
@@ -68,7 +68,7 @@ func NewBroflake(bfOpt *BroflakeOptions, rtcOpt *WebRTCOptions, egOpt *EgressOpt
 	}
 
 	// The boot DAG:
-	// build cTable/pTable -> build the Broflake struct -> run ui.Init -> set up the bus and bind
+	// build cTable/pTable -> build the BU struct -> run ui.Init -> set up the bus and bind
 	// the upstream/downstream handlers -> build cRouter/pRouter -> start the bus, init the routers,
 	// call onStartup and onReady. This dependency graph currently requires us to implement two
 	// switches on clientType during the boot process, which can probably be improved upon.
@@ -104,11 +104,11 @@ func NewBroflake(bfOpt *BroflakeOptions, rtcOpt *WebRTCOptions, egOpt *EgressOpt
 		pTable = NewWorkerTable(pfsms)
 	}
 
-	// Step 2: Build Broflake
-	broflake := NewBroflakeEngine(cTable, pTable, ui, &wgReady)
+	// Step 2: Build BU
+	unbounded := NewBUEngine(cTable, pTable, ui, &wgReady)
 
 	// Step 3: Init the UI (this constructs and exposes the JavaScript API as required)
-	ui.Init(broflake)
+	ui.Init(unbounded)
 
 	// Step 4: Set up the bus, bind upstream and downstream UI handlers
 	var bus = NewIpcObserver(

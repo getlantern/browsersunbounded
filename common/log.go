@@ -11,7 +11,7 @@ var (
 	logMx       sync.RWMutex
 )
 
-// Override the Logger used by broflake for debug messages
+// Override the Logger used by BU for debug messages
 func SetDebugLogger(l *log.Logger) {
 	logMx.Lock()
 	defer logMx.Unlock()

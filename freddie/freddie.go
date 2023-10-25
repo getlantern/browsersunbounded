@@ -15,8 +15,8 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	"golang.org/x/mod/semver"
 
-	"github.com/getlantern/broflake/common"
 	"github.com/getlantern/telemetry"
+	"github.com/getlantern/unbounded/common"
 )
 
 const (
@@ -213,8 +213,8 @@ func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
-// Validate the Broflake protocol version header. If the header isn't present, we consider you
-// invalid. Protocol version is currently the major version of Broflake's reference implementation
+// Validate the BU protocol version header. If the header isn't present, we consider you
+// invalid. Protocol version is currently the major version of BU's reference implementation
 func isValidProtocolVersion(r *http.Request) bool {
 	if semver.Major(r.Header.Get(common.VersionHeader)) != semver.Major(common.Version) {
 		return false
@@ -233,7 +233,7 @@ func main() {
 	closeFuncMetric := telemetry.EnableOTELMetrics(ctx)
 	defer func() { _ = closeFuncMetric(ctx) }()
 
-	m := otel.Meter("github.com/getlantern/broflake/freddie")
+	m := otel.Meter("github.com/getlantern/unbounded/freddie")
 	var err error
 	nConcurrentGetReqs, err = m.Int64UpDownCounter("concurrent-get-reqs")
 	if err != nil {

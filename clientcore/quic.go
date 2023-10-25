@@ -11,7 +11,7 @@ import (
 
 	"github.com/quic-go/quic-go"
 
-	"github.com/getlantern/broflake/common"
+	"github.com/getlantern/unbounded/common"
 )
 
 type ReliableStreamLayer interface {
@@ -38,13 +38,13 @@ type QUICLayerOptions struct {
 	CA                 *x509.CertPool
 }
 
-func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICLayerOptions) (*QUICLayer, error) {
+func NewQUICLayer(bfconn *BUConn, qopt *QUICLayerOptions) (*QUICLayer, error) {
 	q := &QUICLayer{
 		bfconn: bfconn,
 		tlsConfig: &tls.Config{
 			ServerName:         qopt.ServerName,
 			InsecureSkipVerify: qopt.InsecureSkipVerify,
-			NextProtos:         []string{"broflake"},
+			NextProtos:         []string{"unbounded"},
 			RootCAs:            qopt.CA,
 		},
 		eventualConn: newEventualConn(),
@@ -54,7 +54,7 @@ func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICLayerOptions) (*QUICLayer, err
 }
 
 type QUICLayer struct {
-	bfconn       *BroflakeConn
+	bfconn       *BUConn
 	tlsConfig    *tls.Config
 	eventualConn *eventualConn
 	mx           sync.RWMutex

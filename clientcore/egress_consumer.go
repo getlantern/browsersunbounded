@@ -11,7 +11,7 @@ import (
 
 	"nhooyr.io/websocket"
 
-	"github.com/getlantern/broflake/common"
+	"github.com/getlantern/unbounded/common"
 )
 
 func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *WorkerFSM {

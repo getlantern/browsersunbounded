@@ -54,7 +54,7 @@ func NewDefaultEgressOptions() *EgressOptions {
 	}
 }
 
-type BroflakeOptions struct {
+type BUOptions struct {
 	ClientType  string
 	CTableSize  int
 	PTableSize  int
@@ -62,8 +62,8 @@ type BroflakeOptions struct {
 	Netstated   string
 }
 
-func NewDefaultBroflakeOptions() *BroflakeOptions {
-	return &BroflakeOptions{
+func NewDefaultBUOptions() *BUOptions {
+	return &BUOptions{
 		ClientType:  "desktop",
 		CTableSize:  5,
 		PTableSize:  5,

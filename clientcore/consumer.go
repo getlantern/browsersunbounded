@@ -18,8 +18,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/broflake/common"
-	"github.com/getlantern/broflake/otel"
+	"github.com/getlantern/unbounded/common"
+	"github.com/getlantern/unbounded/otel"
 	"github.com/pion/webrtc/v3"
 )
 

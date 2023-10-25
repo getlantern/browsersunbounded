@@ -4,7 +4,7 @@ package clientcore
 import (
 	"sync"
 
-	"github.com/getlantern/broflake/common"
+	"github.com/getlantern/unbounded/common"
 )
 
 // A tableRouter is a multiplexer/demultiplexer which functions as the interface to a WorkerTable,

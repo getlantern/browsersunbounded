@@ -1,4 +1,4 @@
-module github.com/getlantern/broflake
+module github.com/getlantern/unbounded
 
 go 1.19
 

@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"sync"
 
-	"github.com/getlantern/broflake/common"
+	"github.com/getlantern/unbounded/common"
 )
 
 const (

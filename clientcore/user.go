@@ -13,28 +13,28 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/getlantern/broflake/common"
+	"github.com/getlantern/unbounded/common"
 )
 
-type BroflakeConn struct {
+type BUConn struct {
 	net.PacketConn
 	writeChan chan IPCMsg
 	readChan  chan IPCMsg
 	addr      common.DebugAddr
 }
 
-func (c BroflakeConn) LocalAddr() net.Addr {
+func (c BUConn) LocalAddr() net.Addr {
 	return c.addr
 }
 
-func (c BroflakeConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
+func (c BUConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
 	msg := <-c.readChan
 	payload := msg.Data.([]byte)
 	copy(p, payload)
 	return len(payload), common.DebugAddr("DEBUG NELSON WUZ HERE"), nil
 }
 
-func (c BroflakeConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
+func (c BUConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
 	// TODO: This copy seems necessary to avoid a data race
 	b := make([]byte, len(p))
 	copy(b, p)
@@ -49,7 +49,7 @@ func (c BroflakeConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
 	return len(b), nil
 }
 
-func NewProducerUserStream(wg *sync.WaitGroup) (*BroflakeConn, *WorkerFSM) {
+func NewProducerUserStream(wg *sync.WaitGroup) (*BUConn, *WorkerFSM) {
 	worker := NewWorkerFSM(wg, []FSMstate{
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 0
@@ -60,12 +60,12 @@ func NewProducerUserStream(wg *sync.WaitGroup) (*BroflakeConn, *WorkerFSM) {
 		}),
 	})
 
-	bfconn := BroflakeConn{
+	buconn := BUConn{
 		PacketConn: &net.UDPConn{},
 		writeChan:  worker.com.tx,
 		readChan:   worker.com.rx,
 		addr:       common.DebugAddr(uuid.NewString()),
 	}
 
-	return &bfconn, worker
+	return &buconn, worker
 }
