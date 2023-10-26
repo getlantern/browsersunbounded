@@ -9,23 +9,23 @@ import (
 
 type UIImpl struct {
 	UI
-	BUEngine *BUEngine
+	BroflakeEngine *BroflakeEngine
 }
 
-func (ui *UIImpl) Init(bu *BUEngine) {
-	ui.BUEngine = bu
+func (ui *UIImpl) Init(bf *BroflakeEngine) {
+	ui.BroflakeEngine = bf
 }
 
 func (ui UIImpl) Start() {
-	ui.BUEngine.start()
+	ui.BroflakeEngine.start()
 }
 
 func (ui UIImpl) Stop() {
-	ui.BUEngine.stop()
+	ui.BroflakeEngine.stop()
 }
 
 func (ui UIImpl) Debug() {
-	ui.BUEngine.debug()
+	ui.BroflakeEngine.debug()
 }
 
 func (ui UIImpl) OnReady() {
@@ -33,7 +33,7 @@ func (ui UIImpl) OnReady() {
 }
 
 func (ui UIImpl) OnStartup() {
-	ui.BUEngine.start()
+	ui.BroflakeEngine.start()
 }
 
 func (ui UIImpl) OnDownstreamChunk(size int, workerIdx int) {

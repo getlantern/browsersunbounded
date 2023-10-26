@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/unbounded/common"
-	netstatecl "github.com/getlantern/unbounded/netstate/client"
+	"github.com/getlantern/broflake/common"
+	netstatecl "github.com/getlantern/broflake/netstate/client"
 )
 
 type vertex string

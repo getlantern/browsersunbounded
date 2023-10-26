@@ -13,17 +13,17 @@ import (
 
 type UIImpl struct {
 	UI
-	BUEngine *BUEngine
-	ID       string
+	BroflakeEngine *BroflakeEngine
+	ID             string
 }
 
-func (ui *UIImpl) Init(bu *BUEngine) {
-	ui.BUEngine = bu
+func (ui *UIImpl) Init(bf *BroflakeEngine) {
+	ui.BroflakeEngine = bf
 
 	// The notion of 'ID' exists solely to avoid collisions in the JS namespace
 	ui.ID = strings.Replace("L4NT3RN"+uuid.NewString(), "-", "", -1)
 
-	// Construct the JavaScript API for this BU instance
+	// Construct the JavaScript API for this Broflake instance
 	js.Global().Set(ui.ID, js.Global().Get("EventTarget").New())
 
 	js.Global().Get(ui.ID).Set(
@@ -43,15 +43,15 @@ func (ui *UIImpl) Init(bu *BUEngine) {
 }
 
 func (ui UIImpl) Start() {
-	ui.BUEngine.start()
+	ui.BroflakeEngine.start()
 }
 
 func (ui UIImpl) Stop() {
-	ui.BUEngine.stop()
+	ui.BroflakeEngine.stop()
 }
 
 func (ui UIImpl) Debug() {
-	ui.BUEngine.debug()
+	ui.BroflakeEngine.debug()
 }
 
 func (ui UIImpl) fireEvent(eventName string, detail map[string]interface{}) {

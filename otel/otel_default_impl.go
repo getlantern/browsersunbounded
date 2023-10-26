@@ -11,8 +11,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func buTracer() trace.Tracer {
-	return otel.GetTracerProvider().Tracer("unbounded")
+func broflakeTracer() trace.Tracer {
+	return otel.GetTracerProvider().Tracer("broflake")
 }
 
 // collectAndSendNATBehaviorTelemetry attempts to perform NAT behavior discovery, trying one batch
@@ -46,6 +46,6 @@ func CollectAndSendNATBehaviorTelemetry(srvs []string, name string) {
 		}
 	}
 
-	_, span := buTracer().Start(context.Background(), name, attrs)
+	_, span := broflakeTracer().Start(context.Background(), name, attrs)
 	span.End()
 }

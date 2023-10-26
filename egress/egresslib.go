@@ -21,8 +21,8 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	"nhooyr.io/websocket"
 
+	"github.com/getlantern/broflake/common"
 	"github.com/getlantern/telemetry"
-	"github.com/getlantern/unbounded/common"
 )
 
 // TODO: rate limiters and fancy settings and such:
@@ -66,7 +66,7 @@ func (q websocketPacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err error
 	// and reconnections on idle WebSockets, and so it's worth asking whether the cycles added by this
 	// keepalive logic are worth the overhead we're saving in reduced discon/recon loops. Ultimately,
 	// we'd rather implement keepalive on the client side, but that's a much bigger lift. See:
-	// https://github.com/getlantern/unbounded/issues/127
+	// https://github.com/getlantern/broflake/issues/127
 	readDone := make(chan struct{})
 
 	go func() {
@@ -147,7 +147,7 @@ func generateTLSConfig() *tls.Config {
 	}
 	return &tls.Config{
 		Certificates: []tls.Certificate{tlsCert},
-		NextProtos:   []string{"unbounded"},
+		NextProtos:   []string{"broflake"},
 	}
 }
 
@@ -155,7 +155,7 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 	// TODO: InsecureSkipVerify=true just disables origin checking, we need to instead add origin
 	// patterns as strings using AcceptOptions.OriginPattern
 	// TODO: disabling compression is a workaround for a WebKit bug:
-	// https://github.com/getlantern/unbounded/issues/45
+	// https://github.com/getlantern/broflake/issues/45
 	c, err := websocket.Accept(
 		w,
 		r,
@@ -237,7 +237,7 @@ func (l proxyListener) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 
 func NewListener(ctx context.Context, ll net.Listener, certPEM, keyPEM string) (net.Listener, error) {
 	closeFuncMetric := telemetry.EnableOTELMetrics(ctx)
-	m := otel.Meter("github.com/getlantern/unbounded/egress")
+	m := otel.Meter("github.com/getlantern/broflake/egress")
 	var err error
 	nClientsCounter, err = m.Int64UpDownCounter("concurrent-websockets")
 	if err != nil {
@@ -283,13 +283,13 @@ func NewListener(ctx context.Context, ll net.Listener, certPEM, keyPEM string) (
 	if certPEM != "" && keyPEM != "" {
 		cert, err := tls.X509KeyPair([]byte(certPEM), []byte(keyPEM))
 		if err != nil {
-			return nil, fmt.Errorf("Unable to load cert/key from PEM for Browsers Unbounded: %v", err)
+			return nil, fmt.Errorf("Unable to load cert/key from PEM for broflake: %v", err)
 		}
 
-		common.Debugf("Browsers Unbounded using cert %v and key %v", certPEM, keyPEM)
+		common.Debugf("Broflake using cert %v and key %v", certPEM, keyPEM)
 		tlsConfig = &tls.Config{
 			Certificates: []tls.Certificate{cert},
-			NextProtos:   []string{"unbounded"},
+			NextProtos:   []string{"broflake"},
 		}
 	} else {
 		common.Debugf("!!! WARNING !!! No certfile and/or keyfile specified, generating an insecure TLSConfig!")

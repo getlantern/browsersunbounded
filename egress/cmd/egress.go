@@ -10,8 +10,8 @@ import (
 
 	"github.com/elazarl/goproxy"
 
-	"github.com/getlantern/unbounded/common"
-	"github.com/getlantern/unbounded/egress"
+	"github.com/getlantern/broflake/common"
+	"github.com/getlantern/broflake/egress"
 )
 
 func main() {
@@ -64,7 +64,7 @@ func main() {
 			common.Debug("HTTP proxy just saw a request:")
 			// TODO: overriding the context is a hack to prevent "context canceled" errors when proxying
 			// HTTP (not HTTPS) requests. It's not yet clear why this is necessary -- it may be a quirk
-			// of elazarl/goproxy. See: https://github.com/getlantern/unbounded/issues/47
+			// of elazarl/goproxy. See: https://github.com/getlantern/broflake/issues/47
 			r = r.WithContext(context.Background())
 			common.Debug(r)
 			return r, nil

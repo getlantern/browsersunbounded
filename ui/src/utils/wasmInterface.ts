@@ -72,7 +72,7 @@ export interface WasmClient extends EventTarget {
 
 // bind the client constructor
 declare global {
-	function newBU(
+	function newBroflake(
 		type: string,
 		cTableSz: number,
 		pTableSz: number,
@@ -150,7 +150,7 @@ export class WasmInterface {
 		if (mock) { // fake it till you make it
 			this.wasmClient = new MockWasmClient(this)
 		} else {
-			this.wasmClient = globalThis.newBU(
+			this.wasmClient = globalThis.newBroflake(
 				WASM_CLIENT_CONFIG.type,
 				WASM_CLIENT_CONFIG.cTableSz,
 				WASM_CLIENT_CONFIG.pTableSz,

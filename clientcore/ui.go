@@ -7,8 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/getlantern/unbounded/common"
-	netstatecl "github.com/getlantern/unbounded/netstate/client"
+	"github.com/getlantern/broflake/common"
+	netstatecl "github.com/getlantern/broflake/netstate/client"
 )
 
 const (
@@ -16,7 +16,7 @@ const (
 )
 
 type UI interface {
-	Init(bu *BUEngine)
+	Init(bf *BroflakeEngine)
 
 	Start()
 

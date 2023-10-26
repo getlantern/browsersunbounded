@@ -6,8 +6,8 @@ package main
 import (
 	"syscall/js"
 
-	"github.com/getlantern/unbounded/clientcore"
-	"github.com/getlantern/unbounded/common"
+	"github.com/getlantern/broflake/clientcore"
+	"github.com/getlantern/broflake/common"
 )
 
 func main() {
@@ -16,12 +16,12 @@ func main() {
 	// A constructor is exposed to JS. Some (but not all) defaults are forcibly overridden by passing
 	// args. You *must* pass valid values for all of these args:
 	//
-	// newBU(
-	//    BUOptions.ClientType,
-	//    BUOptions.CTableSize,
-	//    BUOptions.PTableSize,
-	//    BUOptions.BusBufferSz,
-	//    BUOptions.Netstated,
+	// newBroflake(
+	//    BroflakeOptions.ClientType,
+	//    BroflakeOptions.CTableSize,
+	//    BroflakeOptions.PTableSize,
+	//    BroflakeOptions.BusBufferSz,
+	//    BroflakeOptions.Netstated,
 	//    WebRTCOptions.DiscoverySrv
 	//    WebRTCOptions.Endpoint,
 	//    WebRTCOptions.STUNBatchSize,
@@ -30,11 +30,11 @@ func main() {
 	//    EgressOptions.Endpoint
 	// )
 	//
-	// Returns a reference to a BU JS API impl (defined in ui_wasm_impl.go)
+	// Returns a reference to a Broflake JS API impl (defined in ui_wasm_impl.go)
 	js.Global().Set(
-		"newBU",
+		"newBroflake",
 		js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-			bfOpt := clientcore.BUOptions{
+			bfOpt := clientcore.BroflakeOptions{
 				ClientType:  args[0].String(),
 				CTableSize:  args[1].Int(),
 				PTableSize:  args[2].Int(),
@@ -52,13 +52,13 @@ func main() {
 			egOpt.Addr = args[9].String()
 			egOpt.Endpoint = args[10].String()
 
-			_, ui, err := clientcore.NewBU(&bfOpt, rtcOpt, egOpt)
+			_, ui, err := clientcore.NewBroflake(&bfOpt, rtcOpt, egOpt)
 			if err != nil {
-				common.Debugf("newBU error: %v", err)
+				common.Debugf("newBroflake error: %v", err)
 				return nil
 			}
 
-			common.Debugf("Built new BU API: %v", ui.ID)
+			common.Debugf("Built new Broflake API: %v", ui.ID)
 			return js.Global().Get(ui.ID)
 		}),
 	)
