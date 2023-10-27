@@ -63,16 +63,25 @@ const App = ({appId, embed}: Props) => {
     // So we can rely on the timeout to stop wasm, otherwise the OS has already suspended the both the
     // timeout and wasm process.
     let timeout: ReturnType<typeof setTimeout> | null = null
-    const createTimeout = () => timeout = setTimeout(() => {
-      wasmInterface.current && wasmInterface.current.stop()
-    }, 1000 * 60)
+    const createTimeout = () => {
+      console.log(`creating timeout to stop wasm. isMobile: ${isMobile}, mobileBg: ${mobileBg}, desktopBg: ${desktopBg}`)
+      timeout = setTimeout(() => {
+        console.log(`stopping wasm due to timeout. isMobile: ${isMobile}, mobileBg: ${mobileBg}, desktopBg: ${desktopBg}, wasmInterface: ${!!wasmInterface.current}`)
+        wasmInterface.current && wasmInterface.current.stop()
+        console.log(`wasm stopped due to timeout. isMobile: ${isMobile}, mobileBg: ${mobileBg}, desktopBg: ${desktopBg}, wasmInterface: ${!!wasmInterface.current}`)
+      }, 1000 * 60)
+    }
 
     if (!isVisible && sharing) {
+      console.log(`page not visible. isVisible: ${isVisible}, sharing: ${sharing}`)
       if (isMobile && !mobileBg) createTimeout()
       else if (!isMobile && !desktopBg) createTimeout()
     }
     return () => {
-      if (timeout) clearTimeout(timeout)
+      if (timeout) {
+        console.log(`clearing timeout to stop wasm. isMobile: ${isMobile}, mobileBg: ${mobileBg}, desktopBg: ${desktopBg}`)
+        clearTimeout(timeout)
+      }
     }
   }, [isVisible, sharing, mobileBg, desktopBg])
 
