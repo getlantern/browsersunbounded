@@ -3,7 +3,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const defaults = rewire('react-scripts/scripts/build.js');
 const config = defaults.__get__('config');
 
-console.log('building network embed');
+console.log('building unbounded embed');
 
 // Consolidate chunk files instead
 // config.optimization.splitChunks = {

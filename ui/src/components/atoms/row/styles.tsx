@@ -25,6 +25,7 @@ const Container = styled.div`
   align-items: center;
   padding: 0 8px;
   box-sizing: border-box;
+	position: relative; // needed for the tutorial
 `
 
 export {Container}

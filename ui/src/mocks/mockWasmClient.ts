@@ -29,7 +29,9 @@ class MockWasmClient implements WasmClient {
 		this.connections = defaultConnections
 	}
 
-	start = () => {
+	start = async () => {
+		const sleepMs = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+		await sleepMs(1000)
 		this.interval = setInterval(() => {
 			const active = this.connections.filter(c => c.state === 1)
 			const chunks = [...Array(active.length)].map((_, i) => (
@@ -54,6 +56,22 @@ class MockWasmClient implements WasmClient {
 				// fire fake connection event
 				this.wasmInterface.handleConnection({detail: connection})
 			}
+
+			// CRAZY STRESS TEST CODE BELOW - DO NOT USE
+			// if (this.tick % 10 === 0) {
+			// 	// Randomly update one of the connection states
+			// 	this.connections = this.connections.map((connection, i) => {
+			// 		return {
+			// 			...connection,
+			// 			state: i === mockRandomInt(0, this.connections.length - 1) || i === mockRandomInt(0, this.connections.length - 1) ?  connection.state === 1 ? -1 : 1 : connection.state
+			// 		}
+			// 	});
+			// 	// Trigger events for updated connections
+			// 	this.connections.forEach(connection => {
+			// 		this.wasmInterface.handleConnection({detail: connection});
+			// 	});
+			// }
+
 			this.tick += 1
 		}, 250)
 	}

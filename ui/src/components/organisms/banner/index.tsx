@@ -15,6 +15,7 @@ import ExpandCollapse from '../../atoms/expandCollapse'
 import LogoLink from '../../atoms/logoLink'
 import Title from '../../molecules/title'
 import ExtensionCta from '../../molecules/extensionCta'
+// import Tutorial from '../../atoms/tutorial' // removing this at request of nelson
 
 const Globe = lazy(() => import('../../molecules/globe'))
 
@@ -131,9 +132,14 @@ const Banner = () => {
 									borderBottom
 									backgroundColor={settings.theme === Themes.DARK ? COLORS.grey6 : menu ? COLORS.white : COLORS.grey1}
 								>
-									<Control
-										onToggle={onToggle}
-									/>
+									<>
+										<Control
+											onToggle={onToggle}
+										/>
+										{/*{(!menu && !collapse) && (*/}
+										{/*	<Tutorial />*/}
+										{/*)}*/}
+									</>
 								</Row>
 								<Stats/>
 								{

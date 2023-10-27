@@ -15,6 +15,7 @@ import Shadow from './shadow'
 import ToolTip from '../toolTip'
 import {useGeo} from '../../../hooks/useGeoFuture'
 import {Notification} from '../notification'
+import usePageVisibility from '../../../hooks/usePageVisibility'
 import * as THREE from 'three'
 // import {useEmitterState} from '../../../hooks/useStateEmitter'
 // import {sharingEmitter} from '../../../utils/wasmInterface'
@@ -85,6 +86,7 @@ const Globe = ({target}: Props) => {
 	const container = useRef()
 	const {arcs, points} = useGeo()
 	const [altitude, setAltitude] = useState(14)
+	const isVisible = usePageVisibility()
 	// const lastAnimation = useRef(0)
 	// const [interacted, setInteracted] = useState(false)
 
@@ -171,7 +173,10 @@ const Globe = ({target}: Props) => {
 	// }, [])
 
 	useEffect(() => {
-		setTimeout(() => {
+		if (!isVisible) return // don't update if not visible
+
+		// @todo this timeout is hacky. basically there's a race with the scene updating. considering moving this to a mutation observer on the scene
+		const timeout = setTimeout(() => {
 			if (!globe.current) return
 			const scene = globe.current?.scene()
 			if (!scene) return
@@ -199,7 +204,11 @@ const Globe = ({target}: Props) => {
 				if (!uuids.includes(uuid.replace('-clone', ''))) scene.remove(mesh)
 			});
 		}, 50)
-	}, [points])
+
+		return () => {
+			if (timeout) clearTimeout(timeout)
+		}
+	}, [points, isVisible])
 
 	// const colorInterpolatorBlue = t => `rgba(0, 188, 212,${Math.sqrt(1-t)})`;
 	// const colorInterpolatorYellow = t => `rgba(255, 193, 7,${Math.sqrt(1-t)})`;

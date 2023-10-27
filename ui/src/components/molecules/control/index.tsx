@@ -7,6 +7,7 @@ import {TextInfo} from './styles'
 import {useContext, useState} from 'react'
 import {AppContext} from '../../../context'
 import {COLORS, Targets} from '../../../constants'
+import {tutorialOnEmitter} from '../../atoms/tutorial'
 
 interface Props {
 	onToggle?: (s: boolean) => void
@@ -34,9 +35,11 @@ const Control = ({onToggle, info = false}: Props) => {
 	}
 
 	const _onToggle = async (share: boolean) => {
-		console.log(`onToggle: share: ${share}, ready: ${ready}, needsInit: ${needsInit}`)
 		if (needsInit) await init()
-		if (share) wasmInterface.start()
+		if (share) {
+			wasmInterface.start()
+			tutorialOnEmitter.update(false)
+		}
 		if (!share) wasmInterface.stop()
 		if (onToggle) onToggle(share)
 	}

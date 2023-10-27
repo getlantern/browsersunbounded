@@ -100,23 +100,23 @@ created. You must refresh the page to update the visualization.
 #### UI settings and configuration
 
 The UI is bootstrapped with [Create React App](https://github.com/facebook/create-react-app). Then "re-wired" to build one single js bundle entry using [rewire](https://www.npmjs.com/package/rewire). 
-The React app will bind to a custom `<lantern-network>` DOM el and render based on settings passed to the [dataset](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/dataset). 
-In development, this html can be found in `ui/public/index.html`. In production, the html is supplied by the "embedder" via https://network.lantern.io/embed.
+The React app will bind to a custom `<browsers-unbounded>` DOM el and render based on settings passed to the [dataset](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/dataset). 
+In development, this html can be found in `ui/public/index.html`. In production, the html is supplied by the "embedder" via https://unbounded.lantern.io/embed.
 
 Example production embed:
 
 ```html
-<lantern-network
+<browsers-unbounded
    data-layout="banner"
    data-theme="dark"
    data-globe="true"
    data-exit="true"
    style='width: 100%;'
-></lantern-network>
+></browsers-unbounded>
 <script defer="defer" src="https://embed.lantern.io/static/js/main.js"></script>
 ```
 
-This tables lists all the available settings that can be passed to the `<lantern-network>` DOM el via the `data-*` attributes. 
+This tables lists all the available settings that can be passed to the `<browsers-unbounded>` DOM el via the `data-*` attributes. 
 The "default" column shows the default value if the attribute is not set.
 
 | dataset   | description                                               | default |
@@ -148,7 +148,7 @@ Links:
 
 [Github pages sandbox](https://embed.lantern.io)
 
-[Lantern Network website](https://network.lantern.io)
+[Browsers Unbounded website](https://unbounded.lantern.io)
 
 #### UI quickstart for devs
 

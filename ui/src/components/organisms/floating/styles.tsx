@@ -3,7 +3,7 @@ import {COLORS, MAX_WIDTH, Themes} from '../../../constants'
 
 export const Container = styled.div`
   box-sizing: border-box;
-  border-radius: 32px;
+  border-radius: 32px 32px 0 0;
   border: 1px solid ${({theme}: { theme: Themes }) => theme === Themes.DARK ? COLORS.grey6 : COLORS.grey2};
   width: 100%;
 `

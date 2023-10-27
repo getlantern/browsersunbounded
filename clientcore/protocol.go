@@ -3,6 +3,8 @@ package clientcore
 
 import (
 	"context"
+	"math"
+	"math/rand"
 	"sync"
 
 	"github.com/getlantern/broflake/common"
@@ -72,3 +74,39 @@ func (fsm *WorkerFSM) Stop() {
 // TODO: a state's number simply corresponds to its index in WorkerFSM.state, but we perform no
 // sanity checking of state indices.
 type FSMstate func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{})
+
+// STUNCache implements the operations which support our strategy for evading STUN server blocking
+// in-country. That is: populate the cache with the largest set of currently known STUN servers and
+// shuffle it; select a cohort of the first N servers in the list to use in parallel; if any of
+// those servers work, continue using that cohort; if all of those servers fail, delete the cohort
+// from the list; when the list is empty, repeat the steps.
+type STUNCache struct {
+	data []string
+	n    float64
+}
+
+func newSTUNCache(srvs []string, n float64) STUNCache {
+	dest := make([]string, len(srvs))
+	copy(dest, srvs)
+
+	rand.Shuffle(len(dest), func(i, j int) {
+		dest[i], dest[j] = dest[j], dest[i]
+	})
+
+	return STUNCache{data: dest, n: n}
+}
+
+// Return the size of the STUNCache
+func (s *STUNCache) size() int {
+	return len(s.data)
+}
+
+// Get the current cohort of servers in the STUNCache
+func (s *STUNCache) cohort() []string {
+	return s.data[:int(math.Min(s.n, float64(len(s.data))))]
+}
+
+// Delete the current cohort of servers from the STUNCache
+func (s *STUNCache) drop() {
+	s.data = s.data[int(math.Min(s.n, float64(len(s.data)))):]
+}

@@ -1,36 +1,26 @@
-import { useState, useEffect, useRef } from 'react';
+import {useState, useRef, useEffect} from 'react'
 
-const useQueueState = <T>(initialState: T, delay: number) => {
-	const [state, setState] = useState(initialState);
-	const queueRef = useRef<Array<T>>([]);
-	const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
-
-	const setQueuedState = (newState: T) => {
-		queueRef.current.push(newState);
-		processQueue();
-	};
-
-	const processQueue = () => {
-		if (timeoutIdRef.current === null && queueRef.current.length > 0) {
-			const nextState = queueRef.current.shift() as T;
-			setState(nextState);
-
-			timeoutIdRef.current = setTimeout(() => {
-				timeoutIdRef.current = null;
-				processQueue();
-			}, delay);
-		}
-	};
-
-	// @todo cleanup on unmount
+export const useQueueState = <T>(propState: T) => {
+	const [state, setState] = useState<T>(propState)
+	const updatesQueue = useRef<T[]>([])
 
 	useEffect(() => {
-		if (state === initialState) return;
-		setQueuedState(initialState);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [initialState]);
+		if (JSON.stringify(propState) !== JSON.stringify(state)) {
+			updatesQueue.current.push(propState)
+		}
+	}, [propState])
 
-	return state;
-};
+	useEffect(() => {
+		const processQueue = () => {
+			if (updatesQueue.current.length) setState(updatesQueue.current.shift() as T)
+		}
 
-export default useQueueState;
+		const intervalId = setInterval(processQueue, 1000)
+
+		return () => {
+			clearInterval(intervalId)
+		}
+	}, [])
+
+	return state
+}

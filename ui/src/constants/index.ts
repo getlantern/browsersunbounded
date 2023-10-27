@@ -4,6 +4,7 @@ export const COLORS = {
 	black: '#000000',
 	white: '#ffffff',
 	green: '#00A83E',
+	green2: '#006163',
 	grey1: '#F8FAFB',
 	grey2: '#EDEFEF',
 	grey3: '#EBEBEB',
@@ -121,7 +122,10 @@ export const WASM_CLIENT_CONFIG = {
 	egressEndpoint: process.env.REACT_APP_EGRESS_ENDPOINT!
 }
 
+// @todo rm stubbing out store urls until extension is ready
 export const APP_STORE_LINKS = {
-	chrome: 'https://chrome.google.com/webstore/detail/lantern-network/jonhnkjdlimggpmbehgkgpjgphoepfdj/',
-	firefox: 'https://addons.mozilla.org/en-US/firefox/addon/lantern-network/'
+	// chrome: 'https://chrome.google.com/webstore/detail/browsers-unbounded/jonhnkjdlimggpmbehgkgpjgphoepfdj',
+	chrome: 'https://unbounded.lantern.io/coming-soon',
+	// firefox: 'https://addons.mozilla.org/en-US/firefox/addon/browsers-unbounded/',
+	firefox: 'https://unbounded.lantern.io/coming-soon',
 }

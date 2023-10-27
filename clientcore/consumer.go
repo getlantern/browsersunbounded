@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"math"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -23,6 +24,8 @@ import (
 )
 
 func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
+	var scache STUNCache
+
 	return NewWorkerFSM(wg, []FSMstate{
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
 			// State 0
@@ -32,13 +35,21 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			// We're resetting this slot, so send a nil path assertion IPC message
 			com.tx <- IPCMsg{IpcType: PathAssertionIPC, Data: common.PathAssertion{}}
 
-			STUNSrvs, err := options.STUNBatch(options.STUNBatchSize)
-			if err != nil {
-				common.Debugf("Error creating STUN batch: %v", err)
-				return 0, []interface{}{}
+			// Populate the STUN cache if necessary
+			if scache.size() == 0 {
+				allSTUNSrvs, err := options.STUNBatch(math.MaxInt32)
+				if err != nil {
+					common.Debugf("Error creating STUN batch: %v", err)
+					return 0, []interface{}{}
+				}
+
+				scache = newSTUNCache(allSTUNSrvs, float64(options.STUNBatchSize))
+				common.Debugf("Populated the STUN cache (%v servers)", scache.size())
 			}
 
-			common.Debugf("Created STUN batch (%v/%v servers)", len(STUNSrvs), options.STUNBatchSize)
+			STUNSrvs := scache.cohort()
+			common.Debugf("Using %v/%v STUN servers: %v", len(STUNSrvs), options.STUNBatchSize, STUNSrvs)
+			common.Debugf("STUN cache size: %v", scache.size())
 
 			config := webrtc.Configuration{
 				ICEServers: []webrtc.ICEServer{
@@ -95,6 +106,14 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			peerConnection.OnConnectionStateChange(func(s webrtc.PeerConnectionState) {
 				common.Debugf("Peer connection state change: %v", s.String())
 				connectionChange <- s
+			})
+
+			// TODO: right now we listen for ICE connection state changes only to log messages about
+			// client behavior. In the future, by passing a channel forward in the same manner as above,
+			// we could probably use the ICE connection state change event to determine the precise
+			// moment of NAT traversal failure (instead of just waiting on a timer).
+			peerConnection.OnICEConnectionStateChange(func(s webrtc.ICEConnectionState) {
+				common.Debugf("ICE connection state change: %v", s.String())
 			})
 
 			return 1, []interface{}{peerConnection, connectionEstablished, connectionChange, connectionClosed}
@@ -348,9 +367,31 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 
 			select {
 			case <-gatherComplete:
-				common.Debug("Ice gathering complete!")
+				common.Debug("ICE gathering complete!")
+				common.Debugf("Local candidates: %v", candidates)
+
+				// If the STUN server(s) we used for this signaling attempt were blocked or unresponsive,
+				// we probably wound up with a slice of valid ICE candidates, but of only the 'host' type.
+				// We don't want to bother signaling those, so here's our escape hatch.
+				var hasNonHostCandidate bool
+				for _, c := range candidates {
+					if c.Typ != webrtc.ICECandidateTypeHost {
+						hasNonHostCandidate = true
+					}
+				}
+
+				if !hasNonHostCandidate {
+					common.Debugf("Failed to gather any non-host ICE candidates, aborting!")
+					scache.drop()
+
+					// Borked!
+					peerConnection.Close() // TODO: there's an err we should handle here
+					return 0, []interface{}{}
+				}
 			case <-time.After(options.ICEFailTimeout):
-				common.Debugf("Failed to gather ICE candidates!")
+				common.Debug("Timeout, aborting ICE gathering!")
+				scache.drop()
+
 				// Borked!
 				peerConnection.Close() // TODO: there's an err we should handle here
 				return 0, []interface{}{}
@@ -448,15 +489,10 @@ func NewConsumerWebRTC(options *WebRTCOptions, wg *sync.WaitGroup) *WorkerFSM {
 			connectionClosed := input[3].(chan struct{})
 			common.Debugf("Consumer state 4, signaling complete!")
 
-			// XXX: Let's select some STUN servers to perform NAT behavior discovery for the purpose of
-			// sending interesting traces revealing the outcome of our NAT traversal attempt
-			STUNSrvs, err := options.STUNBatch(options.STUNBatchSize)
-			if err != nil {
-				common.Debugf("Error creating STUN batch: %v", err)
-				// Borked!
-				peerConnection.Close() // TODO: there's an err we should handle here
-				return 0, []interface{}{}
-			}
+			// XXX: Use our current cohort of STUN servers to perform NAT behavior discovery such that we
+			// can send interesting traces revealing the outcome of our NAT traversal attempt. If the
+			// cohort fails here, we won't drop it.
+			STUNSrvs := scache.cohort()
 
 			select {
 			case d := <-connectionEstablished:

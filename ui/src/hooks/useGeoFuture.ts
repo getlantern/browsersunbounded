@@ -1,9 +1,7 @@
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
-import {usePrevious} from './usePrevious'
+import {useCallback, useEffect, useRef, useState} from 'react'
 import {Connection, connectionsEmitter, sharingEmitter} from '../utils/wasmInterface'
 import {useEmitterState} from './useStateEmitter'
-import {countries} from "../utils/countries";
-import useQueuedState from './useQueuedState'
+import {countries} from '../utils/countries'
 import {pushNotification, removeNotification} from '../components/molecules/notification'
 
 type ISO = keyof typeof countries
@@ -34,10 +32,15 @@ export interface GeoLookup {
 
 const CENSORED_ISO_FALLBACK = 'IR'
 const UNCENSORED_ISO_FALLBACK = 'US'
+const ARCH_ALTITUDE_GAP = 0.05
+const ARCH_ALTITUDE_MIN = 0.3
 
 // this function is a fallback if geo lookup fails. It uses the navigator's language to determine the country
 const getCountryFromNavigator = (): ISO => {
 	const lang = navigator.language
+	console.warn(
+		`Uncensored geo lookup failed, using fallback. Navigator language: ${lang}, ISO: ${lang.split('-')?.[1]}, fallback: ${UNCENSORED_ISO_FALLBACK}`
+	)
 	return lang.split('-')?.[1] as ISO || UNCENSORED_ISO_FALLBACK
 }
 
@@ -45,11 +48,11 @@ const getCountryFromNavigator = (): ISO => {
 export const geoLookup = async (ip: string | null): Promise<ISO> => {
 	const isSelf = ip === null
 	try {
-		const res = await fetch(`${process.env.REACT_APP_GEO_LOOKUP_URL}/${isSelf ? '' : ip}`);
+		const res = await fetch(`${process.env.REACT_APP_GEO_LOOKUP_URL}/${isSelf ? '' : ip}`)
 		const data = await res.json()
 		return data.Country.IsoCode
 	} catch (e) {
-		console.warn('Geo lookup failed, using fallback.')
+		if (!isSelf) console.warn(`Censored geo lookup failed for ${ip}, using fallback. Fallback: ${CENSORED_ISO_FALLBACK}`)
 		return isSelf ? getCountryFromNavigator() : CENSORED_ISO_FALLBACK
 	}
 }
@@ -59,14 +62,17 @@ const geoLookupAll = async (connections: Connection[]): Promise<GeoLookup[]> => 
 	return res.flat().map((iso, index) => ({iso, workerIdx: connections[index].workerIdx}))
 }
 
-const createArcs = (geos: GeoLookup[], isoCountMap: {[key: string]: number}, userIso: ISO ) => (
-	geos.map(geo => {
+const createArcs = (geos: GeoLookup[], isoCountMap: { [key: string]: number }, userIso: ISO) => {
+	const newArcs: Arch[] = []
+	geos.forEach((geo, index) => {
 		const {workerIdx} = geo
 		const iso = geo.iso as keyof typeof countries
 		const country = countries[iso] || countries[CENSORED_ISO_FALLBACK]
 		const userCountry = countries[userIso] || countries[UNCENSORED_ISO_FALLBACK]
-		const count = isoCountMap[iso] || 1
-		return ({
+		const count = isoCountMap[iso] || geos.filter(g => g.iso === iso).length // use count from map if it exists
+		// set altitude based on count minus the number of geos with the same iso that come after this one
+		const altitudeFactor = count - geos.filter((g, i) => g.iso === iso && i > index).length
+		newArcs.push({
 			startLng: userCountry.longitude,
 			startLat: userCountry.latitude,
 			endLng: country.longitude,
@@ -74,11 +80,13 @@ const createArcs = (geos: GeoLookup[], isoCountMap: {[key: string]: number}, use
 			country: country.name,
 			iso: country.alpha2code,
 			workerIdx: workerIdx,
-			altitude: 0.3 + (count * 0.05),
+			altitude: ARCH_ALTITUDE_MIN + (altitudeFactor * ARCH_ALTITUDE_GAP),
 			count: count
 		})
 	})
-)
+
+	return newArcs
+}
 
 const decrementArcs = (arcs: Arch[], remove: Connection[]) => {
 	const rmIds = remove.map(r => r.workerIdx)
@@ -86,14 +94,22 @@ const decrementArcs = (arcs: Arch[], remove: Connection[]) => {
 		return rmIds.includes(arc.workerIdx)
 	})
 	for (const rmArch of arcsToRemove) {
-		// decrement count
-		const iso = rmArch.iso
-		arcs.forEach(arc => {
-			if (arc.iso === iso) arc.count--
-		})
 		// remove arcs in place
 		const index = arcs.findIndex(arc => arc.workerIdx === rmArch.workerIdx)
 		arcs.splice(index, 1)
+		// decrement count
+		const iso = rmArch.iso
+		for (const arc of arcs) {
+			// decrement count for all arcs with the same iso
+			if (arc.iso === iso) arc.count--
+		}
+	}
+	// reset altitudes
+	const isoCountMap: { [key: string]: number } = {};
+
+	for (const arc of arcs) {
+		isoCountMap[arc.iso] = (isoCountMap[arc.iso] ?? 0) + 1;
+		arc.altitude = ARCH_ALTITUDE_MIN + (isoCountMap[arc.iso] * ARCH_ALTITUDE_GAP);
 	}
 }
 
@@ -109,16 +125,12 @@ const incrementArcs = (arcs: Arch[], geos: GeoLookup[]) => {
 export const useGeo = () => {
 	const [arcs, setArcs] = useState<Arch[]>([])
 	const [points, setPoints] = useState<Point[]>([])
-	const [rings, setRings] = useState<Point[]>([])
 	const country = useRef<ISO>()
-	const rawConnections = useEmitterState(connectionsEmitter)
-	const queuedConnections = useQueuedState(rawConnections, 1000) // only update every 1 seconds
-	const active = [...rawConnections].some(c => c.state === 1)
-	const connections = useMemo(() => {
-		return active ? queuedConnections : rawConnections
-	}, [rawConnections, queuedConnections, active])
-	const prevConnections = usePrevious(connections)
+	const connections = useEmitterState(connectionsEmitter)
+	// const connections = useQueueState(rawConnections)
+	const active = connections.some(c => c.state === 1)
 	const sharing = useEmitterState(sharingEmitter)
+	const [updating, setUpdating] = useState(false)
 
 	const updateArcs = useCallback(async (connections: Connection[]) => {
 		/***
@@ -145,9 +157,9 @@ export const useGeo = () => {
 		const geos = await geoLookupAll(addedConnections)
 		incrementArcs(arcs, geos)
 
-		const isoCountMap = {} as {[key: string]: number}
+		const isoCountMap = {} as { [key: string]: number }
 		arcs.forEach(arc => {
-			isoCountMap[arc.iso] = arc.count
+			if (!isoCountMap[arc.iso]) isoCountMap[arc.iso] = arc.count
 		})
 
 		const newArcs = createArcs(geos, isoCountMap, country.current)
@@ -155,53 +167,53 @@ export const useGeo = () => {
 		const updatedArcs = [...arcs, ...newArcs]
 		setArcs(updatedArcs)
 
-		// dispatch push notifications if there is a single new connection (not a sync)
-		if (geos.length === 1) {
-			const country = updatedArcs.find(a => a.iso === geos[0].iso)?.country
+		// dispatch push notifications
+		geos.forEach(geo => {
+			const country = updatedArcs.find(a => a.iso === geo.iso)?.country
 			if (!country) return
 			pushNotification({
-				id: geos[0].workerIdx,
+				id: geo.workerIdx,
 				text: `New connection: ${country.split(',')[0]}`,
-				autoHide: true,
+				autoHide: true
 			})
-		}
-
+		})
 	}, [arcs])
 
 	useEffect(() => {
-		if (prevConnections === connections) return // only update on changes
-		const updatedConnections = connections.filter(connection => {
-			const prevConnection = (
-				prevConnections &&
-				prevConnections.find(p => p.workerIdx === connection.workerIdx)
-			)
-			return (
-				!prevConnection ||
-				prevConnection.state !== connection.state ||
-				prevConnection.addr !== connection.addr
-			)
+		if (updating) return // don't update while updating 🤪doing so causes a race condition
+		// check if connections have changed since the last update (using arcs workerIdx)
+		const updatedConnections = connections.filter(con => {
+			if (con.state === -1) return arcs.some(arc => arc.workerIdx === con.workerIdx)
+			return !arcs.some(arc => arc.workerIdx === con.workerIdx)
 		})
-		updateArcs(updatedConnections).then(null)
-	}, [prevConnections, connections, updateArcs])
+		if (!updatedConnections.length) return // only update on changes
+		setUpdating(true)
+		updateArcs(updatedConnections).then(() => setUpdating(false))
+	}, [connections, updateArcs, updating, arcs])
 
 	useEffect(() => {
 		if (sharing && !active) pushNotification({
 			id: -1,
 			text: 'Waiting for connections',
-			ellipse: true,
+			ellipse: true
 		})
 		else removeNotification(-1)
 	}, [sharing, active])
 
 	useEffect(() => {
-		if (arcs.length === 0) {
-			setRings([])
-			setTimeout(() => setPoints([]), 0) // dumb hack to not do it in the same event loop
+		// If no arcs, reset points and exit.
+		if (!arcs.length) {
+			setPoints([])
 			return
 		}
-		const newPoints: Point[] = []
+
+		const newPoints = [] as Point[]
+
 		arcs.forEach(arc => {
-			if (!points.some(p => arc.workerIdx === p.id)) {
+			const isExistingPoint = points.some(p => arc.endLat === p.lat && arc.endLng === p.lng)
+			const isNewPointDuplicate = newPoints.some(p => arc.endLat === p.lat && arc.endLng === p.lng)
+
+			if (!isExistingPoint && !isNewPointDuplicate) {
 				newPoints.push({
 					lng: arc.endLng,
 					lat: arc.endLat,
@@ -209,7 +221,9 @@ export const useGeo = () => {
 				})
 			}
 		})
-		if (arcs.length > 0 && !points.some(p => p.origin)) {
+
+		// If no origin point exists, add it.
+		if (!points.some(p => p.origin)) {
 			newPoints.push({
 				lng: arcs[0].startLng,
 				lat: arcs[0].startLat,
@@ -217,17 +231,20 @@ export const useGeo = () => {
 				id: -1
 			})
 		}
-		const oldPoints = points.filter(p => p.id === -1 || arcs.some(a => a.workerIdx === p.id))
-		const oldRings = rings.filter(p => p.id === -1 || arcs.some(a => a.workerIdx === p.id))
-		setRings([...oldPoints, ...newPoints])
-		setTimeout( () => setPoints([...oldRings, ...newPoints]), 0)
+
+		const oldPoints = points.filter(p =>
+			p.id === -1 || arcs.some(a => a.endLat === p.lat && a.endLng === p.lng)
+		)
+
+		// Set points after a short delay.
+		setTimeout(() => setPoints([...oldPoints, ...newPoints]), 0)
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [arcs])
 
 	return {
 		arcs: arcs,
 		points: points,
-		rings: rings,
 		country: country.current
 	}
 }
