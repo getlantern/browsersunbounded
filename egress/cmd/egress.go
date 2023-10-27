@@ -57,11 +57,11 @@ func main() {
 	// Instantiate our local HTTP CONNECT proxy
 	proxy := goproxy.NewProxyHttpServer()
 	proxy.Verbose = true
-	common.Debugf("Starting HTTP CONNECT proxy...")
+	common.Debugf("Starting HTTP CONNECT proxy for egress server...")
 
 	proxy.OnRequest().DoFunc(
 		func(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
-			common.Debug("HTTP proxy just saw a request:")
+			common.Debug("HTTP egress proxy just saw a request:")
 			// TODO: overriding the context is a hack to prevent "context canceled" errors when proxying
 			// HTTP (not HTTPS) requests. It's not yet clear why this is necessary -- it may be a quirk
 			// of elazarl/goproxy. See: https://github.com/getlantern/broflake/issues/47
