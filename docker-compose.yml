@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  freddie:
+    image: freddie
+    build:
+      dockerfile: ./Dockerfile.freddie
+    ports:
+      - 9000:9000/tcp
+  egress:
+    image: egress
+    build:
+      dockerfile: ./Dockerfile.egress
+    ports:
+      - 8000:8000/tcp
