@@ -1,11 +1,11 @@
-package main
+package freddie
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -16,7 +16,6 @@ import (
 	"golang.org/x/mod/semver"
 
 	"github.com/getlantern/broflake/common"
-	"github.com/getlantern/telemetry"
 )
 
 const (
@@ -25,11 +24,10 @@ const (
 	bufferSz    = 16384
 )
 
-var consumerTable = userTable{Data: make(map[string]chan string)}
-var signalTable = userTable{Data: make(map[string]chan string)}
-
-var nConcurrentPostReqs metric.Int64UpDownCounter
-var nConcurrentGetReqs metric.Int64UpDownCounter
+var (
+	consumerTable = userTable{Data: make(map[string]chan string)}
+	signalTable   = userTable{Data: make(map[string]chan string)}
+)
 
 type userTable struct {
 	Data map[string]chan string
@@ -73,7 +71,60 @@ func (t *userTable) Size() int {
 	return len(t.Data)
 }
 
-func handleSignal(w http.ResponseWriter, r *http.Request) {
+type Freddie struct {
+	TLSConfig *tls.Config
+
+	ctx context.Context
+	srv *http.Server
+
+	nConcurrentGetReqs  metric.Int64UpDownCounter
+	nConcurrentPostReqs metric.Int64UpDownCounter
+}
+
+func New(ctx context.Context, listenAddr string) (Freddie, error) {
+	f := Freddie{
+		ctx: ctx,
+		srv: &http.Server{
+			ReadTimeout:  30 * time.Second,
+			WriteTimeout: 30 * time.Second,
+			Addr:         listenAddr,
+		},
+	}
+
+	var err error
+
+	m := otel.Meter("github.com/getlantern/broflake/freddie")
+	f.nConcurrentGetReqs, err = m.Int64UpDownCounter("concurrent-get-reqs")
+	if err != nil {
+		return Freddie{}, err
+	}
+	f.nConcurrentPostReqs, err = m.Int64UpDownCounter("concurrent-post-reqs")
+	if err != nil {
+		return Freddie{}, err
+	}
+
+	http.HandleFunc("/v1/signal", f.handleSignal)
+
+	return f, nil
+}
+
+func (f *Freddie) ListenAndServe() error {
+	common.Debugf("Freddie (%v) listening on %v", common.Version, f.srv.Addr)
+	return f.srv.ListenAndServe()
+}
+
+func (f *Freddie) ListenAndServeTLS(certFile, keyFile string) error {
+	f.srv.TLSConfig = f.TLSConfig
+
+	common.Debugf("Freddie (%v/tls) listening on %v", common.Version, f.srv.Addr)
+	return f.srv.ListenAndServeTLS(certFile, keyFile)
+}
+
+func (f *Freddie) Shutdown() error {
+	return f.srv.Shutdown(f.ctx)
+}
+
+func (f *Freddie) handleSignal(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 
 	// Handle preflight requests
@@ -98,16 +149,16 @@ func handleSignal(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		handleSignalGet(w, r)
+		f.handleSignalGet(w, r)
 	case http.MethodPost:
-		handleSignalPost(w, r)
+		f.handleSignalPost(w, r)
 	}
 }
 
 // GET /v1/signal is the producer advertisement stream
-func handleSignalGet(w http.ResponseWriter, r *http.Request) {
-	nConcurrentGetReqs.Add(context.Background(), 1)
-	defer nConcurrentGetReqs.Add(context.Background(), -1)
+func (f *Freddie) handleSignalGet(w http.ResponseWriter, r *http.Request) {
+	f.nConcurrentGetReqs.Add(context.Background(), 1)
+	defer f.nConcurrentGetReqs.Add(context.Background(), -1)
 
 	consumerID := uuid.NewString()
 	consumerChan := consumerTable.Add(consumerID)
@@ -133,9 +184,9 @@ func handleSignalGet(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/signal is how all signaling messaging is performed
-func handleSignalPost(w http.ResponseWriter, r *http.Request) {
-	nConcurrentPostReqs.Add(context.Background(), 1)
-	defer nConcurrentPostReqs.Add(context.Background(), -1)
+func (f *Freddie) handleSignalPost(w http.ResponseWriter, r *http.Request) {
+	f.nConcurrentPostReqs.Add(context.Background(), 1)
+	defer f.nConcurrentPostReqs.Add(context.Background(), -1)
 
 	reqID := uuid.NewString()
 	reqChan := signalTable.Add(reqID)
@@ -221,38 +272,4 @@ func isValidProtocolVersion(r *http.Request) bool {
 	}
 
 	return true
-}
-
-func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "9000"
-	}
-
-	ctx := context.Background()
-	closeFuncMetric := telemetry.EnableOTELMetrics(ctx)
-	defer func() { _ = closeFuncMetric(ctx) }()
-
-	m := otel.Meter("github.com/getlantern/broflake/freddie")
-	var err error
-	nConcurrentGetReqs, err = m.Int64UpDownCounter("concurrent-get-reqs")
-	if err != nil {
-		panic(err)
-	}
-	nConcurrentPostReqs, err = m.Int64UpDownCounter("concurrent-post-reqs")
-	if err != nil {
-		panic(err)
-	}
-
-	srv := &http.Server{
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		Addr:         fmt.Sprintf(":%v", port),
-	}
-	http.HandleFunc("/v1/signal", handleSignal)
-	common.Debugf("Freddie (%v) listening on %v", common.Version, srv.Addr)
-	err = srv.ListenAndServe()
-	if err != nil {
-		common.Debug(err)
-	}
 }
