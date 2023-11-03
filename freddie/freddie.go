@@ -103,6 +103,10 @@ func New(ctx context.Context, listenAddr string) (Freddie, error) {
 		return Freddie{}, err
 	}
 
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(fmt.Sprintf("freddie (%v)\n", common.Version)))
+	})
 	http.HandleFunc("/v1/signal", f.handleSignal)
 
 	return f, nil
