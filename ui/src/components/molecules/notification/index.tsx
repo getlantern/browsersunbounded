@@ -1,10 +1,9 @@
-import {Container, LottieContainer, LottieWrapper, Text} from './styles'
+import {Container, Text} from './styles'
 import {StateEmitter, useEmitterState} from '../../../hooks/useStateEmitter'
 import {useEffect, useState} from 'react'
 import {usePrevious} from '../../../hooks/usePrevious'
 import {Ellipse} from '../../atoms/ellipse'
-import Lottie from 'lottie-react'
-import explosion from './explosion.json'
+import Explosion from './explosion'
 
 interface NotificationType {
 	id: number
@@ -83,11 +82,7 @@ export const Notification = () => {
 		>
 			{
 				notification?.heart && (
-					<LottieContainer>
-						<LottieWrapper>
-							<Lottie animationData={explosion} loop={false} />
-						</LottieWrapper>
-					</LottieContainer>
+					<Explosion />
 				)
 			}
 			<Text>{notification?.text}{notification?.ellipse && <Ellipse />}</Text>

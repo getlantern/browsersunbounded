@@ -173,7 +173,7 @@ export const useGeo = () => {
 			if (!country) return
 			pushNotification({
 				id: geo.workerIdx,
-				text: `New connection: ${country.split(',')[0]}`,
+				text: `Helping a new person in ${country.split(',')[0]}`,
 				autoHide: true,
 				heart: true
 			})
