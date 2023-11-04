@@ -1,14 +1,17 @@
-import {Container, Text} from './styles'
+import {Container, LottieContainer, LottieWrapper, Text} from './styles'
 import {StateEmitter, useEmitterState} from '../../../hooks/useStateEmitter'
 import {useEffect, useState} from 'react'
 import {usePrevious} from '../../../hooks/usePrevious'
 import {Ellipse} from '../../atoms/ellipse'
+import Lottie from 'lottie-react'
+import explosion from './explosion.json'
 
 interface NotificationType {
 	id: number
 	text: string
 	autoHide?: boolean
 	ellipse?: boolean
+	heart?: boolean
 	show?: boolean
 	timeoutHide?: ReturnType<typeof setTimeout> | null
 	timeoutRemove?: ReturnType<typeof setTimeout> | null
@@ -43,14 +46,14 @@ export const Notification = () => {
 		if (!notifications[0]) return;
 
 		if (notification?.id === notifications[0].id) {
-			if (notifications.length === 1) return // if there are no more notifications
-			if (notification.timeoutRemove) return // if the notification is already being removed, return
-			if (notification.timeoutHide) clearTimeout(notification.timeoutHide)
-			const timeoutRemove = setTimeout(() => {
-				removeNotification(notifications[0].id!)
-				setNotification(null)
-			}, 1000)
-			setNotification({...notification, show: false, timeoutRemove}) // hide the notification and schedule it to be removed
+			// if (notifications.length === 1) return // if there are no more notifications
+			// if (notification.timeoutRemove) return // if the notification is already being removed, return
+			// if (notification.timeoutHide) clearTimeout(notification.timeoutHide)
+			// const timeoutRemove = setTimeout(() => {
+			// 	removeNotification(notifications[0].id!)
+			// 	setNotification(null)
+			// }, 1000)
+			// setNotification({...notification, show: false, timeoutRemove}) // hide the notification and schedule it to be removed
 			return
 		}
 
@@ -78,6 +81,15 @@ export const Notification = () => {
 				opacity: show ? 1 : 0,
 			}}
 		>
+			{
+				notification?.heart && (
+					<LottieContainer>
+						<LottieWrapper>
+							<Lottie animationData={explosion} loop={false} />
+						</LottieWrapper>
+					</LottieContainer>
+				)
+			}
 			<Text>{notification?.text}{notification?.ellipse && <Ellipse />}</Text>
 		</Container>
 	)

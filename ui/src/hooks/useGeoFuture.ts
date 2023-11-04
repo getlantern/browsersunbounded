@@ -149,9 +149,9 @@ export const useGeo = () => {
 		const removedConnections = connections.filter(c => c.state === -1)
 		decrementArcs(arcs, removedConnections) // mutate arcs in place
 
-		removedConnections.forEach(con => {
-			removeNotification(con.workerIdx)
-		})
+		// removedConnections.forEach(con => {
+		// 	removeNotification(con.workerIdx)
+		// })
 
 		const addedConnections = connections.filter(c => c.state === 1)
 		const geos = await geoLookupAll(addedConnections)
@@ -174,7 +174,8 @@ export const useGeo = () => {
 			pushNotification({
 				id: geo.workerIdx,
 				text: `New connection: ${country.split(',')[0]}`,
-				autoHide: true
+				autoHide: true,
+				heart: true
 			})
 		})
 	}, [arcs])

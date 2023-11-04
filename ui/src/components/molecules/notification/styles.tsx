@@ -9,9 +9,13 @@ export const Container = styled.div`
   background: ${COLORS.grey1};
   border: 1px solid ${COLORS.grey2};
   box-shadow: ${SHADOWS.light};
-	padding: 8px 16px;
+	padding: 14px 16px;
   transition: opacity 300ms ease-out, bottom 300ms ease-out;
 	pointer-events: none;
+	display: flex;
+	gap: 16px;
+	align-items: center;
+	justify-content: center;
 `
 
 export const Text = styled.p`
@@ -21,4 +25,17 @@ export const Text = styled.p`
   font-size: 14px;
   line-height: 16px;
 	color: ${COLORS.blue5};
+`
+
+export const LottieContainer = styled.div`
+  position: relative;
+  width: 25px;
+  height: 20px;
+`
+
+export const LottieWrapper = styled.div`
+	position: absolute;
+  bottom: -50px;
+  left: -90px;
+  width: 360px;
 `
