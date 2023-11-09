@@ -2,7 +2,7 @@ import {useCallback, useEffect, useRef, useState} from 'react'
 import {Connection, connectionsEmitter, sharingEmitter} from '../utils/wasmInterface'
 import {useEmitterState} from './useStateEmitter'
 import {countries} from '../utils/countries'
-import {pushNotification, removeNotification} from '../components/molecules/notification'
+import {pushNotification} from '../components/molecules/notification'
 
 type ISO = keyof typeof countries
 
@@ -198,7 +198,6 @@ export const useGeo = () => {
 			text: 'Waiting for connections',
 			ellipse: true
 		})
-		else removeNotification(-1)
 	}, [sharing, active])
 
 	useEffect(() => {

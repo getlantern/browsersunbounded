@@ -1,7 +1,6 @@
 import {Container, Text} from './styles'
 import {StateEmitter, useEmitterState} from '../../../hooks/useStateEmitter'
 import {useEffect, useState} from 'react'
-import {usePrevious} from '../../../hooks/usePrevious'
 import {Ellipse} from '../../atoms/ellipse'
 import Explosion from './explosion'
 
@@ -18,6 +17,11 @@ interface NotificationType {
 
 const notificationQueue = new StateEmitter<NotificationType[]>([])
 export const pushNotification = (notification: NotificationType) => {
+	const index = notificationQueue.state.findIndex(n => n.id === notification.id)
+	if (index >= 0) {
+		notificationQueue.state[index] = notification
+		return notificationQueue.update([...notificationQueue.state])
+	}
 	notificationQueue.update([...notificationQueue.state, notification])
 }
 
@@ -27,50 +31,30 @@ export const removeNotification = (id: number) => {
 
 export const Notification = () => {
 	const notifications = useEmitterState(notificationQueue)
-	const prevNotifications = usePrevious(notifications)
 	const [notification, setNotification] = useState<NotificationType | null>(null)
 	const show = notification?.show ?? false
 
 	useEffect(() => {
-		// find all removed notifications
-		const removedNotifications = prevNotifications?.filter(n => !notifications.find(n2 => n.id === n2.id)) ?? []
+		if (!notifications.length) return setNotification(null)
+
 		// if the notification is already showing, set show to false and remove it
-		if (notification && removedNotifications.find(n => n.id === notification.id)) {
-			if (notification.timeoutHide) clearTimeout(notification.timeoutHide)
-			if (notification.timeoutRemove) clearTimeout(notification.timeoutRemove)
-			const timeoutRemove = setTimeout(() => setNotification(null), 1000)
-			setNotification({...notification, show: false, timeoutRemove})
+		if (notification && !notification.autoHide && !notification.timeoutRemove) {
+			if (notifications.length > 1) {
+				const timeoutRemove = setTimeout(() => removeNotification(notification.id), 750)
+				return setNotification({...notification, show: false, timeoutRemove})
+			}
 		}
 
-		if (!notifications[0]) return;
-
-		if (notification?.id === notifications[0].id) {
-			// if (notifications.length === 1) return // if there are no more notifications
-			// if (notification.timeoutRemove) return // if the notification is already being removed, return
-			// if (notification.timeoutHide) clearTimeout(notification.timeoutHide)
-			// const timeoutRemove = setTimeout(() => {
-			// 	removeNotification(notifications[0].id!)
-			// 	setNotification(null)
-			// }, 1000)
-			// setNotification({...notification, show: false, timeoutRemove}) // hide the notification and schedule it to be removed
-			return
-		}
-
-		setNotification({...notifications[0], show: true})
-
-		if (!notifications[0].autoHide) return
+		if (notification && notification.id === notifications[0].id) return // same notification
+		if (!notifications[0].autoHide) return setNotification({...notifications[0], show: true})
 
 		const timeoutHide = setTimeout(() => {
-			const timeoutRemove = setTimeout(() => {
-				removeNotification(notifications[0].id!)
-				setNotification(null)
-			}, 1000)
+			const timeoutRemove = setTimeout(() => removeNotification(notifications[0].id), 750)
 			setNotification({...notifications[0], show: false, timeoutRemove})
-		}, 4000)
+		}, 3500)
 
 		setNotification({...notifications[0], show: true, timeoutHide})
-	}, [notification, notifications, prevNotifications])
-
+	}, [notification, notifications])
 
 	return (
 		<Container
@@ -82,7 +66,9 @@ export const Notification = () => {
 		>
 			{
 				notification?.heart && (
-					<Explosion />
+					<Explosion
+						id={notification.id}
+					/>
 				)
 			}
 			<Text>{notification?.text}{notification?.ellipse && <Ellipse />}</Text>

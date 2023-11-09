@@ -29,13 +29,13 @@ export const Text = styled.p`
 
 export const LottieContainer = styled.div`
   position: relative;
-  width: 25px;
-  height: 20px;
+  width: 32px;
+  height: 27px;
 `
 
 export const LottieWrapper = styled.div`
-	position: absolute;
-  bottom: -50px;
-  left: -90px;
-  width: 360px;
+  position: absolute;
+  bottom: -55px;
+  left: -105px;
+  width: 420px;
 `
