@@ -16,6 +16,21 @@ const (
 
 type SignalMsgType int
 
+func (t SignalMsgType) String() string {
+	switch t {
+	case SignalMsgGenesis:
+		return "Genesis"
+	case SignalMsgOffer:
+		return "Offer"
+	case SignalMsgAnswer:
+		return "Answer"
+	case SignalMsgICE:
+		return "ICE"
+	default:
+		return "invalid"
+	}
+}
+
 type PathAssertion struct {
 	Allow []Endpoint
 	Deny  []Endpoint

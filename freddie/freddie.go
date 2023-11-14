@@ -12,7 +12,10 @@ import (
 
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/mod/semver"
 
 	"github.com/getlantern/broflake/common"
@@ -77,8 +80,14 @@ type Freddie struct {
 	ctx context.Context
 	srv *http.Server
 
+	tracer              trace.Tracer
+	meter               metric.Meter
 	nConcurrentGetReqs  metric.Int64UpDownCounter
 	nConcurrentPostReqs metric.Int64UpDownCounter
+	totalGetRequests    metric.Int64Counter
+	totalPostRequests   metric.Int64Counter
+	consumerTableSize   metric.Int64ObservableUpDownCounter
+	signalTableSize     metric.Int64ObservableUpDownCounter
 }
 
 func New(ctx context.Context, listenAddr string) (Freddie, error) {
@@ -92,16 +101,58 @@ func New(ctx context.Context, listenAddr string) (Freddie, error) {
 			Addr:         listenAddr,
 			Handler:      mux,
 		},
+		tracer: otel.Tracer("github.com/getlantern/broflake/freddie"),
+		meter:  otel.Meter("github.com/getlantern/broflake/freddie"),
 	}
 
 	var err error
 
-	m := otel.Meter("github.com/getlantern/broflake/freddie")
-	f.nConcurrentGetReqs, err = m.Int64UpDownCounter("concurrent-get-reqs")
+	f.nConcurrentGetReqs, err = f.meter.Int64UpDownCounter("freddie.requests.concurrent.get",
+		metric.WithDescription("concurrent GET requests"),
+		metric.WithUnit("request"))
 	if err != nil {
 		return Freddie{}, err
 	}
-	f.nConcurrentPostReqs, err = m.Int64UpDownCounter("concurrent-post-reqs")
+
+	f.nConcurrentPostReqs, err = f.meter.Int64UpDownCounter("freddie.requests.concurrent.post",
+		metric.WithDescription("concurrent POST requests"),
+		metric.WithUnit("request"))
+	if err != nil {
+		return Freddie{}, err
+	}
+
+	f.totalGetRequests, err = f.meter.Int64Counter("freddie.requests.get",
+		metric.WithDescription("total GET requests"),
+		metric.WithUnit("request"))
+	if err != nil {
+		return Freddie{}, err
+	}
+
+	f.totalPostRequests, err = f.meter.Int64Counter("freddie.requests.post",
+		metric.WithDescription("total POST requests"),
+		metric.WithUnit("request"))
+	if err != nil {
+		return Freddie{}, err
+	}
+
+	f.consumerTableSize, err = f.meter.Int64ObservableUpDownCounter("freddie.consumertable.size",
+		metric.WithDescription("total number of users in the consumers table"),
+		metric.WithUnit("user"),
+		metric.WithInt64Callback(func(ctx context.Context, m metric.Int64Observer) error {
+			m.Observe(int64(consumerTable.Size()))
+			return nil
+		}))
+	if err != nil {
+		return Freddie{}, err
+	}
+
+	f.signalTableSize, err = f.meter.Int64ObservableUpDownCounter("freddie.signaltable.size",
+		metric.WithDescription("total number of users in the signal table"),
+		metric.WithUnit("user"),
+		metric.WithInt64Callback(func(ctx context.Context, m metric.Int64Observer) error {
+			m.Observe(int64(signalTable.Size()))
+			return nil
+		}))
 	if err != nil {
 		return Freddie{}, err
 	}
@@ -132,6 +183,9 @@ func (f *Freddie) Shutdown() error {
 }
 
 func (f *Freddie) handleSignal(w http.ResponseWriter, r *http.Request) {
+	ctx, span := f.tracer.Start(r.Context(), "handleSignal")
+	defer span.End()
+
 	enableCors(&w)
 
 	// Handle preflight requests
@@ -156,21 +210,26 @@ func (f *Freddie) handleSignal(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		f.handleSignalGet(w, r)
+		f.handleSignalGet(ctx, w, r)
 	case http.MethodPost:
-		f.handleSignalPost(w, r)
+		f.handleSignalPost(ctx, w, r)
 	}
 }
 
 // GET /v1/signal is the producer advertisement stream
-func (f *Freddie) handleSignalGet(w http.ResponseWriter, r *http.Request) {
-	f.nConcurrentGetReqs.Add(context.Background(), 1)
-	defer f.nConcurrentGetReqs.Add(context.Background(), -1)
+func (f *Freddie) handleSignalGet(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+	ctx, span := f.tracer.Start(ctx, "handleSignalGet")
+	defer span.End()
+
+	f.totalGetRequests.Add(ctx, 1)
+	f.nConcurrentGetReqs.Add(ctx, 1)
+	defer f.nConcurrentGetReqs.Add(ctx, -1)
 
 	consumerID := uuid.NewString()
+	span.SetAttributes(attribute.String("consumer.id", consumerID))
+
 	consumerChan := consumerTable.Add(consumerID)
 	defer consumerTable.Delete(consumerID)
-	// common.Debugf("New consumer listening (%v) | total consumers: %v", consumerID, consumerTable.Size())
 
 	// TODO: Matchmaking would happen here. (Just be selective about which consumers you broadcast
 	// to, and you've implemented matchmaking!) If consumerTable was an indexed datastore, we could
@@ -184,18 +243,23 @@ func (f *Freddie) handleSignalGet(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(fmt.Sprintf("%v\n", msg)))
 			w.(http.Flusher).Flush()
 		case <-timeoutChan:
-			// common.Debugf("Consumer %v timeout, bye bye!", consumerID)
 			return
 		}
 	}
 }
 
 // POST /v1/signal is how all signaling messaging is performed
-func (f *Freddie) handleSignalPost(w http.ResponseWriter, r *http.Request) {
-	f.nConcurrentPostReqs.Add(context.Background(), 1)
-	defer f.nConcurrentPostReqs.Add(context.Background(), -1)
+func (f *Freddie) handleSignalPost(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+	ctx, span := f.tracer.Start(ctx, "handleSignalPost")
+	defer span.End()
+
+	f.totalPostRequests.Add(ctx, 1)
+	f.nConcurrentPostReqs.Add(ctx, 1)
+	defer f.nConcurrentPostReqs.Add(ctx, -1)
 
 	reqID := uuid.NewString()
+	span.SetAttributes(attribute.String("request.id", reqID))
+
 	reqChan := signalTable.Add(reqID)
 	defer signalTable.Delete(reqID)
 
@@ -204,19 +268,17 @@ func (f *Freddie) handleSignalPost(w http.ResponseWriter, r *http.Request) {
 	data := r.Form.Get("data")
 	msgType, err := strconv.ParseInt(r.Form.Get("type"), 10, 32)
 	if err != nil {
-		// Malformed request
+		span.SetStatus(codes.Error, "invalid message type")
+		span.RecordError(fmt.Errorf("invalid message type: %w", err))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400\n"))
 		return
 	}
 
-	// common.Debugf(
-	// 	"New msg (%v) -> %v: %v | total open messages: %v",
-	// 	reqID,
-	// 	sendTo,
-	// 	data,
-	// 	signalTable.Size(),
-	// )
+	span.SetAttributes(
+		attribute.String("recipient.id", sendTo),
+		attribute.String("msg_type", common.SignalMsgType(msgType).String()),
+	)
 
 	// Package the message
 	msg, err := json.Marshal(
@@ -224,6 +286,8 @@ func (f *Freddie) handleSignalPost(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		// Malformed request
+		span.SetStatus(codes.Error, "malformed request")
+		span.RecordError(fmt.Errorf("malformed request: %w", err))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400\n"))
 		return
@@ -237,6 +301,7 @@ func (f *Freddie) handleSignalPost(w http.ResponseWriter, r *http.Request) {
 		// recipient is no longer available)
 		ok := signalTable.Send(sendTo, string(msg))
 		if !ok {
+			span.SetStatus(codes.Error, "recipient not found")
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("404\n"))
 			return
@@ -246,6 +311,7 @@ func (f *Freddie) handleSignalPost(w http.ResponseWriter, r *http.Request) {
 	// Send 200 OK to indicate that signaling partner accepts the message, stream back their
 	// response or a nil body if they failed to respond
 	w.WriteHeader(http.StatusOK)
+	span.SetStatus(codes.Ok, "")
 
 	// XXX: If the sender has just sent a SignalMsgICE, there are no more steps in the signaling
 	// handshake, so we'll close the request immediately. Being aware of message contents here is
@@ -261,7 +327,7 @@ func (f *Freddie) handleSignalPost(w http.ResponseWriter, r *http.Request) {
 	case res := <-reqChan:
 		w.Write([]byte(fmt.Sprintf("%v\n", res)))
 	case <-time.After(msgTTL * time.Second):
-		// common.Debugf("Msg %v received no reply, bye bye!", reqID)
+		span.AddEvent("timeout waiting for response")
 		w.Write(nil)
 	}
 }
