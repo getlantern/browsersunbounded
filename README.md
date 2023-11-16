@@ -50,7 +50,7 @@ Instructions last updated March 29, 2023. If something's not working and it's be
 
 5. Build the browser widget: `cd cmd && ./build_web.sh`
 
-6. Start Freddie: `cd freddie && PORT=9000 go run freddie.go`
+6. Start Freddie: `cd freddie/cmd && PORT=9000 go run main.go`
 
 7. Start the egress server: `cd egress/cmd && PORT=8000 go run egress.go`
 
