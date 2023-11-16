@@ -42,6 +42,7 @@ type QUICLayerOptions struct {
 func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICLayerOptions) (*QUICLayer, error) {
 	q := &QUICLayer{
 		bfconn: bfconn,
+		t:      &quic.Transport{Conn: bfconn},
 		tlsConfig: &tls.Config{
 			ServerName:         qopt.ServerName,
 			InsecureSkipVerify: qopt.InsecureSkipVerify,
@@ -57,6 +58,7 @@ func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICLayerOptions) (*QUICLayer, err
 
 type QUICLayer struct {
 	bfconn       *BroflakeConn
+	t            *quic.Transport
 	tlsConfig    *tls.Config
 	eventualConn *eventualConn
 	mx           sync.RWMutex
@@ -86,7 +88,7 @@ func (c *QUICLayer) DialAndMaintainQUICConnection() {
 
 		go func() {
 			defer cancelDial()
-			conn, err := quic.Dial(ctxDial, c.bfconn, common.DebugAddr("NELSON WUZ HERE"), c.tlsConfig, &common.QUICCfg)
+			conn, err := c.t.Dial(ctxDial, common.DebugAddr("NELSON WUZ HERE"), c.tlsConfig, &common.QUICCfg)
 
 			if err != nil {
 				connErr <- err
