@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 
 	"github.com/quic-go/quic-go"
 
@@ -48,6 +49,7 @@ func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICLayerOptions) (*QUICLayer, err
 			RootCAs:            qopt.CA,
 		},
 		eventualConn: newEventualConn(),
+		dialTimeout:  5 * time.Second,
 	}
 
 	return q, nil
@@ -60,6 +62,7 @@ type QUICLayer struct {
 	mx           sync.RWMutex
 	ctx          context.Context
 	cancel       context.CancelFunc
+	dialTimeout  time.Duration
 }
 
 // DialAndMaintainQUICConnection attempts to create and maintain an e2e QUIC connection by dialing
@@ -67,35 +70,41 @@ type QUICLayer struct {
 func (c *QUICLayer) DialAndMaintainQUICConnection() {
 	c.ctx, c.cancel = context.WithCancel(context.Background())
 
-	go func() {
-		for {
-			var conn quic.Connection
+	for {
+		select {
+		case <-c.ctx.Done():
+			common.Debugf("Cancelling QUIC dialer!")
+			return
+		default:
+			// Do nothing
+		}
 
-			// State 1 of 2: Keep dialing until we acquire a connection
-			for {
-				select {
-				case <-c.ctx.Done():
-					common.Debugf("Cancelling QUIC dialer!")
-					return
-				default:
-					// Do nothing
-				}
+		ctxDial, cancelDial := context.WithTimeout(context.Background(), c.dialTimeout)
+		connEstablished := make(chan quic.Connection)
+		connErr := make(chan error)
 
-				var err error
-				conn, err = quic.Dial(c.bfconn, common.DebugAddr("NELSON WUZ HERE"), "DEBUG", c.tlsConfig, &common.QUICCfg)
-				if err != nil {
-					common.Debugf("QUIC dial failed (%v), retrying...", err)
-					continue
-				}
-				break
+		go func() {
+			defer cancelDial()
+			conn, err := quic.Dial(ctxDial, c.bfconn, common.DebugAddr("NELSON WUZ HERE"), c.tlsConfig, &common.QUICCfg)
+
+			if err != nil {
+				connErr <- err
+				return
 			}
 
+			connEstablished <- conn
+		}()
+
+		select {
+		case err := <-connErr:
+			common.Debugf("QUIC dial failed (%v), retrying...", err)
+		case conn := <-connEstablished:
 			c.mx.Lock()
 			c.eventualConn.set(conn)
 			c.mx.Unlock()
 			common.Debug("QUIC connection established, ready to proxy!")
 
-			// State 2 of 2: Connection established, block until we detect a half open or a context cancellation
+			// State 2 of 2: Connection established, block until we detect a half open or a ctx cancel
 			_, err := conn.AcceptStream(c.ctx)
 			if err != nil {
 				common.Debugf("QUIC connection error (%v), closing!", err)
@@ -110,7 +119,7 @@ func (c *QUICLayer) DialAndMaintainQUICConnection() {
 			c.eventualConn = newEventualConn()
 			c.mx.Unlock()
 		}
-	}()
+	}
 }
 
 // Close a QUICLayer which was previously opened via a call to DialAndMaintainQUICConnection.
