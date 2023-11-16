@@ -49,7 +49,7 @@ func NewQUICLayer(bfconn *BroflakeConn, qopt *QUICLayerOptions) (*QUICLayer, err
 			RootCAs:            qopt.CA,
 		},
 		eventualConn: newEventualConn(),
-		dialTimeout:  5 * time.Second,
+		dialTimeout:  8 * time.Second,
 	}
 
 	return q, nil
@@ -70,6 +70,7 @@ type QUICLayer struct {
 func (c *QUICLayer) DialAndMaintainQUICConnection() {
 	c.ctx, c.cancel = context.WithCancel(context.Background())
 
+	// State 1 of 2: Keep dialing until we acquire a connection
 	for {
 		select {
 		case <-c.ctx.Done():
