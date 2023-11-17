@@ -10,6 +10,7 @@ import (
 	"context"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -18,9 +19,11 @@ import (
 
 type BroflakeConn struct {
 	net.PacketConn
-	writeChan chan IPCMsg
-	readChan  chan IPCMsg
-	addr      common.DebugAddr
+	writeChan          chan IPCMsg
+	readChan           chan IPCMsg
+	addr               common.DebugAddr
+	readDeadline       time.Time
+	updateReadDeadline chan time.Time
 }
 
 func (c BroflakeConn) LocalAddr() net.Addr {
@@ -28,10 +31,30 @@ func (c BroflakeConn) LocalAddr() net.Addr {
 }
 
 func (c BroflakeConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
-	msg := <-c.readChan
-	payload := msg.Data.([]byte)
-	copy(p, payload)
-	return len(payload), common.DebugAddr("DEBUG NELSON WUZ HERE"), nil
+	for {
+		var ctx context.Context
+
+		// If the deadline is zero value, never expire; otherwise obey the deadline
+		if c.readDeadline.IsZero() {
+			ctx, _ = context.WithCancel(context.Background())
+		} else {
+			ctx, _ = context.WithDeadline(context.Background(), c.readDeadline)
+		}
+
+		select {
+		case msg := <-c.readChan:
+			// The read completed, let's return some bytes!
+			payload := msg.Data.([]byte)
+			copy(p, payload)
+			return len(payload), common.DebugAddr("DEBUG NELSON WUZ HERE"), nil
+		case <-ctx.Done():
+			// We're past our deadline, so let's return failure!
+			return 0, common.DebugAddr("DEBUG NELSON WUZ HERE"), ctx.Err()
+		case d := <-c.updateReadDeadline:
+			// Someone updated the read deadline, so let's iterate to respect the new deadline
+			c.readDeadline = d
+		}
+	}
 }
 
 func (c BroflakeConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
@@ -49,6 +72,16 @@ func (c BroflakeConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
 	return len(b), nil
 }
 
+// XXX: A note about deadlines: as of quic-go 0.34, the QUIC dialer didn't seem to care about read
+// or write deadlines, and it was happy to use a net.PacketConn which didn't properly implement them.
+// But when we bumped to quic-go 0.40, it emerged that the dialer wouldn't work unless we added
+// support for read deadlines. Since there's still no evidence that the dialer cares about write
+// deadlines, we haven't added support for those yet.
+func (c BroflakeConn) SetReadDeadline(t time.Time) error {
+	c.updateReadDeadline <- t
+	return nil
+}
+
 func NewProducerUserStream(wg *sync.WaitGroup) (*BroflakeConn, *WorkerFSM) {
 	worker := NewWorkerFSM(wg, []FSMstate{
 		FSMstate(func(ctx context.Context, com *ipcChan, input []interface{}) (int, []interface{}) {
@@ -61,10 +94,12 @@ func NewProducerUserStream(wg *sync.WaitGroup) (*BroflakeConn, *WorkerFSM) {
 	})
 
 	bfconn := BroflakeConn{
-		PacketConn: &net.UDPConn{},
-		writeChan:  worker.com.tx,
-		readChan:   worker.com.rx,
-		addr:       common.DebugAddr(uuid.NewString()),
+		PacketConn:         &net.UDPConn{},
+		writeChan:          worker.com.tx,
+		readChan:           worker.com.rx,
+		addr:               common.DebugAddr(uuid.NewString()),
+		readDeadline:       time.Time{},
+		updateReadDeadline: make(chan time.Time, 512),
 	}
 
 	return &bfconn, worker
