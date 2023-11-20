@@ -218,7 +218,7 @@ node ./scripts/build.js
 
 # Copy to destination
 echo -e "${COL_ICYAN}Copying to destination...${COL_WHITE}"
-cp build/* -rv ${OUTPUT_DIR}
+cp -rv build/* ${OUTPUT_DIR}
 
 # Deploy
 echo ""
