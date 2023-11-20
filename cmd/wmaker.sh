@@ -5,7 +5,7 @@ set -e
 set -u
 
 # Details for the VM where we're hosting builds
-REMOTE_IP="144.126.209.50"
+REMOTE_IP="666.666.666.666"
 REMOTE_PORT="22"
 REMOTE_USERNAME="root"
 REMOTE_BASE_DIR="/usr/share/nginx/html"
