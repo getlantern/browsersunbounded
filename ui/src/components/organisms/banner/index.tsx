@@ -111,14 +111,14 @@ const Banner = () => {
 								{
 									title && (
 										<div
-											style={{marginBottom: 24}}
+											style={{marginBottom: 16}}
 										>
 											<Title/>
 										</div>
 									)
 								}
 								<div
-									style={{marginBottom: 24}}
+									style={{marginBottom: 16}}
 								>
 									<About
 										style={{
