@@ -40,7 +40,7 @@ export const BodyWrapper = styled.div`
 export const Body = styled.div`
   display: flex;
   width: 100%;
-  gap: ${(props: {mobile: boolean}) => props.mobile ? '16px' : 0};
+  gap: ${(props: {mobile: boolean}) => props.mobile ? '8px' : 0};
   max-width: ${MAX_WIDTH}px;
   flex-direction: ${(props: {mobile: boolean}) => props.mobile ? 'column' : 'row'};
 `
