@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
@@ -80,17 +81,18 @@ type Freddie struct {
 	ctx context.Context
 	srv *http.Server
 
-	tracer              trace.Tracer
-	meter               metric.Meter
-	nConcurrentGetReqs  metric.Int64UpDownCounter
-	nConcurrentPostReqs metric.Int64UpDownCounter
-	totalGetRequests    metric.Int64Counter
-	totalPostRequests   metric.Int64Counter
-	consumerTableSize   metric.Int64ObservableUpDownCounter
-	signalTableSize     metric.Int64ObservableUpDownCounter
+	currentGets  atomic.Int64
+	currentPosts atomic.Int64
+
+	tracer            trace.Tracer
+	meter             metric.Meter
+	nConcurrentReqs   metric.Int64ObservableUpDownCounter
+	totalRequests     metric.Int64Counter
+	consumerTableSize metric.Int64ObservableUpDownCounter
+	signalTableSize   metric.Int64ObservableUpDownCounter
 }
 
-func New(ctx context.Context, listenAddr string) (Freddie, error) {
+func New(ctx context.Context, listenAddr string) (*Freddie, error) {
 	mux := http.NewServeMux()
 
 	f := Freddie{
@@ -101,38 +103,34 @@ func New(ctx context.Context, listenAddr string) (Freddie, error) {
 			Addr:         listenAddr,
 			Handler:      mux,
 		},
-		tracer: otel.Tracer("github.com/getlantern/broflake/freddie"),
-		meter:  otel.Meter("github.com/getlantern/broflake/freddie"),
+		currentGets:  atomic.Int64{},
+		currentPosts: atomic.Int64{},
+		tracer:       otel.Tracer("github.com/getlantern/broflake/freddie"),
+		meter:        otel.Meter("github.com/getlantern/broflake/freddie"),
 	}
 
 	var err error
 
-	f.nConcurrentGetReqs, err = f.meter.Int64UpDownCounter("freddie.requests.concurrent.get",
-		metric.WithDescription("concurrent GET requests"),
-		metric.WithUnit("request"))
+	f.nConcurrentReqs, err = f.meter.Int64ObservableUpDownCounter("freddie.requests.concurrent",
+		metric.WithDescription("concurrent requests"),
+		metric.WithUnit("request"),
+		metric.WithInt64Callback(func(ctx context.Context, m metric.Int64Observer) error {
+			attrs := metric.WithAttributes(attribute.String("method", "GET"))
+			m.Observe(f.currentGets.Load(), attrs)
+
+			attrs = metric.WithAttributes(attribute.String("method", "POST"))
+			m.Observe(f.currentPosts.Load(), attrs)
+			return nil
+		}))
 	if err != nil {
-		return Freddie{}, err
+		return nil, err
 	}
 
-	f.nConcurrentPostReqs, err = f.meter.Int64UpDownCounter("freddie.requests.concurrent.post",
-		metric.WithDescription("concurrent POST requests"),
+	f.totalRequests, err = f.meter.Int64Counter("freddie.requests",
+		metric.WithDescription("total requests"),
 		metric.WithUnit("request"))
 	if err != nil {
-		return Freddie{}, err
-	}
-
-	f.totalGetRequests, err = f.meter.Int64Counter("freddie.requests.get",
-		metric.WithDescription("total GET requests"),
-		metric.WithUnit("request"))
-	if err != nil {
-		return Freddie{}, err
-	}
-
-	f.totalPostRequests, err = f.meter.Int64Counter("freddie.requests.post",
-		metric.WithDescription("total POST requests"),
-		metric.WithUnit("request"))
-	if err != nil {
-		return Freddie{}, err
+		return nil, err
 	}
 
 	f.consumerTableSize, err = f.meter.Int64ObservableUpDownCounter("freddie.consumertable.size",
@@ -143,7 +141,7 @@ func New(ctx context.Context, listenAddr string) (Freddie, error) {
 			return nil
 		}))
 	if err != nil {
-		return Freddie{}, err
+		return nil, err
 	}
 
 	f.signalTableSize, err = f.meter.Int64ObservableUpDownCounter("freddie.signaltable.size",
@@ -154,16 +152,18 @@ func New(ctx context.Context, listenAddr string) (Freddie, error) {
 			return nil
 		}))
 	if err != nil {
-		return Freddie{}, err
+		return nil, err
 	}
 
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(fmt.Sprintf("freddie (%v)\n", common.Version)))
+		w.Write([]byte(fmt.Sprintf("current GET requests: %d\n", f.currentGets.Load())))
+		w.Write([]byte(fmt.Sprintf("current POST requests: %d\n", f.currentPosts.Load())))
 	})
 	mux.HandleFunc("/v1/signal", f.handleSignal)
 
-	return f, nil
+	return &f, nil
 }
 
 func (f *Freddie) ListenAndServe() error {
@@ -208,6 +208,8 @@ func (f *Freddie) handleSignal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	f.totalRequests.Add(ctx, 1, metric.WithAttributes(attribute.String("method", r.Method)))
+
 	switch r.Method {
 	case http.MethodGet:
 		f.handleSignalGet(ctx, w, r)
@@ -221,9 +223,8 @@ func (f *Freddie) handleSignalGet(ctx context.Context, w http.ResponseWriter, r 
 	ctx, span := f.tracer.Start(ctx, "handleSignalGet")
 	defer span.End()
 
-	f.totalGetRequests.Add(ctx, 1)
-	f.nConcurrentGetReqs.Add(ctx, 1)
-	defer f.nConcurrentGetReqs.Add(ctx, -1)
+	f.currentGets.Add(1)
+	defer f.currentGets.Add(-1)
 
 	consumerID := uuid.NewString()
 	span.SetAttributes(attribute.String("consumer.id", consumerID))
@@ -253,9 +254,8 @@ func (f *Freddie) handleSignalPost(ctx context.Context, w http.ResponseWriter, r
 	ctx, span := f.tracer.Start(ctx, "handleSignalPost")
 	defer span.End()
 
-	f.totalPostRequests.Add(ctx, 1)
-	f.nConcurrentPostReqs.Add(ctx, 1)
-	defer f.nConcurrentPostReqs.Add(ctx, -1)
+	f.currentPosts.Add(1)
+	defer f.currentPosts.Add(-1)
 
 	reqID := uuid.NewString()
 	span.SetAttributes(attribute.String("request.id", reqID))
