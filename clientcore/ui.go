@@ -85,7 +85,7 @@ func UpstreamUIHandler(ui UIImpl, netstated, tag string) func(msg IPCMsg) {
 				)
 
 				if err != nil {
-					common.Debugf("netstatecl.Exec error: %v", err)
+					common.Debugf("Netstate client Exec error: %v", err)
 				}
 			}
 		}
