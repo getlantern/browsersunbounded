@@ -26,6 +26,10 @@ func Exec(netstated string, inst *Instruction) error {
 	}
 
 	res, err := http.Post(netstated, "application/json; charset=UTF-8", bytes.NewBuffer(serialized))
-	defer res.Body.Close()
+
+	if res != nil {
+		res.Body.Close()
+	}
+
 	return err
 }
