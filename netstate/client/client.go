@@ -10,6 +10,7 @@ type operation int
 
 const (
 	OpConsumerConnectionChange = iota // Args: [state, workerIdx, IP address, tag]
+	OpUserConnectedChange             // Args: [state]
 )
 
 // TODO: add a Lamport timestamp?
@@ -26,10 +27,10 @@ func Exec(netstated string, inst *Instruction) error {
 	}
 
 	res, err := http.Post(netstated, "application/json; charset=UTF-8", bytes.NewBuffer(serialized))
-
-	if res != nil {
-		res.Body.Close()
+	if err != nil {
+		return err
 	}
 
-	return err
+	defer res.Body.Close()
+	return nil
 }

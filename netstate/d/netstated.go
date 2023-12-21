@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/netip"
 	"sync"
 	"time"
 
@@ -137,26 +138,66 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// XXX: A word about the graph we're building: as of 12/18/2023, only uncensored users report
+	// to netstate, and we build a network graph based on their view of the world. When they connect
+	// or disconnect from a censored consumer, they report it here, and we're able to add or remove
+	// a censored vertex accordingly. One consequence of this rather funky approach is that we derive
+	// vertex labels for uncensored and censored users in two different ways: for uncensored vertices,
+	// we use the IP addr (no port) from their HTTP request plus their self-reported tag, but for censored
+	// vertices, we use the remote IP addr (no port) and tag which as passed as operation arguments by the
+	// uncensored user. Given these two different derivations, our vertex labeling scheme is pretty
+	// brittle and could easily result in broken network graphs. The correct solution is to push the
+	// necessary changes to censored Lantern clients such that they report themselves to netstate!
+	addrPort, err := netip.ParseAddrPort(r.RemoteAddr)
+	if err != nil {
+		common.Debugf("Error: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400\n"))
+		return
+	}
+
+	localLabel := fmt.Sprintf("%v (%v)", addrPort.Addr().String(), inst.Tag)
+
 	// TODO: This switch is the interpreter, we could extract it into a function
 	switch inst.Op {
 	case netstatecl.OpConsumerConnectionChange:
-		state, workerIdx, addr, remoteTag := inst.Args[0], inst.Args[1], inst.Args[2], inst.Args[3]
-		label := fmt.Sprintf("%v (%v)", remoteTag, addr)
+		state, workerIdx, remoteAddr, remoteTag := inst.Args[0], inst.Args[1], inst.Args[2], inst.Args[3]
+		remoteLabel := fmt.Sprintf("%v (%v)", remoteAddr, remoteTag)
 
 		switch state {
 		case "1":
-			world.addVertex(vertex(inst.Tag))
-			world.addEdge(vertex(inst.Tag), edge{vertex(label), workerIdx})
+			world.addVertex(vertex(localLabel))
+			world.addEdge(vertex(localLabel), edge{vertex(remoteLabel), workerIdx})
 		case "-1":
-			world.delEdge(vertex(inst.Tag), workerIdx)
-			if world.degree(vertex(label)) == 0 {
-				world.delVertex(vertex(label))
+			world.delEdge(vertex(localLabel), workerIdx)
+			if world.degree(vertex(remoteLabel)) == 0 {
+				world.delVertex(vertex(remoteLabel))
 			}
+		}
+	case netstatecl.OpUserConnectedChange:
+		state := inst.Args[0]
+
+		// If this user already exists in the graph, they must have exited without cleaning up, so
+		// we'll delete them before re-adding them
+		for _, e := range world.data[vertex(localLabel)] {
+			if world.degree(e.label) == 0 {
+				world.delVertex(e.label)
+			}
+		}
+
+		world.delVertex(vertex(localLabel))
+
+		switch state {
+		case "1":
+			world.addVertex(vertex(localLabel))
+		case "-1":
+			// Do nothing, we already deleted this user (above)
 		}
 	}
 
-	common.Debug(world.data)
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("200\n"))
+	common.Debug(world.data)
 }
 
 // TODO: delete me and replace with a real CORS strategy!
