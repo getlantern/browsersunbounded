@@ -91,6 +91,11 @@ func (g *multigraph) toGraphvizNeato() string {
 	gv += "\tsep=\"+20\"\n"
 
 	for vertex, edges := range g.data {
+		if g.degree(vertex) == 0 {
+			gv += fmt.Sprintf("\t\"%v\";\n", vertex)
+			continue
+		}
+
 		for _, e := range edges {
 			gv += fmt.Sprintf("\t\"%v\" -- \"%v\";\n", vertex, e.label)
 		}
