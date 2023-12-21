@@ -7,28 +7,65 @@ import (
 	"sync"
 
 	"github.com/getlantern/broflake/common"
+	netstatecl "github.com/getlantern/broflake/netstate/client"
 )
 
 type BroflakeEngine struct {
-	cTable *WorkerTable
-	pTable *WorkerTable
-	ui     UI
-	wg     *sync.WaitGroup
+	cTable    *WorkerTable
+	pTable    *WorkerTable
+	ui        UI
+	wg        *sync.WaitGroup
+	netstated string
+	tag       string
 }
 
-func NewBroflakeEngine(cTable, pTable *WorkerTable, ui UI, wg *sync.WaitGroup) *BroflakeEngine {
-	return &BroflakeEngine{cTable, pTable, ui, wg}
+func NewBroflakeEngine(cTable, pTable *WorkerTable, ui UI, wg *sync.WaitGroup, netstated, tag string) *BroflakeEngine {
+	return &BroflakeEngine{cTable, pTable, ui, wg, netstated, tag}
 }
 
 func (b *BroflakeEngine) start() {
 	b.cTable.Start()
 	b.pTable.Start()
 	common.Debug("▶ Broflake started!")
+
+	if b.netstated != "" {
+		go func() {
+			err := netstatecl.Exec(
+				b.netstated,
+				&netstatecl.Instruction{
+					Op:   netstatecl.OpUserConnectedChange,
+					Args: []string{"1"},
+					Tag:  b.tag,
+				},
+			)
+
+			if err != nil {
+				common.Debugf("Netstate client Exec error: %v", err)
+			}
+		}()
+	}
 }
 
 func (b *BroflakeEngine) stop() {
 	b.cTable.Stop()
 	b.pTable.Stop()
+
+	if b.netstated != "" {
+		go func() {
+			err := netstatecl.Exec(
+				b.netstated,
+				&netstatecl.Instruction{
+					Op:   netstatecl.OpUserConnectedChange,
+					Args: []string{"-1"},
+					Tag:  b.tag,
+				},
+			)
+
+			if err != nil {
+				common.Debugf("Netstate client Exec error: %v", err)
+			}
+		}()
+	}
 
 	go func() {
 		b.wg.Wait()
@@ -105,7 +142,7 @@ func NewBroflake(bfOpt *BroflakeOptions, rtcOpt *WebRTCOptions, egOpt *EgressOpt
 	}
 
 	// Step 2: Build Broflake
-	broflake := NewBroflakeEngine(cTable, pTable, ui, &wgReady)
+	broflake := NewBroflakeEngine(cTable, pTable, ui, &wgReady, bfOpt.Netstated, rtcOpt.Tag)
 
 	// Step 3: Init the UI (this constructs and exposes the JavaScript API as required)
 	ui.Init(broflake)
