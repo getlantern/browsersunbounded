@@ -13,60 +13,72 @@ import (
 	netstatecl "github.com/getlantern/broflake/netstate/client"
 )
 
-type vertex string
+type vertexLabel string
+
+type vertex struct {
+	edges    []edge
+	lastSeen time.Time
+}
 
 // Parallel edges possess the same label but must have different IDs
 // don't create multiple edges of vertex v with the same ID!
 type edge struct {
-	label vertex
+	label vertexLabel
 	id    string
 }
 
 // multigraph is a threadsafe multigraph represented as an adjacency list. It's an identity bearing
 // multigraph (parallel edges between vertices possess distinct identities)
 type multigraph struct {
-	data map[vertex][]edge
+	data map[vertexLabel]vertex
 	sync.RWMutex
 }
 
 func newMultigraph() *multigraph {
-	return &multigraph{data: make(map[vertex][]edge)}
+	return &multigraph{data: make(map[vertexLabel]vertex)}
 }
 
-// Idempotently add a vertex
-func (g *multigraph) addVertex(v vertex) {
+// Idempotently add a vertex and update its lastSeen time
+func (g *multigraph) addVertex(v vertexLabel) {
 	g.Lock()
 	defer g.Unlock()
 
 	if _, ok := g.data[v]; !ok {
-		g.data[v] = []edge{}
+		g.data[v] = vertex{}
 	}
+
+	vv := g.data[v]
+	vv.lastSeen = time.Now()
+	g.data[v] = vv
 }
 
 // Idempotently delete a vertex
-func (g *multigraph) delVertex(v vertex) {
+func (g *multigraph) delVertex(v vertexLabel) {
 	g.Lock()
 	defer g.Unlock()
 	delete(g.data, v)
 }
 
 // Get the degree of vertex v, returns 0 if v does not exist
-func (g *multigraph) degree(v vertex) int {
+func (g *multigraph) degree(v vertexLabel) int {
 	g.RLock()
 	defer g.RUnlock()
-	return len(g.data[v])
+	return len(g.data[v].edges)
 }
 
 // Add an edge e to vertex v, if v does not exist it will be created
-func (g *multigraph) addEdge(v vertex, e edge) {
+func (g *multigraph) addEdge(v vertexLabel, e edge) {
 	g.addVertex(v)
 	g.Lock()
 	defer g.Unlock()
-	g.data[v] = append(g.data[v], e)
+
+	vv := g.data[v]
+	vv.edges = append(vv.edges, e)
+	g.data[v] = vv
 }
 
 // Delete a single instance of a potentially parallel edge of vertex v by ID
-func (g *multigraph) delEdge(v vertex, id string) {
+func (g *multigraph) delEdge(v vertexLabel, id string) {
 	g.Lock()
 	defer g.Unlock()
 
@@ -74,10 +86,13 @@ func (g *multigraph) delEdge(v vertex, id string) {
 		return
 	}
 
-	for i, ee := range g.data[v] {
+	for i, ee := range g.data[v].edges {
 		if ee.id == id {
-			g.data[v][i] = g.data[v][len(g.data[v])-1]
-			g.data[v] = g.data[v][:len(g.data[v])-1]
+			g.data[v].edges[i] = g.data[v].edges[len(g.data[v].edges)-1]
+
+			vv := g.data[v]
+			vv.edges = vv.edges[:len(g.data[v].edges)-1]
+			g.data[v] = vv
 			return
 		}
 	}
@@ -90,14 +105,14 @@ func (g *multigraph) toGraphvizNeato() string {
 	gv += "\toverlap=false\n"
 	gv += "\tsep=\"+20\"\n"
 
-	for vertex, edges := range g.data {
-		if g.degree(vertex) == 0 {
-			gv += fmt.Sprintf("\t\"%v\";\n", vertex)
+	for vertexLabel, vertex := range g.data {
+		if g.degree(vertexLabel) == 0 {
+			gv += fmt.Sprintf("\t\"%v\";\n", vertexLabel)
 			continue
 		}
 
-		for _, e := range edges {
-			gv += fmt.Sprintf("\t\"%v\" -- \"%v\";\n", vertex, e.label)
+		for _, e := range vertex.edges {
+			gv += fmt.Sprintf("\t\"%v\" -- \"%v\";\n", vertexLabel, e.label)
 		}
 	}
 
@@ -161,43 +176,30 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	localLabel := fmt.Sprintf("%v (%v)", addrPort.Addr().String(), inst.Tag)
+	localLabel := vertexLabel(fmt.Sprintf("%v (%v)", addrPort.Addr().String(), inst.Tag))
 
 	// TODO: This switch is the interpreter, we could extract it into a function
 	switch inst.Op {
-	case netstatecl.OpConsumerConnectionChange:
-		state, workerIdx, remoteAddr, remoteTag := inst.Args[0], inst.Args[1], inst.Args[2], inst.Args[3]
-		remoteLabel := fmt.Sprintf("%v (%v)", remoteAddr, remoteTag)
+	case netstatecl.OpConsumerState:
+		consumers := netstatecl.DecodeArgsOpConsumerState(inst.Args)
 
-		switch state {
-		case "1":
-			world.addVertex(vertex(localLabel))
-			world.addEdge(vertex(localLabel), edge{vertex(remoteLabel), workerIdx})
-		case "-1":
-			world.delEdge(vertex(localLabel), workerIdx)
-			if world.degree(vertex(remoteLabel)) == 0 {
-				world.delVertex(vertex(remoteLabel))
-			}
-		}
-	case netstatecl.OpUserConnectedChange:
-		state := inst.Args[0]
+		// 1. Idempotently add a vertex representing the reporting node, updaing its lastSeen time
+		// 2. Idempotently add a vertex representing each reported consumer, updating its lastSeen time
+		// 3. Replace the reporting node's edges with a new set of edges representing its current consumers
 
-		// If this user already exists in the graph, they must have exited without cleaning up, so
-		// we'll delete them before re-adding them
-		for _, e := range world.data[vertex(localLabel)] {
-			if world.degree(e.label) == 0 {
-				world.delVertex(e.label)
-			}
+		world.addVertex(localLabel)
+		var newEdges []edge
+
+		for _, c := range consumers {
+			remoteAddr, remoteTag, workerIdx := c[0], c[1], c[2]
+			remoteLabel := vertexLabel(fmt.Sprintf("%v (%v)", remoteAddr, remoteTag))
+			world.addVertex(remoteLabel)
+			newEdges = append(newEdges, edge{label: remoteLabel, id: workerIdx})
 		}
 
-		world.delVertex(vertex(localLabel))
-
-		switch state {
-		case "1":
-			world.addVertex(vertex(localLabel))
-		case "-1":
-			// Do nothing, we already deleted this user (above)
-		}
+		vv := world.data[localLabel]
+		vv.edges = newEdges
+		world.data[localLabel] = vv
 	}
 
 	w.WriteHeader(http.StatusOK)

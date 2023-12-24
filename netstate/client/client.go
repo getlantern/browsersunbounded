@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"strings"
 )
 
 type operation int
 
 const (
-	OpConsumerConnectionChange = iota // Args: [state, workerIdx, IP address, tag]
-	OpUserConnectedChange             // Args: [state]
+	OpConsumerState = iota // Args: [[IP 1, tag 1, workerIdx 1], [IP 2, tag 2, workerIdx 2]..[IP n, tag n, workerIdx n]]
 )
 
 // TODO: add a Lamport timestamp?
@@ -18,6 +18,26 @@ type Instruction struct {
 	Op   operation
 	Args []string
 	Tag  string
+}
+
+func EncodeArgsOpConsumerState(args [][]string) []string {
+	var encoded []string
+
+	for _, arg := range args {
+		encoded = append(encoded, strings.Join(arg, ","))
+	}
+
+	return encoded
+}
+
+func DecodeArgsOpConsumerState(args []string) [][]string {
+	var decoded [][]string
+
+	for _, arg := range args {
+		decoded = append(decoded, strings.Split(arg, ","))
+	}
+
+	return decoded
 }
 
 func Exec(netstated string, inst *Instruction) error {
