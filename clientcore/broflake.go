@@ -5,22 +5,34 @@ import (
 	"fmt"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/getlantern/broflake/common"
 	netstatecl "github.com/getlantern/broflake/netstate/client"
 )
 
 type BroflakeEngine struct {
-	cTable    *WorkerTable
-	pTable    *WorkerTable
-	ui        UI
-	wg        *sync.WaitGroup
-	netstated string
-	tag       string
+	cTable            *WorkerTable
+	pTable            *WorkerTable
+	ui                UI
+	wg                *sync.WaitGroup
+	netstated         string
+	tag               string
+	netstateHeartbeat time.Duration
+	netstateStop      chan struct{}
 }
 
 func NewBroflakeEngine(cTable, pTable *WorkerTable, ui UI, wg *sync.WaitGroup, netstated, tag string) *BroflakeEngine {
-	return &BroflakeEngine{cTable, pTable, ui, wg, netstated, tag}
+	return &BroflakeEngine{
+		cTable,
+		pTable,
+		ui,
+		wg,
+		netstated,
+		tag,
+		1 * time.Minute,
+		make(chan struct{}, 0),
+	}
 }
 
 func (b *BroflakeEngine) start() {
@@ -30,17 +42,30 @@ func (b *BroflakeEngine) start() {
 
 	if b.netstated != "" {
 		go func() {
-			err := netstatecl.Exec(
-				b.netstated,
-				&netstatecl.Instruction{
-					Op:   netstatecl.OpUserConnectedChange,
-					Args: []string{"1"},
-					Tag:  b.tag,
-				},
-			)
+			common.Debug("Netstate hearbeat ON")
 
-			if err != nil {
-				common.Debugf("Netstate client Exec error: %v", err)
+			for {
+				common.Debug("Netstate HEARTBEAT")
+				err := netstatecl.Exec(
+					b.netstated,
+					&netstatecl.Instruction{
+						Op:   netstatecl.OpConsumerState,
+						Args: netstatecl.EncodeArgsOpConsumerState(connectedConsumers.slice()),
+						Tag:  b.tag,
+					},
+				)
+
+				if err != nil {
+					common.Debugf("Netstate client Exec error: %v", err)
+				}
+
+				select {
+				case <-time.After(b.netstateHeartbeat):
+					// Do nothing, iterate the loop
+				case <-b.netstateStop:
+					defer common.Debug("Netstate heartbeat OFF")
+					return
+				}
 			}
 		}()
 	}
@@ -50,25 +75,13 @@ func (b *BroflakeEngine) stop() {
 	b.cTable.Stop()
 	b.pTable.Stop()
 
-	if b.netstated != "" {
-		go func() {
-			err := netstatecl.Exec(
-				b.netstated,
-				&netstatecl.Instruction{
-					Op:   netstatecl.OpUserConnectedChange,
-					Args: []string{"-1"},
-					Tag:  b.tag,
-				},
-			)
-
-			if err != nil {
-				common.Debugf("Netstate client Exec error: %v", err)
-			}
-		}()
-	}
-
 	go func() {
 		b.wg.Wait()
+
+		if b.netstated != "" {
+			b.netstateStop <- struct{}{}
+		}
+
 		common.Debug("■ Broflake stopped.")
 		b.ui.OnReady()
 	}()
