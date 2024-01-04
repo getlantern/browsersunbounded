@@ -13,6 +13,12 @@ import (
 	netstatecl "github.com/getlantern/broflake/netstate/client"
 )
 
+const (
+	ttl = 5 * time.Minute // How long do vertices live before we prune them?
+)
+
+var world multigraph
+
 type vertexLabel string
 
 type vertex struct {
@@ -28,7 +34,10 @@ type edge struct {
 }
 
 // multigraph is a threadsafe multigraph represented as an adjacency list. It's an identity bearing
-// multigraph (parallel edges between vertices possess distinct identities)
+// multigraph (parallel edges between vertices possess distinct identities). You can use it like
+// a directed graph or an undirected graph (depending on whether you create reciprocal edges). We
+// use it like a directed graph, where edge direction indicates who is helping who. That is, an
+// outedge from vertex A to vertex B indicates that A is an uncensored user helping censored user B.
 type multigraph struct {
 	data map[vertexLabel]vertex
 	sync.RWMutex
@@ -52,13 +61,6 @@ func (g *multigraph) addVertex(v vertexLabel) {
 	g.data[v] = vv
 }
 
-// Idempotently delete a vertex
-func (g *multigraph) delVertex(v vertexLabel) {
-	g.Lock()
-	defer g.Unlock()
-	delete(g.data, v)
-}
-
 // Get the degree of vertex v, returns 0 if v does not exist
 func (g *multigraph) degree(v vertexLabel) int {
 	g.RLock()
@@ -66,40 +68,42 @@ func (g *multigraph) degree(v vertexLabel) int {
 	return len(g.data[v].edges)
 }
 
-// Add an edge e to vertex v, if v does not exist it will be created
-func (g *multigraph) addEdge(v vertexLabel, e edge) {
-	g.addVertex(v)
+// prune deletes expired vertices from this multigraph based on the delta between ttl and the current time
+// TODO: this is an unoptimized solution, requiring two passes through the data structure
+func (g *multigraph) prune(ttl time.Duration) {
 	g.Lock()
 	defer g.Unlock()
 
-	vv := g.data[v]
-	vv.edges = append(vv.edges, e)
-	g.data[v] = vv
-}
+	now := time.Now()
+	killList := make(map[vertexLabel]bool)
 
-// Delete a single instance of a potentially parallel edge of vertex v by ID
-func (g *multigraph) delEdge(v vertexLabel, id string) {
-	g.Lock()
-	defer g.Unlock()
-
-	if _, ok := g.data[v]; !ok {
-		return
+	// Determine which vertices are expired and delete them
+	for label, vertex := range g.data {
+		if vertex.lastSeen.Add(ttl).Before(now) {
+			killList[label] = true
+			delete(g.data, label)
+		}
 	}
 
-	for i, ee := range g.data[v].edges {
-		if ee.id == id {
-			g.data[v].edges[i] = g.data[v].edges[len(g.data[v].edges)-1]
+	// Now clean up the dangling edges
+	for label := range g.data {
+		for i, edge := range g.data[label].edges {
+			if _, ok := killList[edge.label]; ok {
+				g.data[label].edges[i] = g.data[label].edges[len(g.data[label].edges)-1]
 
-			vv := g.data[v]
-			vv.edges = vv.edges[:len(g.data[v].edges)-1]
-			g.data[v] = vv
-			return
+				vv := g.data[label]
+				vv.edges = vv.edges[:len(vv.edges)-1]
+				g.data[label] = vv
+			}
 		}
 	}
 }
 
 // Encode this multigraph as a Graphviz graph using the 'neato' layout
 func (g *multigraph) toGraphvizNeato() string {
+	g.RLock()
+	defer g.RUnlock()
+
 	gv := "graph G {\n"
 	gv += "\tlayout=neato\n"
 	gv += "\toverlap=false\n"
@@ -120,11 +124,13 @@ func (g *multigraph) toGraphvizNeato() string {
 	return gv
 }
 
-var world multigraph
-
 // GET /neato
 // Fetch a Graphviz encoded representation of the global network topology, 'neato' layout
+// TODO: this is a massively unoptimized approach where we prune and encode the graph upon every
+// request, both of which are expensive operations. In the near future, we'll want to run a
+// prune/encode job not very often, and cache the last state of the world to serve requests.
 func handleNeato(w http.ResponseWriter, r *http.Request) {
+	world.prune(ttl)
 	g := world.toGraphvizNeato()
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(g))
