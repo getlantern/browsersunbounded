@@ -4,26 +4,38 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/netip"
+	"net/url"
+	"os"
+	"path"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/getlantern/broflake/common"
 	netstatecl "github.com/getlantern/broflake/netstate/client"
+	"github.com/getlantern/geo"
 )
 
 const (
 	ttl = 5 * time.Minute // How long do vertices live before we prune them?
 )
 
-var world multigraph
+var (
+	world     multigraph
+	geolookup geo.Lookup
+	geoDb     string
+)
 
 type vertexLabel string
 
 type vertex struct {
 	edges    []edge
 	lastSeen time.Time
+	lat      float64
+	lon      float64
 }
 
 // Parallel edges possess the same label but must have different IDs
@@ -47,8 +59,8 @@ func newMultigraph() *multigraph {
 	return &multigraph{data: make(map[vertexLabel]vertex)}
 }
 
-// Idempotently add a vertex and update its lastSeen time
-func (g *multigraph) addVertex(v vertexLabel) {
+// Idempotently add a vertex; if this vertex already exists, just update its lat/lon and lastSeen time
+func (g *multigraph) addVertex(v vertexLabel, lat, lon float64) {
 	g.Lock()
 	defer g.Unlock()
 
@@ -58,6 +70,8 @@ func (g *multigraph) addVertex(v vertexLabel) {
 
 	vv := g.data[v]
 	vv.lastSeen = time.Now()
+	vv.lat = lat
+	vv.lon = lon
 	g.data[v] = vv
 }
 
@@ -110,13 +124,16 @@ func (g *multigraph) toGraphvizNeato() string {
 	gv += "\tsep=\"+20\"\n"
 
 	for vertexLabel, vertex := range g.data {
+		printedVertexLabel := fmt.Sprintf("%v lat: %v, lon: %v", vertexLabel, vertex.lat, vertex.lon)
+
 		if g.degree(vertexLabel) == 0 {
-			gv += fmt.Sprintf("\t\"%v\";\n", vertexLabel)
+			gv += fmt.Sprintf("\t\"%v\";\n", printedVertexLabel)
 			continue
 		}
 
 		for _, e := range vertex.edges {
-			gv += fmt.Sprintf("\t\"%v\" -- \"%v\";\n", vertexLabel, e.label)
+			printedEdgeLabel := fmt.Sprintf("%v lat: %v, lon: %v", e.label, g.data[e.label].lat, g.data[e.label].lon)
+			gv += fmt.Sprintf("\t\"%v\" -- \"%v\";\n", printedVertexLabel, printedEdgeLabel)
 		}
 	}
 
@@ -189,17 +206,26 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 	case netstatecl.OpConsumerState:
 		consumers := netstatecl.DecodeArgsOpConsumerState(inst.Args)
 
-		// 1. Idempotently add a vertex representing the reporting node, updaing its lastSeen time
-		// 2. Idempotently add a vertex representing each reported consumer, updating its lastSeen time
+		// 1. Idempotently add a vertex representing the reporting node, updaing its lastSeen time and lat/lon
+		// 2. Idempotently add a vertex representing each reported consumer, updating its lastSeen time and lat/lon
 		// 3. Replace the reporting node's edges with a new set of edges representing its current consumers
 
-		world.addVertex(localLabel)
+		lat, lon := geolocate(geoDb, net.IP(addrPort.Addr().AsSlice()))
+		world.addVertex(localLabel, lat, lon)
+
 		var newEdges []edge
 
 		for _, c := range consumers {
 			remoteAddr, remoteTag, workerIdx := c[0], c[1], c[2]
+
+			parsedIP := net.ParseIP(remoteAddr)
+			if parsedIP == nil {
+				continue
+			}
+
+			lat, lon := geolocate(geoDb, parsedIP)
 			remoteLabel := vertexLabel(fmt.Sprintf("%v (%v)", remoteAddr, remoteTag))
-			world.addVertex(remoteLabel)
+			world.addVertex(remoteLabel, lat, lon)
 			newEdges = append(newEdges, edge{label: remoteLabel, id: workerIdx})
 		}
 
@@ -225,12 +251,53 @@ func enableCors(w *http.ResponseWriter) {
 	)
 }
 
+func geolocate(geoDb string, addr net.IP) (lat float64, lon float64) {
+	if geoDb != "" {
+		lat, lon = geolookup.LatLong(addr)
+	}
+
+	return lat, lon
+}
+
 func main() {
+	// If GEODB is unspecified, we'll run netstated sans geolocation
+	geoDb = os.Getenv("GEODB")
+
+	if geoDb != "" {
+		_, err := url.ParseRequestURI(geoDb)
+
+		if err != nil {
+			common.Debugf("GEODB is not a valid URL! We won't perform geolocation...")
+		} else {
+			common.Debugf("Using %v for geolocation...", geoDb)
+		}
+	} else {
+		common.Debug("GEODB not specified! We won't perform geolocation...")
+	}
+
 	// The gv client is hardcoded to hit the /neato endpoint on port 8080, so we don't currently
 	// support running netstated on a different port
 	port := 8080
 
 	world = *newMultigraph()
+
+	if geoDb != "" {
+		// XXX: The API for github.com/getlantern/geo requires 3 repetitive arguments for reasons that
+		// aren't clear. To make it easier to configure netstated, we'll assume that GEODB is a URL
+		// pointing to a compressed MaxMind database file ending in .tar.gz, and we'll extract the
+		// 2nd and 3rd arguments from the 1st.
+		filenameUnzipped := strings.ReplaceAll(path.Base(geoDb), ".tar.gz", "")
+
+		geolookup = geo.LatLongFromWeb(
+			geoDb,
+			filenameUnzipped,
+			24*time.Hour,
+			filenameUnzipped,
+			geo.LatLong,
+		)
+
+		geolookup.Ready()
+	}
 
 	srv := &http.Server{
 		ReadTimeout:  30 * time.Second,
