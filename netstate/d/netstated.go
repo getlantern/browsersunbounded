@@ -23,6 +23,11 @@ const (
 	ttl = 5 * time.Minute // How long do vertices live before we prune them?
 )
 
+const (
+	clientTypeCensored clientType = iota
+	clientTypeUncensored
+)
+
 var (
 	world     multigraph
 	geolookup geo.Lookup
@@ -30,12 +35,25 @@ var (
 )
 
 type vertexLabel string
+type clientType int
+
+func (c clientType) String() string {
+	switch c {
+	case clientTypeCensored:
+		return "censored"
+	case clientTypeUncensored:
+		return "uncensored"
+	}
+
+	return "unknown"
+}
 
 type vertex struct {
 	edges    []edge
 	lastSeen time.Time
 	lat      float64
 	lon      float64
+	t        clientType
 }
 
 // Parallel edges possess the same label but must have different IDs
@@ -59,8 +77,8 @@ func newMultigraph() *multigraph {
 	return &multigraph{data: make(map[vertexLabel]vertex)}
 }
 
-// Idempotently add a vertex; if this vertex already exists, just update its lat/lon and lastSeen time
-func (g *multigraph) addVertex(v vertexLabel, lat, lon float64) {
+// Idempotently add a vertex; if this vertex already exists, just update all of its properties
+func (g *multigraph) addVertex(v vertexLabel, lat, lon float64, t clientType) {
 	g.Lock()
 	defer g.Unlock()
 
@@ -72,6 +90,7 @@ func (g *multigraph) addVertex(v vertexLabel, lat, lon float64) {
 	vv.lastSeen = time.Now()
 	vv.lat = lat
 	vv.lon = lon
+	vv.t = t
 	g.data[v] = vv
 }
 
@@ -124,7 +143,7 @@ func (g *multigraph) toGraphvizNeato() string {
 	gv += "\tsep=\"+20\"\n"
 
 	for vertexLabel, vertex := range g.data {
-		printedVertexLabel := fmt.Sprintf("%v lat: %v, lon: %v", vertexLabel, vertex.lat, vertex.lon)
+		printedVertexLabel := fmt.Sprintf("%v [%v] \nlat: %v, lon: %v", vertexLabel, vertex.t, vertex.lat, vertex.lon)
 
 		if g.degree(vertexLabel) == 0 {
 			gv += fmt.Sprintf("\t\"%v\";\n", printedVertexLabel)
@@ -132,7 +151,7 @@ func (g *multigraph) toGraphvizNeato() string {
 		}
 
 		for _, e := range vertex.edges {
-			printedEdgeLabel := fmt.Sprintf("%v lat: %v, lon: %v", e.label, g.data[e.label].lat, g.data[e.label].lon)
+			printedEdgeLabel := fmt.Sprintf("%v [%v]\n lat: %v, lon: %v", e.label, g.data[e.label].t, g.data[e.label].lat, g.data[e.label].lon)
 			gv += fmt.Sprintf("\t\"%v\" -- \"%v\";\n", printedVertexLabel, printedEdgeLabel)
 		}
 	}
@@ -211,7 +230,7 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 		// 3. Replace the reporting node's edges with a new set of edges representing its current consumers
 
 		lat, lon := geolocate(geoDb, net.IP(addrPort.Addr().AsSlice()))
-		world.addVertex(localLabel, lat, lon)
+		world.addVertex(localLabel, lat, lon, clientTypeUncensored)
 
 		var newEdges []edge
 
@@ -225,7 +244,7 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 
 			lat, lon := geolocate(geoDb, parsedIP)
 			remoteLabel := vertexLabel(fmt.Sprintf("%v (%v)", remoteAddr, remoteTag))
-			world.addVertex(remoteLabel, lat, lon)
+			world.addVertex(remoteLabel, lat, lon, clientTypeCensored)
 			newEdges = append(newEdges, edge{label: remoteLabel, id: workerIdx})
 		}
 
