@@ -207,6 +207,14 @@ func (g *multigraph) toPublicPeerData() []publicPeerData {
 // request, both of which are expensive operations. In the near future, we'll want to run a
 // prune/encode job not very often, and cache the last state of the world to serve requests.
 func handleNeato(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+
+	// Handle preflight requests
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	world.prune(ttl)
 	g := world.toGraphvizNeato()
 	w.WriteHeader(http.StatusOK)
@@ -217,6 +225,14 @@ func handleNeato(w http.ResponseWriter, r *http.Request) {
 // Fetch a JSON encoded representation of the global network topology, structured as an array of
 // peerData objects. TODO: like handleNeato above, this is massively unoptimized.
 func handleData(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+
+	// Handle preflight requests
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	world.prune(ttl)
 	ppd := world.toPublicPeerData()
 
