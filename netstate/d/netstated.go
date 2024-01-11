@@ -48,6 +48,14 @@ func (c clientType) String() string {
 	return "unknown"
 }
 
+type publicPeerData struct {
+	T        int       `json:"t"`
+	Lat      float64   `json:"lat"`
+	Lon      float64   `json:"lon"`
+	LastSeen time.Time `json:"lastSeen"`
+	Edges    []int     `json:"edges"`
+}
+
 type vertex struct {
 	edges    []edge
 	lastSeen time.Time
@@ -160,6 +168,39 @@ func (g *multigraph) toGraphvizNeato() string {
 	return gv
 }
 
+// Encode this multigraph as a slice of publicPeerDatas
+func (g *multigraph) toPublicPeerData() []publicPeerData {
+	g.RLock()
+	defer g.RUnlock()
+
+	// This encoding is an adjacency list which discards vertex labels and instead uses the element
+	// index of each vertex as a label. Go maps don't maintain insertion order and iteration order is
+	// random, so we first need to enumerate a vertex order in a lookup table to use during translation...
+	peerIdx := make(map[vertexLabel]int)
+	i := 0
+
+	for vl := range g.data {
+		peerIdx[vl] = i
+		i++
+	}
+
+	ppd := make([]publicPeerData, len(peerIdx))
+
+	for vl, vertex := range g.data {
+		peerData := publicPeerData{T: int(vertex.t), Lat: vertex.lat, Lon: vertex.lon}
+		peerEdges := []int{}
+
+		for _, e := range vertex.edges {
+			peerEdges = append(peerEdges, peerIdx[e.label])
+		}
+
+		peerData.Edges = peerEdges
+		ppd[peerIdx[vl]] = peerData
+	}
+
+	return ppd
+}
+
 // GET /neato
 // Fetch a Graphviz encoded representation of the global network topology, 'neato' layout
 // TODO: this is a massively unoptimized approach where we prune and encode the graph upon every
@@ -170,6 +211,24 @@ func handleNeato(w http.ResponseWriter, r *http.Request) {
 	g := world.toGraphvizNeato()
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(g))
+}
+
+// GET /data
+// Fetch a JSON encoded representation of the global network topology, structured as an array of
+// peerData objects. TODO: like handleNeato above, this is massively unoptimized.
+func handleData(w http.ResponseWriter, r *http.Request) {
+	world.prune(ttl)
+	ppd := world.toPublicPeerData()
+
+	j, err := json.Marshal(ppd)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500"))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(j)
 }
 
 // POST /exec
@@ -324,6 +383,7 @@ func main() {
 		Addr:         fmt.Sprintf(":%v", port),
 	}
 	http.Handle("/", http.FileServer(http.Dir("./webclients/gv/public")))
+	http.HandleFunc("/data", handleData)
 	http.HandleFunc("/exec", handleExec)
 	http.HandleFunc("/neato", handleNeato)
 	common.Debugf("netstated listening on %v", srv.Addr)
