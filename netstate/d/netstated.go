@@ -24,8 +24,8 @@ const (
 )
 
 const (
-	clientTypeUncensored clientType = iota
-	clientTypeCensored
+	clientTypeCensored clientType = iota
+	clientTypeUncensored
 )
 
 var (
@@ -142,31 +142,25 @@ func (g *multigraph) prune(ttl time.Duration) {
 
 // Encode this multigraph as a Graphviz graph using the 'neato' layout
 func (g *multigraph) toGraphvizNeato() string {
-	printedLabel := func(v vertexLabel, t clientType, lat, lon float64) string {
-		return fmt.Sprintf("%v [%v]\nlat: %v, lon: %v", v, t, lat, lon)
-	}
-
 	g.RLock()
 	defer g.RUnlock()
 
-	gv := "digraph G {\n"
+	gv := "graph G {\n"
 	gv += "\tlayout=neato\n"
 	gv += "\toverlap=false\n"
 	gv += "\tsep=\"+20\"\n"
 
-	// Encode the vertices
 	for vertexLabel, vertex := range g.data {
-		printedVertexLabel := printedLabel(vertexLabel, vertex.t, vertex.lat, vertex.lon)
-		gv += fmt.Sprintf("\t\"%v\";\n", printedVertexLabel)
-	}
+		printedVertexLabel := fmt.Sprintf("%v [%v] \nlat: %v, lon: %v", vertexLabel, vertex.t, vertex.lat, vertex.lon)
 
-	// Encode the edges
-	for vertexLabel, vertex := range g.data {
-		printedVertexLabel := printedLabel(vertexLabel, vertex.t, vertex.lat, vertex.lon)
+		if g.degree(vertexLabel) == 0 {
+			gv += fmt.Sprintf("\t\"%v\";\n", printedVertexLabel)
+			continue
+		}
 
 		for _, e := range vertex.edges {
-			printedEdgeLabel := printedLabel(e.label, g.data[e.label].t, g.data[e.label].lat, g.data[e.label].lon)
-			gv += fmt.Sprintf("\t\"%v\" -> \"%v\";\n", printedVertexLabel, printedEdgeLabel)
+			printedEdgeLabel := fmt.Sprintf("%v [%v]\n lat: %v, lon: %v", e.label, g.data[e.label].t, g.data[e.label].lat, g.data[e.label].lon)
+			gv += fmt.Sprintf("\t\"%v\" -- \"%v\";\n", printedVertexLabel, printedEdgeLabel)
 		}
 	}
 
