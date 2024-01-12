@@ -193,7 +193,7 @@ func (g *multigraph) toPublicPeerData() []publicPeerData {
 	ppd := make([]publicPeerData, len(peerIdx))
 
 	for vl, vertex := range g.data {
-		peerData := publicPeerData{T: int(vertex.t), Lat: vertex.lat, Lon: vertex.lon}
+		peerData := publicPeerData{T: int(vertex.t), Lat: vertex.lat, Lon: vertex.lon, LastSeen: vertex.lastSeen}
 		peerEdges := []int{}
 
 		for _, e := range vertex.edges {
