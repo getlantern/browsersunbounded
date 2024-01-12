@@ -392,7 +392,10 @@ func main() {
 
 	// The gv client is hardcoded to hit the /neato endpoint on port 8080, so we don't currently
 	// support running netstated on a different port
-	port := 8080
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = 8080
+	}
 
 	world = *newMultigraph()
 
