@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -375,6 +376,20 @@ func main() {
 		common.Debug("GEODB not specified! We won't perform geolocation...")
 	}
 
+	// If UNSAFE == 1, we'll expose the Graphviz-related endpoints which are useful for debugging,
+	// but which surface private user data including IP address
+	unsafe, err := strconv.ParseInt(os.Getenv("UNSAFE"), 10, 64)
+
+	if err != nil {
+		common.Debugf("UNSAFE not specified or not valid! Using default value...")
+	}
+
+	if unsafe == 0 {
+		common.Debugf("UNSAFE=0, we won't expose Graphviz endpoints...")
+	} else if unsafe == 1 {
+		common.Debugf("*** WARNING *** UNSAFE=1, we'll expose Graphviz endpoints!")
+	}
+
 	// The gv client is hardcoded to hit the /neato endpoint on port 8080, so we don't currently
 	// support running netstated on a different port
 	port := 8080
@@ -404,12 +419,16 @@ func main() {
 		WriteTimeout: 30 * time.Second,
 		Addr:         fmt.Sprintf(":%v", port),
 	}
-	http.Handle("/", http.FileServer(http.Dir("./webclients/gv/public")))
+
+	if unsafe == 1 {
+		http.Handle("/", http.FileServer(http.Dir("./webclients/gv/public")))
+		http.HandleFunc("/neato", handleNeato)
+	}
+
 	http.HandleFunc("/data", handleData)
 	http.HandleFunc("/exec", handleExec)
-	http.HandleFunc("/neato", handleNeato)
 	common.Debugf("netstated listening on %v", srv.Addr)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	if err != nil {
 		common.Debug(err)
 	}
