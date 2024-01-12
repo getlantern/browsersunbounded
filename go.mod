@@ -1,6 +1,6 @@
 module github.com/getlantern/broflake
 
-go 1.19
+go 1.21.4
 
 replace github.com/enobufs/go-nats => github.com/noahlevenson/go-nats v0.0.0-20230720174341-49df1f749775
 
