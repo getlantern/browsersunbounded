@@ -113,7 +113,7 @@ export const WASM_CLIENT_CONFIG = {
 	cTableSz: 5,
 	pTableSz: 5,
 	busBufSz: 4096,
-	netstated: '',
+	netstated: process.env.REACT_APP_NETSTATED_URL!,
 	discoverySrv: process.env.REACT_APP_DISCOVERY_SRV!,
 	discoverySrvEndpoint: process.env.REACT_APP_DISCOVERY_ENDPOINT!,
 	stunBatchSize: 2,
