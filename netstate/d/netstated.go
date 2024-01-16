@@ -295,30 +295,35 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 
 	// Depending on whether netstated is deployed behind a load balancer or some other infrastructural
 	// doohickey, we may need to check a few different places to find a public IP address for the requester
-	remoteIPAddr := r.Header.Get("X-Real-Ip")
-	if remoteIPAddr == "" {
-		remoteIPAddr = r.Header.Get("X-Forwarded-For")
+	rawAddr := r.Header.Get("X-Real-Ip")
+	if rawAddr == "" {
+		rawAddr = r.Header.Get("X-Forwarded-For")
 	}
-	if remoteIPAddr == "" {
-		remoteIPAddr = r.RemoteAddr
-	}
-
-	// If we still don't have a public IP address for the requester, let's just not execute this state change
-	if !common.IsPublicAddr(net.ParseIP(remoteIPAddr)) {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("400\n"))
-		return
+	if rawAddr == "" {
+		rawAddr = r.RemoteAddr
 	}
 
-	addrPort, err := netip.ParseAddrPort(remoteIPAddr)
+	// rawAddr may or may not have a port; to handle the ambiguity, we'll try parsing it a couple
+	// different ways in a failover pattern
+	var parsedAddr net.IP
+
+	addrPort, err := netip.ParseAddrPort(rawAddr)
 	if err != nil {
-		common.Debugf("Error: %v", err)
+		// It didn't seem to have a port, so let's try parsing it as an IP address
+		parsedAddr = net.ParseIP(rawAddr)
+	} else {
+		// It seemed to have a port, so let's discard the port and keep the IP address
+		parsedAddr = net.IP(addrPort.Addr().AsSlice())
+	}
+
+	// If we've failed to make sense of the requester's IP address, let's just not execute this state change
+	if parsedAddr == nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400\n"))
 		return
 	}
 
-	localLabel := vertexLabel(fmt.Sprintf("%v (%v)", addrPort.Addr().String(), inst.Tag))
+	localLabel := vertexLabel(fmt.Sprintf("%v (%v)", parsedAddr, inst.Tag))
 
 	// TODO: This switch is the interpreter, we could extract it into a function
 	switch inst.Op {
@@ -329,7 +334,7 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 		// 2. Idempotently add a vertex representing each reported consumer, updating its lastSeen time and lat/lon
 		// 3. Replace the reporting node's edges with a new set of edges representing its current consumers
 
-		lat, lon := geolocate(geoDb, net.IP(addrPort.Addr().AsSlice()))
+		lat, lon := geolocate(geoDb, parsedAddr)
 		world.addVertex(localLabel, lat, lon, clientTypeUncensored)
 
 		var newEdges []edge
