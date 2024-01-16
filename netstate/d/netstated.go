@@ -303,6 +303,8 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 		remoteIPAddr = r.RemoteAddr
 	}
 
+	common.Debugf("REQUESTER IP ADDRESS: %v\n", remoteIPAddr)
+
 	// If we still don't have a public IP address for the requester, let's just not execute this state change
 	if !common.IsPublicAddr(net.ParseIP(remoteIPAddr)) {
 		w.WriteHeader(http.StatusBadRequest)
