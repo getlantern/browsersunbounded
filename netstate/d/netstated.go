@@ -292,7 +292,25 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 	// uncensored user. Given these two different derivations, our vertex labeling scheme is pretty
 	// brittle and could easily result in broken network graphs. The correct solution is to push the
 	// necessary changes to censored Lantern clients such that they report themselves to netstate!
-	addrPort, err := netip.ParseAddrPort(r.RemoteAddr)
+
+	// Depending on whether netstated is deployed behind a load balancer or some other infrastructural
+	// doohickey, we may need to check a few different places to find a public IP address for the requester
+	remoteIPAddr := r.Header.Get("X-Real-Ip")
+	if remoteIPAddr == "" {
+		remoteIPAddr = r.Header.Get("X-Forwarded-For")
+	}
+	if remoteIPAddr == "" {
+		remoteIPAddr = r.RemoteAddr
+	}
+
+	// If we still don't have a public IP address for the requester, let's just not execute this state change
+	if !common.IsPublicAddr(net.ParseIP(remoteIPAddr)) {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400\n"))
+		return
+	}
+
+	addrPort, err := netip.ParseAddrPort(remoteIPAddr)
 	if err != nil {
 		common.Debugf("Error: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
