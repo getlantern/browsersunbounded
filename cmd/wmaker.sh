@@ -29,6 +29,7 @@ export REACT_APP_DISCOVERY_SRV="https://freddie-subgraph-575320e16b61.herokuapp.
 export REACT_APP_DISCOVERY_ENDPOINT="/v1/signal"
 export REACT_APP_EGRESS_ADDR="wss://bf-egress.herokuapp.com"
 export REACT_APP_EGRESS_ENDPOINT="/ws"
+export REACT_APP_NETSTATED_URL="https://netstated-d7bbec1ed55b.herokuapp.com/exec"
 
 function prompt_for_ui_config() {
 #  echo "REACT_APP_WIDGET_WASM_URL (or just hit enter for ${REACT_APP_WIDGET_WASM_URL}):"
@@ -91,6 +92,13 @@ function prompt_for_ui_config() {
 
   if [[ $type != "" ]]; then
     export REACT_APP_EGRESS_ENDPOINT=$type
+  fi
+  
+  echo "REACT_APP_NETSTATED_URL (or just hit enter for ${REACT_APP_NETSTATED_URL}):"
+  read type
+
+  if [[ $type != "" ]]; then
+    export REACT_APP_NETSTATED_URL=$type
   fi
 }
 
