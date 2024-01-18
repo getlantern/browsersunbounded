@@ -360,7 +360,6 @@ func handleExec(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("200\n"))
-	common.Debug(world.data)
 }
 
 // TODO: delete me and replace with a real CORS strategy!
