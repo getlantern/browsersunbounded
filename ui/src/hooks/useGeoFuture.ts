@@ -2,7 +2,7 @@ import {useCallback, useEffect, useRef, useState} from 'react'
 import {Connection, connectionsEmitter, sharingEmitter} from '../utils/wasmInterface'
 import {useEmitterState} from './useStateEmitter'
 import {countries} from '../utils/countries'
-import {pushNotification, removeNotification} from '../components/molecules/notification'
+import {pushNotification} from '../components/molecules/notification'
 
 type ISO = keyof typeof countries
 
@@ -149,9 +149,9 @@ export const useGeo = () => {
 		const removedConnections = connections.filter(c => c.state === -1)
 		decrementArcs(arcs, removedConnections) // mutate arcs in place
 
-		removedConnections.forEach(con => {
-			removeNotification(con.workerIdx)
-		})
+		// removedConnections.forEach(con => {
+		// 	removeNotification(con.workerIdx)
+		// })
 
 		const addedConnections = connections.filter(c => c.state === 1)
 		const geos = await geoLookupAll(addedConnections)
@@ -173,8 +173,9 @@ export const useGeo = () => {
 			if (!country) return
 			pushNotification({
 				id: geo.workerIdx,
-				text: `New connection: ${country.split(',')[0]}`,
-				autoHide: true
+				text: `Helping a new person in ${country.split(',')[0]}`,
+				autoHide: true,
+				heart: true
 			})
 		})
 	}, [arcs])
@@ -197,7 +198,6 @@ export const useGeo = () => {
 			text: 'Waiting for connections',
 			ellipse: true
 		})
-		else removeNotification(-1)
 	}, [sharing, active])
 
 	useEffect(() => {

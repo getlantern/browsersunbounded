@@ -5,7 +5,7 @@ set -e
 set -u
 
 # Details for the VM where we're hosting builds
-REMOTE_IP="666.666.666.666"
+REMOTE_IP="144.126.209.50"
 REMOTE_PORT="22"
 REMOTE_USERNAME="root"
 REMOTE_BASE_DIR="/usr/share/nginx/html"
@@ -25,7 +25,7 @@ OUTPUT_DIR="$(pwd)${BUILD_PATH}/${UNIX_TIME}"
 # export PUBLIC_URL="/"
 # export REACT_APP_STORAGE_URL="/storage.html"
 export REACT_APP_GEO_LOOKUP_URL="https://geo.getiantem.org/lookup"
-export REACT_APP_DISCOVERY_SRV="https://freddie-subgraph-575320e16b61.herokuapp.com"
+export REACT_APP_DISCOVERY_SRV="https://bf-freddie.herokuapp.com"
 export REACT_APP_DISCOVERY_ENDPOINT="/v1/signal"
 export REACT_APP_EGRESS_ADDR="wss://bf-egress.herokuapp.com"
 export REACT_APP_EGRESS_ENDPOINT="/ws"

@@ -17,6 +17,7 @@
     "@webextension-toolbox/webextension-toolbox": "^5.2.2",
     "dotenv": "^16.0.3",
     "gh-pages": "^4.0.0",
+    "lottie-react": "^2.4.0",
     "mini-css-extract-plugin": "^2.6.1",
     "patch-package": "^6.5.0",
     "postinstall-postinstall": "^2.1.0",
