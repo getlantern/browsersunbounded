@@ -1,8 +1,9 @@
 import {Container, Text} from './styles'
 import {StateEmitter, useEmitterState} from '../../../hooks/useStateEmitter'
-import {useEffect, useState} from 'react'
+import {useContext, useEffect, useState} from 'react'
 import {Ellipse} from '../../atoms/ellipse'
 import Explosion from './explosion'
+import {AppContext} from '../../../context'
 
 interface NotificationType {
 	id: number
@@ -30,6 +31,7 @@ export const removeNotification = (id: number) => {
 }
 
 export const Notification = () => {
+	const {theme} = useContext(AppContext).settings
 	const notifications = useEmitterState(notificationQueue)
 	const [notification, setNotification] = useState<NotificationType | null>(null)
 	const show = notification?.show ?? false
@@ -58,6 +60,7 @@ export const Notification = () => {
 
 	return (
 		<Container
+			theme={theme}
 			style={{
 				top: 'unset',
 				bottom: show ? 0 : -10,
@@ -71,7 +74,7 @@ export const Notification = () => {
 					/>
 				)
 			}
-			<Text>{notification?.text}{notification?.ellipse && <Ellipse />}</Text>
+			<Text theme={theme}>{notification?.text}{notification?.ellipse && <Ellipse />}</Text>
 		</Container>
 	)
 }

@@ -50,7 +50,7 @@ const Toast = () => {
 		>
 			<Bell/>
 			<Text
-				style={{color: theme === Themes.LIGHT ? COLORS.grey2 : COLORS.grey6}}
+				style={{color: theme === Themes.LIGHT ? COLORS.grey2 : COLORS.grey2}}
 			>
 				Keep this site open to continue sharing your connection
 			</Text>
