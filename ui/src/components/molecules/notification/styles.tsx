@@ -1,14 +1,14 @@
 import styled from 'styled-components'
-import {COLORS, SHADOWS} from '../../../constants'
+import {COLORS, SHADOWS, Themes} from '../../../constants'
 
 export const Container = styled.div`
   position: absolute;
   bottom: 0;
   top: unset;
   border-radius: 100px;
-  background: ${COLORS.grey1};
-  border: 1px solid ${COLORS.grey2};
-  box-shadow: ${SHADOWS.light};
+  background: ${({theme}: { theme: Themes }) => theme === Themes.LIGHT ? COLORS.grey1 : COLORS.grey6};
+  border: 1px solid ${({theme}: { theme: Themes }) => theme === Themes.LIGHT ? COLORS.grey2 : COLORS.grey6};
+  box-shadow: ${({theme}: {theme: Themes}) => theme === Themes.LIGHT ? SHADOWS.light : SHADOWS.dark};
 	padding: 14px 16px;
   transition: opacity 300ms ease-out, bottom 300ms ease-out;
 	pointer-events: none;
@@ -24,7 +24,7 @@ export const Text = styled.p`
   font-weight: 500;
   font-size: 14px;
   line-height: 16px;
-	color: ${COLORS.blue5};
+  color: ${({theme}: { theme: Themes }) => theme === Themes.LIGHT ? COLORS.blue5 : COLORS.grey2};
 `
 
 export const LottieContainer = styled.div`
