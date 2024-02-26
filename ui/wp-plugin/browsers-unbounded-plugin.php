@@ -37,6 +37,8 @@ function browsers_unbounded_register_settings() {
     add_settings_field('browsers_unbounded_layout', 'Layout', 'browsers_unbounded_layout_callback', 'browsers-unbounded-settings', 'browsers_unbounded_main_section');
     add_settings_field('browsers_unbounded_theme', 'Theme', 'browsers_unbounded_theme_callback', 'browsers-unbounded-settings', 'browsers_unbounded_main_section');
     add_settings_field('browsers_unbounded_location', 'Location', 'browsers_unbounded_location_callback', 'browsers-unbounded-settings', 'browsers_unbounded_main_section');
+    add_settings_field('browsers_unbounded_homepage', 'Display on Homepage', 'browsers_unbounded_homepage_callback', 'browsers-unbounded-settings', 'browsers_unbounded_main_section');
+    add_settings_field('browsers_unbounded_posts', 'Display on Posts', 'browsers_unbounded_posts_callback', 'browsers-unbounded-settings', 'browsers_unbounded_main_section');
 }
 
 // sanitizes plugin options before saving
@@ -99,6 +101,24 @@ function browsers_unbounded_location_callback() {
     <?php
 }
 
+function browsers_unbounded_homepage_callback() {
+    $options = get_option('browsers_unbounded_options');
+    $homepage = isset($options['homepage']) ? $options['homepage'] : ''; // default off
+    ?>
+    <input type='checkbox' id='browsers_unbounded_homepage' name='browsers_unbounded_options[homepage]' <?php checked($homepage, 'on'); ?> />
+    <label for='browsers_unbounded_homepage'>Enable widget on the homepage</label>
+    <?php
+}
+
+function browsers_unbounded_posts_callback() {
+    $options = get_option('browsers_unbounded_options');
+    $posts = isset($options['posts']) ? $options['posts'] : ''; // default off
+    ?>
+    <input type='checkbox' id='browsers_unbounded_posts' name='browsers_unbounded_options[posts]' <?php checked($posts, 'on'); ?> />
+    <label for='browsers_unbounded_posts'>Enable widget on all posts</label>
+    <?php
+}
+
 
 // meta box to the page editor to enable the unbounded widget
 function browsers_unbounded_add_meta_box() {
@@ -129,18 +149,17 @@ function browsers_unbounded_save_meta_box_data($post_id) {
 
 // enqueues the script and element if the page has the widget enabled
 function browsers_unbounded_add_element_and_script() {
-    if (is_page()) {
-        global $post;
-        $is_enabled = get_post_meta($post->ID, '_browsers_unbounded_enable', true);
+    global $post;
+    $options = get_option('browsers_unbounded_options');
+    $is_enabled = is_page() ? get_post_meta($post->ID, '_browsers_unbounded_enable', true) : false;
+    $display_on_homepage = isset($options['homepage']) && $options['homepage'] === 'on';
+    $display_on_posts = isset($options['posts']) && $options['posts'] === 'on';
 
-        if ($is_enabled) {
-            $options = get_option('browsers_unbounded_options');
+    if ($is_enabled || (is_single() && $display_on_posts) || ($display_on_homepage && (is_front_page() || is_home()))) {
+        // script
+        echo '<script defer="defer" src="https://embed.lantern.io/static/js/main.js"></script>';
 
-            // script
-            echo '<script defer="defer" src="https://embed.lantern.io/static/js/main.js"></script>';
-
-            // element
-            echo "<browsers-unbounded data-layout='{$options['layout']}' data-theme='{$options['theme']}' style='width: 100%;'></browsers-unbounded>";
-        }
+        // element
+        echo "<browsers-unbounded data-layout='{$options['layout']}' data-theme='{$options['theme']}' style='width: 100%;'></browsers-unbounded>";
     }
 }
