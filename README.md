@@ -16,10 +16,11 @@ Broflake is a system for distributed peer-to-peer proxying. The Broflake system 
 browser-based client which enables volunteers to instantly provide proxying services just by 
 accessing a web page. However, Broflake is not just a web application! The Broflake system 
 introduces software libraries and protocol concepts designed to enable role-agnostic multi-hop p2p 
-proxying across the entire Lantern network.
+proxying across the entire Lantern network or on behalf of any circumvention tool that chooses to 
+integrate it.
 
-Put another way, Broflake is a common language which enables Lantern users to describe, exchange,
-and share the resource of internet access across network boundaries and runtime environments.
+Put another way, Broflake is a common language which enables circumvention tool users to describe, 
+exchange, and share the resource of internet access across network boundaries and runtime environments.
 
 ### :floppy_disk: System components
 ![system](https://user-images.githubusercontent.com/21117002/176231832-1c558546-8933-4e25-b8df-f60edb4ed6d5.png)
