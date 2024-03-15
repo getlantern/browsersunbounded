@@ -37,7 +37,7 @@ const Panel = () => {
 					mobile={width < BREAKPOINT}
 				>
 					<Header>
-						{ branding ? <LogoLink /> : <div /> }
+						{ branding ? <LogoLink style={{width: '100%'}} /> : <div /> }
 						{ menu && <Menu /> }
 					</Header>
 					{ !expanded && <About style={{padding: '24px 0'}} /> }

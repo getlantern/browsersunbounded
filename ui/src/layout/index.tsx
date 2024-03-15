@@ -44,6 +44,7 @@ const Layout = ({children}: Props) => {
 			theme={theme}
 			$menu={menu}
 			ref={ref}
+			id={'browsers-unbounded-app'}
 		>
 			{children}
 		</AppWrapper>
