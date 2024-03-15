@@ -95,7 +95,7 @@ export const defaultSettings: Settings = {
 	target: Targets.WEB,
 	mock: false,
 	keepText: true,
-	menu: true,
+	menu: false, // @todo make true after extension is ready
 	title: false,
 	share: false,
 	infoLink: ''

@@ -4,14 +4,16 @@ import styled from 'styled-components'
 import {Text} from '../typography'
 
 const StyledButton = styled.button`
-	border: none;
-	display: flex;
-	justify-content: flex-end;
-	gap: 8px;
-	align-items: center;
-	background-color: transparent;
-	cursor: pointer;
-	padding: 0;
+	&& {
+    border: none;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    align-items: center;
+    background-color: transparent;
+    cursor: pointer;
+    padding: 0;
+	}
 `
 
 interface Props {

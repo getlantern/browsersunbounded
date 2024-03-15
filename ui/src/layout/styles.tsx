@@ -13,6 +13,9 @@ const AppWrapper = styled.section`
   width: 100%;
   max-width: ${({layout}: Props) => layout === Layouts.PANEL ? '330px' : layout === Layouts.FLOATING ? '360px'  : 'unset'};
   border-radius: ${({layout}: Props) => layout !== Layouts.BANNER ? layout === Layouts.FLOATING ? '32px 32px 0 0' : '32px' : '0'};
+  @media (max-width: 330px) { // supper small
+    ${({layout}: Props) => layout === Layouts.PANEL ? 'border-radius: 16px;' : ''}
+  }
   background-color: ${({theme, $menu}: Props) => theme === Themes.DARK ? COLORS.grey5 : $menu ? COLORS.grey1 : COLORS.white };
   box-sizing: content-box;
   position: ${({layout}: Props) => layout !== Layouts.FLOATING ? 'relative' : 'fixed'};
@@ -21,6 +24,7 @@ const AppWrapper = styled.section`
   box-shadow: ${({layout}: Props) => layout === Layouts.FLOATING ? SHADOWS.light : ''};
   * {
     box-sizing: unset;
+    //all: revert;
   }
 `
 
