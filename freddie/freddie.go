@@ -25,7 +25,7 @@ import (
 const (
 	consumerTTL = 20
 	msgTTL      = 5
-	bufferSz    = 16384
+	bufferSz    = 1000
 )
 
 var (
