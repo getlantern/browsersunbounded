@@ -230,6 +230,7 @@ func (f *Freddie) handleSignalGet(ctx context.Context, w http.ResponseWriter, r 
 	span.SetAttributes(attribute.String("consumer.id", consumerID))
 
 	consumerChan := consumerTable.Add(consumerID)
+	defer func() { close(consumerChan) }()
 	defer consumerTable.Delete(consumerID)
 
 	// TODO: Matchmaking would happen here. (Just be selective about which consumers you broadcast
@@ -261,6 +262,7 @@ func (f *Freddie) handleSignalPost(ctx context.Context, w http.ResponseWriter, r
 	span.SetAttributes(attribute.String("request.id", reqID))
 
 	reqChan := signalTable.Add(reqID)
+	defer func() { close(reqChan) }()
 	defer signalTable.Delete(reqID)
 
 	r.ParseForm()
