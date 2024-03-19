@@ -3,12 +3,9 @@ import {COLORS, MAX_WIDTH, Themes} from '../../../constants'
 
 export const Container = styled.div`
   box-sizing: border-box;
-  border-radius: 32px;
   border: 1px solid ${({theme}: { theme: Themes }) => theme === Themes.DARK ? COLORS.grey6 : COLORS.grey2};
   width: 100%;
-	@media (max-width: 330px) { // supper small
-		border-radius: 16px;
-  }
+  border-radius: 16px;
 `
 
 export const Header = styled.div`

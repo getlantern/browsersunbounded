@@ -18,7 +18,7 @@ const Row = ({children, borderTop = false, borderBottom = true, backgroundColor 
 			borderBottom={borderBottom}
 			backgroundColor={backgroundColor}
 			theme={theme}
-			style={layout === Layouts.PANEL || menu ? {height: 48} : {height: 60}}
+			style={layout !== Layouts.BANNER ? {height: 48} : {height: 60}}
 		>
 			{children}
 		</Container>
