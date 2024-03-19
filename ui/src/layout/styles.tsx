@@ -12,7 +12,7 @@ const getBorderRadius = (layout: Layouts) => {
     case Layouts.PANEL:
       return '16px';
     case Layouts.FLOATING:
-      return '32px 32px 0 0';
+      return '16px 16px 0 0';
     case Layouts.BANNER:
       return '0';
     default:
