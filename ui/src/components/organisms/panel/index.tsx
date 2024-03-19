@@ -40,7 +40,7 @@ const Panel = () => {
 						{ branding ? <LogoLink style={{width: '100%'}} /> : <div /> }
 						{ menu && <Menu /> }
 					</Header>
-					{ !expanded && <About style={{padding: '24px 0'}} /> }
+					{ !expanded && <About style={{padding: '24px 0 16px 0', fontSize: 12, lineHeight: '20px'}} /> }
 					{
 						settings.globe && expanded && (
 							<Col>
@@ -50,7 +50,7 @@ const Panel = () => {
 							</Col>
 						)
 					}
-					{ expanded && <About style={{padding: `${settings.globe ? 0 : '24px'} 0 24px`}} /> }
+					{ expanded && <About style={{padding: '24px 0 16px 0', fontSize: 12, lineHeight: '20px'}} /> }
 					<Col>
 						<Row
 							borderTop

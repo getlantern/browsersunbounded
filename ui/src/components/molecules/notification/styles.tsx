@@ -16,6 +16,7 @@ export const Container = styled.div`
 	gap: 16px;
 	align-items: center;
 	justify-content: center;
+  white-space: nowrap;
 `
 
 export const Text = styled.p`

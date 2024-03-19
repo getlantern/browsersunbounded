@@ -13,6 +13,12 @@ const StyledButton = styled.button`
     background-color: transparent;
     cursor: pointer;
     padding: 0;
+		
+		&:focus &:hover {
+			border: none;
+			outline: none;
+			background-color: transparent;
+		}
 	}
 `
 

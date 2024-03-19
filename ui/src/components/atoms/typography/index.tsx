@@ -12,6 +12,7 @@ const StyledText = styled.p`
     color: ${({theme}: { theme: Themes }) => theme === Themes.DARK ? COLORS.grey2 : COLORS.blue5};
     padding: 0;
     margin: 0;
+		text-transform: none;
 	}
 `
 

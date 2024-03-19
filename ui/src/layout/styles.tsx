@@ -25,6 +25,8 @@ const AppWrapper = styled.section`
   * {
     box-sizing: unset;
     //all: revert;
+    -webkit-font-smoothing: initial;
+    -moz-osx-font-smoothing: initial;
   }
 `
 
