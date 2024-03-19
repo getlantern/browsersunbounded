@@ -14,7 +14,7 @@ const StyledButton = styled.button`
     cursor: pointer;
     padding: 0;
 		
-		&:focus &:hover {
+		&:focus, &:hover {
 			border: none;
 			outline: none;
 			background-color: transparent;

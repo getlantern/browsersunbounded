@@ -122,12 +122,6 @@ const incrementArcs = (arcs: Arch[], geos: GeoLookup[]) => {
 	}
 }
 
-pushNotification({
-	id: -1,
-	text: 'Waiting for connections',
-	ellipse: true
-})
-
 export const useGeo = () => {
 	const [arcs, setArcs] = useState<Arch[]>([])
 	const [points, setPoints] = useState<Point[]>([])
