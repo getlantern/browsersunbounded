@@ -5,14 +5,10 @@ import {AppContext} from '../../../context'
 // import {BREAKPOINT} from '../../../constants'
 // import {formatBytes, getIndex} from '../../../hooks/useBytesFormatLatch'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
-import {
-	// averageThroughputEmitter,
-	connectionsEmitter,
-	// lifetimeChunksEmitter,
-	lifetimeConnectionsEmitter
-} from '../../../utils/wasmInterface'
+import {connectionsEmitter, lifetimeConnectionsEmitter} from '../../../utils/wasmInterface'
 import {humanizeCount} from '../../../utils/humanize'
 import {LifetimeConnectionsWrapper} from './styles'
+import {Layouts} from '../../../constants'
 // import TwitterLink from '../../atoms/twitterLink'
 // import useSample from '../../../hooks/useSample'
 
@@ -34,7 +30,7 @@ export const Connections = () => {
 
 const Stats = () => {
 	const {settings} = useContext(AppContext)
-	const {menu} = settings
+	const {menu, layout} = settings
 	const connections = useEmitterState(connectionsEmitter)
 	const lifetimeConnections = useEmitterState(lifetimeConnectionsEmitter)
 	// const sampledThroughput = useSample({emitter: averageThroughputEmitter, ms: 500})
@@ -44,13 +40,15 @@ const Stats = () => {
 	// const totalChunks = sampledLifetimeChunks.map(c => c.size).reduce((p, c) => p + c, 0)
 	// const formattedTotalChunks = formatBytes(totalChunks, getIndex(totalChunks))
 
+	const fontSize = layout === Layouts.BANNER ? 14 : 12
+
 	return (
 		<>
 			<Row
 				borderBottom
 			>
-				<Text>{'People you\'re helping' + (true ? ' right now:' : ':')}</Text>
-				<Text>{currentConnections}</Text>
+				<Text style={{fontSize}}>{'People you\'re helping' + (true ? ' right now:' : ':')}</Text>
+				<Text style={{fontSize}}>{currentConnections}</Text>
 			</Row>
 			{/*<Row*/}
 			{/*	borderBottom*/}
@@ -63,20 +61,20 @@ const Stats = () => {
 			>
 				{
 					menu ? (
-						<Text>
+						<Text style={{fontSize}}>
 							Total people helped to date:
 						</Text>
 					)
 					: (
 						<LifetimeConnectionsWrapper>
-							<Text>
+							<Text style={{fontSize}}>
 								Total people helped to date:
 							</Text>
 							{/*<TwitterLink connections={lifetimeConnections} />*/}
 						</LifetimeConnectionsWrapper>
 					)
 				}
-				<Text>{humanizeCount(lifetimeConnections)}</Text>
+				<Text style={{fontSize}}>{humanizeCount(lifetimeConnections)}</Text>
 			</Row>
 			{/*<Row*/}
 			{/*	borderBottom*/}

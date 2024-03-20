@@ -6,7 +6,7 @@ import Info from '../info'
 import {TextInfo} from './styles'
 import {useContext, useState} from 'react'
 import {AppContext} from '../../../context'
-import {COLORS, Targets} from '../../../constants'
+import {COLORS, Layouts, Targets} from '../../../constants'
 import {tutorialOnEmitter} from '../../atoms/tutorial'
 
 interface Props {
@@ -18,7 +18,7 @@ const Control = ({onToggle, info = false}: Props) => {
 	const ready = useEmitterState(readyEmitter) // true
 	const sharing = useEmitterState(sharingEmitter)
 	const {wasmInterface, settings} = useContext(AppContext)
-	const {mock, target} = settings
+	const {mock, target, layout} = settings
 	// on web, we don't need to initialize wasm until user starts sharing
 	const needsInit = target === Targets.WEB && !wasmInterface?.instance
 	const [loading, setLoading] = useState(false)
@@ -48,7 +48,7 @@ const Control = ({onToggle, info = false}: Props) => {
 		<>
 			<TextInfo>
 				<Text
-					style={{minWidth: 90, fontWeight: 'bold'}}
+					style={{minWidth: 90, fontWeight: 'bold', fontSize: layout === Layouts.BANNER ? 14 : 12}}
 				>
 					Status: <span style={{color: sharing ? COLORS.green : COLORS.error}}>{sharing ? 'ON' : 'OFF'}</span>
 				</Text>

@@ -4,6 +4,7 @@ import {useContext, useEffect, useState} from 'react'
 import {Ellipse} from '../../atoms/ellipse'
 import Explosion from './explosion'
 import {AppContext} from '../../../context'
+import {Layouts} from '../../../constants'
 
 interface NotificationType {
 	id: number
@@ -31,10 +32,11 @@ export const removeNotification = (id: number) => {
 }
 
 export const Notification = () => {
-	const {theme} = useContext(AppContext).settings
+	const {theme, layout} = useContext(AppContext).settings
 	const notifications = useEmitterState(notificationQueue)
 	const [notification, setNotification] = useState<NotificationType | null>(null)
 	const show = notification?.show ?? false
+	const fontSize = layout === Layouts.BANNER ? 14 : 12
 
 	useEffect(() => {
 		if (!notifications.length) return setNotification(null)
@@ -74,7 +76,7 @@ export const Notification = () => {
 					/>
 				)
 			}
-			<Text theme={theme}>{notification?.text}{notification?.ellipse && <Ellipse />}</Text>
+			<Text style={{fontSize}} theme={theme}>{notification?.text}{notification?.ellipse && <Ellipse />}</Text>
 		</Container>
 	)
 }
