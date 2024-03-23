@@ -1,6 +1,5 @@
 # Browsers Unbounded
-
-![protocols](https://user-images.githubusercontent.com/21117002/208517779-e86683e7-08c9-4c5f-8784-2e406a5b57c9.png)
+<img width="981" alt="image" src="https://github.com/getlantern/browsersunbounded/assets/1143966/4de8bc34-5ed9-4029-93d2-51c0691a5077">
 
 # :compass: Table of contents
 * [What is Browsers Unbounded?](#question-what-is-browsers-unbounded)
