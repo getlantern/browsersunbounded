@@ -1,8 +1,8 @@
-# broflake
+# Browsers Unbounded
 ![protocols](https://user-images.githubusercontent.com/21117002/208517779-e86683e7-08c9-4c5f-8784-2e406a5b57c9.png)
 
 # :compass: Table of contents
-* [What is Broflake?](#question-what-is-broflake)
+* [What is Browsers Unbounded?](#question-what-is-browsers-unbounded)
 * [System components](#floppy_disk-system-components)
 * [Quickstart for devs](#arrow_forward-quickstart-for-devs)
 * [Observing networks with netstate](#spider_web)
@@ -11,33 +11,31 @@
 ### :skull: Warning
 This is prototype-grade software!
 
-### :question: What is Broflake?
-Broflake is a system for distributed peer-to-peer proxying. The Broflake system includes a 
+### :question: What is Browsers Unbounded?
+Browsers Unbounded is a system for distributed peer-to-peer proxying. The Browsers Unbounded system includes a 
 browser-based client which enables volunteers to instantly provide proxying services just by 
-accessing a web page. However, Broflake is not just a web application! The Broflake system 
+accessing a web page. However, Browsers Unbounded is not just a web application! The Browsers Unbounded system 
 introduces software libraries and protocol concepts designed to enable role-agnostic multi-hop p2p 
 proxying across the entire Lantern network or on behalf of any circumvention tool that chooses to 
 integrate it.
 
-Put another way, Broflake is a common language which enables circumvention tool users to describe, 
+Put another way, Browsers Unbounded is a common language which enables circumvention tool users to describe, 
 exchange, and share the resource of internet access across network boundaries and runtime environments.
 
 ### :floppy_disk: System components
 ![system](https://user-images.githubusercontent.com/21117002/176231832-1c558546-8933-4e25-b8df-f60edb4ed6d5.png)
 
-| Module     | Description                                                                         |
-|------------|-------------------------------------------------------------------------------------|
-| clientcore | library exposing Broflake's high level client API                                   |
-| cmd        | driver code for operationalizing Broflake outside of a controlling process          |   
-| common     | data structures and functionality shared across Broflake modules                    |
-| egress     | egress server                                                                       |
-| freddie    | discovery, signaling, and matchmaking server                                        |
-| netstate   | network topology observability tool                                                 |
-| ui         | embeddable web user interface                                                       |
+| Module     | Description                                                                                   |
+|------------|-----------------------------------------------------------------------------------------------|
+| clientcore | library exposing Browsers Unbounded's high level client API                                   |
+| cmd        | driver code for operationalizing Browsers Unbounded outside of a controlling process          |   
+| common     | data structures and functionality shared across Browsers Unbounded modules                    |
+| egress     | egress server                                                                                 |
+| freddie    | discovery, signaling, and matchmaking server                                                  |
+| netstate   | network topology observability tool                                                           |
+| ui         | embeddable web user interface                                                                 |
 
 ### :arrow_forward: Quickstart for devs
-Instructions last updated March 29, 2023. If something's not working and it's been a while since 
-3/29, you might want to check with nelson.
 
 1. Clone this repo.
 
@@ -71,11 +69,11 @@ websites. Your traffic is proxied in a chain: Firefox -> local HTTP proxy -> des
 webRTC -> widget -> WebSocket -> egress server -> remote HTTP proxy -> the internet. 
 
 ### :spider_web: Observing networks with netstate
-The netstate module is a work-in-progress tool for observing Broflake networks. netstate currently 
-visualizes network topology, labeling each Broflake node with an arbitrary, user-defined "tag" which
+The netstate module is a work-in-progress tool for observing Browsers Unbounded networks. netstate currently 
+visualizes network topology, labeling each Browsers Unbounded node with an arbitrary, user-defined "tag" which
 may be injected at runtime.
 
-`netstated` is a distributed state machine which collects and processes state changes from Broflake
+`netstated` is a distributed state machine which collects and processes state changes from Browsers Unbounded
 clients. It serves a network visualization at `GET /`. The `gv` visualizer client looks for a 
 `netstated` instance at `localhost:8080`.
 
