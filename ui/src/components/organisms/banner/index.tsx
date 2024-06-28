@@ -1,11 +1,11 @@
 import {Body, BodyWrapper, Container, Header, HeaderRight, HeaderWrapper, Item} from './styles'
 import Control from '../../molecules/control'
 import Menu from '../../molecules/menu'
-import React, {useContext, useState, lazy, Suspense, useEffect} from 'react'
+import React, {lazy, Suspense, useContext, useEffect, useState} from 'react'
 import Col from '../../atoms/col'
 import GlobeSuspense from '../../molecules/globe/suspense'
 import Row from '../../atoms/row'
-import {BREAKPOINT, COLORS, Themes} from '../../../constants'
+import {BREAKPOINT, COLORS, Targets, Themes} from '../../../constants'
 import Stats, {Connections} from '../../molecules/stats'
 import About from '../../molecules/about'
 // import Footer from '../../molecules/footer'
@@ -22,7 +22,7 @@ const Globe = lazy(() => import('../../molecules/globe'))
 
 const Banner = () => {
 	const {width, settings} = useContext(AppContext)
-	const {collapse, menu, title} = settings
+	const {collapse, menu, title, target} = settings
 	const [expanded, setExpanded] = useState(!collapse)
 	const interacted = useLatch(expanded)
 	const onToggle = (share: boolean) => !interacted && share ? setExpanded(share) : null
@@ -143,7 +143,7 @@ const Banner = () => {
 								</Row>
 								<Stats/>
 								{
-									!menu && (
+									!menu && (target === Targets.WEB) && (
 										<ExtensionCta />
 									)
 								}
