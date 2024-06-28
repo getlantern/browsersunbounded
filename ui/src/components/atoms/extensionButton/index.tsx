@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import {APP_STORE_LINKS, BREAKPOINT, COLORS} from '../../../constants'
+import {APP_STORE_LINKS, COLORS} from '../../../constants'
 import {Text} from '../typography'
 import {ChromeColor, FirefoxColor} from '../icons'
 import {useContext} from 'react'
@@ -29,10 +29,13 @@ interface Props {
 const ExtensionButton = ({isSmall}: Props) => {
 	const {width} = useContext(AppContext)
 
+	const largePadding = width < 900 ? '12px 16px' : '12px 40px'
+	const smallPadding = width < 275 ? '12px 16px' : '12px 40px'
+
 	return (
 		<StyledLink
 			style={{
-				padding: !isSmall && (width < BREAKPOINT + 100) ? '12px 16px' : '12px 40px'
+				padding: isSmall ? smallPadding : largePadding
 			}}
 			href={isFirefox() ? APP_STORE_LINKS.firefox : APP_STORE_LINKS.chrome}
 			target="_blank"
