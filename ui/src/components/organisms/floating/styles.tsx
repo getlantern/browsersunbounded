@@ -50,3 +50,10 @@ export const Item = styled.div`
 	height: 32px;
 	padding: 0 16px;
 `
+
+export const CtaWrapper = styled.div`
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 24px 0 0 0;
+`

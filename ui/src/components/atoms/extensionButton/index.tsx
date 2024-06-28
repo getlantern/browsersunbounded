@@ -22,13 +22,17 @@ const StyledLink = styled.a`
 	}
 `
 
-const ExtensionButton = () => {
+interface Props {
+	isSmall?: boolean
+}
+
+const ExtensionButton = ({isSmall}: Props) => {
 	const {width} = useContext(AppContext)
 
 	return (
 		<StyledLink
 			style={{
-				padding: width < BREAKPOINT + 100 ? '12px 16px' : '12px 40px'
+				padding: !isSmall && (width < BREAKPOINT + 100) ? '12px 16px' : '12px 40px'
 			}}
 			href={isFirefox() ? APP_STORE_LINKS.firefox : APP_STORE_LINKS.chrome}
 			target="_blank"
@@ -43,7 +47,7 @@ const ExtensionButton = () => {
 					lineHeight: '24px',
 				}}
 			>
-				{`Get Browsers Unbounded for ${isFirefox() ? 'Firefox' : 'Chrome'}`}
+				{isSmall ? `Add to ${isFirefox() ? 'Firefox' : 'Chrome'}` : `Get Browsers Unbounded for ${isFirefox() ? 'Firefox' : 'Chrome'}`}
 			</Text>
 		</StyledLink>
 	)

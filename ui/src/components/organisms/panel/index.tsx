@@ -1,7 +1,7 @@
-import {Container, Body, BodyWrapper, ExpandWrapper, Header} from './styles'
+import {Container, Body, BodyWrapper, ExpandWrapper, Header, CtaWrapper} from './styles'
 import React, {useContext, useState, lazy, Suspense, useEffect} from 'react'
 import {AppContext} from '../../../context'
-import {BREAKPOINT, COLORS, Themes} from '../../../constants'
+import {BREAKPOINT, COLORS, Targets, Themes} from '../../../constants'
 import Col from '../../atoms/col'
 import GlobeSuspense from '../../molecules/globe/suspense'
 import Row from '../../atoms/row'
@@ -13,12 +13,13 @@ import {ExpandCollapsePanel} from '../../atoms/expandCollapse'
 import {useLatch} from '../../../hooks/useLatch'
 import Menu from '../../molecules/menu'
 import LogoLink from '../../atoms/logoLink'
+import ExtensionCta from '../../molecules/extensionCta'
 
 const Globe = lazy(() => import('../../molecules/globe'))
 
 const Panel = () => {
 	const {width, settings} = useContext(AppContext)
-	const {theme, menu, branding} = settings
+	const {theme, menu, branding, target} = settings
 	const [expanded, setExpanded] = useState(!settings.collapse)
 	const interacted = useLatch(expanded)
 	const onToggle = (share: boolean) => !interacted && share ? setExpanded(share) : null
@@ -62,14 +63,13 @@ const Panel = () => {
 							/>
 						</Row>
 						<Stats />
-						{/*<div*/}
-						{/*	style={{paddingLeft: 8, paddingRight: 8, margin: '24px 0 0'}}*/}
-						{/*>*/}
-						{/*	<Footer*/}
-						{/*		social={false}*/}
-						{/*		donate={settings.donate}*/}
-						{/*	/>*/}
-						{/*</div>*/}
+						{
+							!menu && (target === Targets.WEB) && (
+								<CtaWrapper>
+									<ExtensionCta isSmall={true}/>
+								</CtaWrapper>
+							)
+						}
 						{
 							settings.collapse && settings.globe && (
 								<ExpandWrapper

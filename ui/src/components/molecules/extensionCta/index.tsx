@@ -4,9 +4,15 @@ import {Container} from './styles'
 import ExtensionButton from '../../atoms/extensionButton'
 import {Text} from '../../atoms/typography'
 
-const ExtensionCta = () => {
+interface Props {
+	isSmall?: boolean
+}
+
+const ExtensionCta = ({isSmall}: Props) => {
 	const {settings} = useContext(AppContext)
 	const {theme, menu} = settings
+
+	if (isSmall) return <ExtensionButton isSmall={isSmall} />
 
 	return (
 		<Container

@@ -36,3 +36,10 @@ export const ExpandWrapper = styled.div`
 	display: flex;
 	justify-content: center;
 `
+
+export const CtaWrapper = styled.div`
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 24px 0 0 0;
+`

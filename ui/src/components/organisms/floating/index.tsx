@@ -1,7 +1,7 @@
-import {Container, Body, BodyWrapper, Header, Item, HeaderRight} from './styles'
+import {Container, Body, BodyWrapper, Header, Item, HeaderRight, CtaWrapper} from './styles'
 import React, {useContext, useState, lazy, Suspense, useEffect} from 'react'
 import {AppContext} from '../../../context'
-import {BREAKPOINT, COLORS, Themes} from '../../../constants'
+import {BREAKPOINT, COLORS, Targets, Themes} from '../../../constants'
 import Col from '../../atoms/col'
 import GlobeSuspense from '../../molecules/globe/suspense'
 import Row from '../../atoms/row'
@@ -14,12 +14,13 @@ import useWindowSize from '../../../hooks/useWindowSize'
 import About from '../../molecules/about'
 import Menu from '../../molecules/menu'
 import LogoLink from '../../atoms/logoLink'
+import ExtensionCta from '../../molecules/extensionCta'
 
 const Globe = lazy(() => import('../../molecules/globe'))
 
 const Floating = () => {
 	const {width, settings} = useContext(AppContext)
-	const {theme, menu} = settings
+	const {theme, menu, target} = settings
 	const {height} = useWindowSize()
 	const [expanded, setExpanded] = useState(!settings.collapse)
 	const interacted = useLatch(expanded)
@@ -106,14 +107,13 @@ const Floating = () => {
 										</>
 									)
 								}
-								{/*<div*/}
-								{/*	style={{paddingLeft: 8, paddingRight: 8, margin: '24px 0 0'}}*/}
-								{/*>*/}
-								{/*	<Footer*/}
-								{/*		social={false}*/}
-								{/*		donate={settings.donate}*/}
-								{/*	/>*/}
-								{/*</div>*/}
+								{
+									!menu && (target === Targets.WEB) && (
+										<CtaWrapper>
+											<ExtensionCta isSmall={true}/>
+										</CtaWrapper>
+									)
+								}
 							</Col>
 						)
 					}
