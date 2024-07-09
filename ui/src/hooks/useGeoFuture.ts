@@ -1,8 +1,10 @@
-import {useCallback, useEffect, useRef, useState} from 'react'
+import {useCallback, useContext, useEffect, useRef, useState} from 'react'
 import {Connection, connectionsEmitter, sharingEmitter} from '../utils/wasmInterface'
 import {useEmitterState} from './useStateEmitter'
 import {countries} from '../utils/countries'
 import {pushNotification} from '../components/molecules/notification'
+import {AppContext} from '../context'
+import {Targets} from '../constants'
 
 type ISO = keyof typeof countries
 
@@ -131,6 +133,8 @@ export const useGeo = () => {
 	const active = connections.some(c => c.state === 1)
 	const sharing = useEmitterState(sharingEmitter)
 	const [updating, setUpdating] = useState(false)
+	const startTs = useRef(performance.now())
+	const {target} = useContext(AppContext).settings
 
 	const updateArcs = useCallback(async (connections: Connection[]) => {
 		/***
@@ -171,6 +175,7 @@ export const useGeo = () => {
 		geos.forEach(geo => {
 			const country = updatedArcs.find(a => a.iso === geo.iso)?.country
 			if (!country) return
+			if (target === Targets.EXTENSION_POPUP && startTs.current + 1000 > performance.now()) return // don't show notifications on initial load because of initial sync w/ bg script
 			pushNotification({
 				id: geo.workerIdx,
 				text: `Helping a new person in ${country.split(',')[0]}`,
@@ -178,6 +183,7 @@ export const useGeo = () => {
 				heart: true
 			})
 		})
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [arcs])
 
 	useEffect(() => {
