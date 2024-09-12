@@ -312,7 +312,7 @@ func NewListener(ctx context.Context, ll net.Listener, certPEM, keyPEM string) (
 	}
 
 	http.Handle("/ws", otelhttp.NewHandler(http.HandlerFunc(l.handleWebsocket), "/ws"))
-	common.Debugf("Egress server listening for WebSocket connections on %s", ll.Addr())
+	common.Debugf("Egress server listening for WebSocket connections on %v", ll.Addr())
 	go func() {
 		err := srv.ServeTLS(ll, "", "")
 		panic(fmt.Sprintf("stopped listening and serving for some reason: %v", err))
