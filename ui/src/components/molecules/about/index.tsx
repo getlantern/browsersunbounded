@@ -18,7 +18,7 @@ const About = ({style = {}}: Props) => {
 		>
 			{t('intro')}
 			{/*<a style={{color: brand}} href={'https://lantern.io'} target={'_blank'} rel={'noreferrer'}>Lantern</a>.*/}
-			{ !!keepText && ' Keep this site open to continue sharing your connection.' }
+			{ keepText && ` ${t('keep')}` }
 			{ !!infoLink.length && <span dangerouslySetInnerHTML={{__html: infoLink}} />}
 		</Text>
 	)

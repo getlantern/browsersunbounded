@@ -38,7 +38,6 @@ const ACCEPTED_LOCALES = [
 	'ar',
 	'zh', // zh chinese fallback
 	'zh-Hans', // default zh
-	// 'zh-Hans-HK',
 	'zh-Hant-TW',
 	'ru',
 	'fa',
@@ -67,19 +66,21 @@ const getLocales = async () => {
 
 const runAsync = async () => {
 	const locales = await getLocales();
+	let translationsJson = {};
 
 	for (const locale of locales) {
 		console.log(`Translating items for ${locale.code}`);
 		const translations = await get('unbounded-widget', { locale: locale.code });
 		const {data} = translations;
 		const {attributes} = data;
-		// create an i18n file for each locale
-		const localeData = attributes;
-		if (!fs.existsSync(`public/locales/${locale.code}`)) {
-			fs.mkdirSync(`public/locales/${locale.code}`, { recursive: true });
-		}
-		fs.writeFileSync(`public/locales/${locale.code}/translation.json`, JSON.stringify(localeData, null, 2));
+		// Add locale data to the main translationsJson object
+		translationsJson[locale.code] = { translation: attributes };
 	}
+
+	// Write the combined JSON file
+	fs.writeFileSync('src/translations.json', JSON.stringify(translationsJson, null, 2));
+
+	console.log('Translations saved to src/translations.json');
 }
 
 runAsync();
