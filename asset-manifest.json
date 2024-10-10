@@ -1,9 +1,10 @@
 {
   "files": {
     "main.js": "https://embed.lantern.io/static/js/main.js",
-    "static/js/964.94048c36.chunk.js": "https://embed.lantern.io/static/js/964.94048c36.chunk.js",
-    "static/js/60.99825c54.chunk.js": "https://embed.lantern.io/static/js/60.99825c54.chunk.js",
-    "index.html": "https://embed.lantern.io/index.html"
+    "static/js/964.18714468.chunk.js": "https://embed.lantern.io/static/js/964.18714468.chunk.js",
+    "static/js/60.20419927.chunk.js": "https://embed.lantern.io/static/js/60.20419927.chunk.js",
+    "index.html": "https://embed.lantern.io/index.html",
+    "static/media/getFetch.cjs": "https://embed.lantern.io/static/media/getFetch.c4cca45e22bc1b2c7d0d.cjs"
   },
   "entrypoints": [
     "static/js/main.js"
