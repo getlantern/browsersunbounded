@@ -17,6 +17,7 @@ import {useGeo} from '../../../hooks/useGeoFuture'
 import {Notification} from '../notification'
 import usePageVisibility from '../../../hooks/usePageVisibility'
 import * as THREE from 'three'
+import { useTranslation } from 'react-i18next';
 // import {useEmitterState} from '../../../hooks/useStateEmitter'
 // import {sharingEmitter} from '../../../utils/wasmInterface'
 // import {countries} from "../../../utils/countries";
@@ -75,6 +76,7 @@ const materialYellow = new THREE.MeshLambertMaterial({
 });
 
 const Globe = ({target}: Props) => {
+	const {t} = useTranslation()
 	// const sharing = useEmitterState(sharingEmitter)
 	const {width, settings} = useContext(AppContext)
 	const {theme, title, menu} = settings
@@ -270,7 +272,13 @@ const Globe = ({target}: Props) => {
 				// ringPropagationSpeed={1}
 			/>
 			<ToolTip
-				text={!!arc && `${count} ${count === 1 ? 'person' : 'people'} from ${arc.country.split(',')[0]}`}
+				// text={!!arc && `${count} ${count === 1 ? 'person' : 'people'} from ${arc.country.split(',')[0]}`}
+				text={!!arc && (() => {
+					const country = arc.country.split(',')[0]
+					const plural = count > 1
+					if (plural) return t('peers', { country, count })
+					return t('peer', { country, count })
+				})}
 				show={!!arc}
 				container={container}
 			/>

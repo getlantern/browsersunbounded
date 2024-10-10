@@ -172,6 +172,7 @@ Production:
    3. Set `REACT_APP_STORAGE_URL` to your intended iframe html for local storage of widget state and analytics. Most likely `https://embed.lantern.io/storage.html` or `/storage.html` if testing locally
    4. Set any `REACT_APP_*` variables as needed for your development environment. See [UI settings and configuration](#ui-settings-and-configuration) for more info.
    5. Configure the WASM client endpoints: `REACT_APP_DISCOVERY_SRV`, `REACT_APP_DISCOVERY_ENDPOINT`, `REACT_APP_EGRESS_ADDR` & `REACT_APP_EGRESS_ENDPOINT`
+   6. Configure the CMS and translations: `STRAPI_API_TOKEN` & `STRAPI_API_URL`
 
 3. Install the dependencies: `yarn`
 

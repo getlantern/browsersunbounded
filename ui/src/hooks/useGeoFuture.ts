@@ -5,6 +5,7 @@ import {countries} from '../utils/countries'
 import {pushNotification} from '../components/molecules/notification'
 import {AppContext} from '../context'
 import {Targets} from '../constants'
+import {useTranslation} from 'react-i18next'
 
 type ISO = keyof typeof countries
 
@@ -125,6 +126,7 @@ const incrementArcs = (arcs: Arch[], geos: GeoLookup[]) => {
 }
 
 export const useGeo = () => {
+	const {t} = useTranslation()
 	const [arcs, setArcs] = useState<Arch[]>([])
 	const [points, setPoints] = useState<Point[]>([])
 	const country = useRef<ISO>()
@@ -178,7 +180,8 @@ export const useGeo = () => {
 			if (target === Targets.EXTENSION_POPUP && startTs.current + 1000 > performance.now()) return // don't show notifications on initial load because of initial sync w/ bg script
 			pushNotification({
 				id: geo.workerIdx,
-				text: `Helping a new person in ${country.split(',')[0]}`,
+				// text: `Helping a new person in ${country.split(',')[0]}`,
+				text: `${t('helping', {country})}`,
 				autoHide: true,
 				heart: true
 			})
@@ -201,7 +204,7 @@ export const useGeo = () => {
 	useEffect(() => {
 		if (sharing && !active) pushNotification({
 			id: -1,
-			text: 'Waiting for connections',
+			text: t('waiting'),
 			ellipse: true
 		})
 	}, [sharing, active])

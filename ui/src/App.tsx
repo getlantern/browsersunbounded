@@ -1,4 +1,4 @@
-import React, {useEffect, useLayoutEffect, useRef, useState} from 'react'
+import React, {Suspense, useEffect, useLayoutEffect, useRef, useState} from 'react'
 import {settingsEmitter} from './index'
 import Layout from './layout'
 import Toast from './components/molecules/toast'
@@ -15,6 +15,7 @@ import useMessaging from './hooks/useMessaging'
 import {Targets, Layouts} from './constants'
 import {AppContextProvider} from './context'
 import useAutoUpdate, {AUTO_START_STORAGE_FLAG} from './hooks/useAutoUpdate'
+import './i18n'
 
 interface Props {
   appId: number
@@ -90,16 +91,18 @@ const App = ({appId, embed}: Props) => {
       { settings.target !== Targets.EXTENSION_POPUP && <Storage settings={settings} /> }
       { settings.editor && <Editor embed={embed} /> }
       <Layout>
-        <Toast />
-        { settings.layout === Layouts.BANNER && (
-          <Banner />
-        )}
-        { settings.layout === Layouts.PANEL && (
-          <Panel />
-        )}
-        { settings.layout === Layouts.FLOATING && (
-          <Floating />
-        )}
+        <Suspense fallback={'Loading..'}>
+          <Toast />
+          { settings.layout === Layouts.BANNER && (
+            <Banner />
+          )}
+          { settings.layout === Layouts.PANEL && (
+            <Panel />
+          )}
+          { settings.layout === Layouts.FLOATING && (
+            <Floating />
+          )}
+        </Suspense>
       </Layout>
     </AppContextProvider>
   );

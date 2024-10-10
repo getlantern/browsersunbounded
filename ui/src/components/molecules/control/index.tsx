@@ -8,6 +8,7 @@ import {useContext, useState} from 'react'
 import {AppContext} from '../../../context'
 import {COLORS, Layouts, Targets} from '../../../constants'
 import {tutorialOnEmitter} from '../../atoms/tutorial'
+import {useTranslation} from 'react-i18next'
 
 interface Props {
 	onToggle?: (s: boolean) => void
@@ -15,6 +16,7 @@ interface Props {
 }
 
 const Control = ({onToggle, info = false}: Props) => {
+	const {t} = useTranslation()
 	const ready = useEmitterState(readyEmitter) // true
 	const sharing = useEmitterState(sharingEmitter)
 	const {wasmInterface, settings} = useContext(AppContext)
@@ -50,7 +52,7 @@ const Control = ({onToggle, info = false}: Props) => {
 				<Text
 					style={{minWidth: 90, fontWeight: 'bold', fontSize: layout === Layouts.BANNER ? 14 : 12}}
 				>
-					Status: <span style={{color: sharing ? COLORS.green : COLORS.error}}>{sharing ? 'ON' : 'OFF'}</span>
+					{t('status')} <span style={{color: sharing ? COLORS.green : COLORS.error}}>{sharing ? t('on') : t('off')}</span>
 				</Text>
 				{ info && <Info /> }
 			</TextInfo>

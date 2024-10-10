@@ -6,8 +6,10 @@ import {useEmitterState} from '../../../hooks/useStateEmitter'
 import {sharingEmitter} from '../../../utils/wasmInterface'
 import {AppContext} from '../../../context'
 import {COLORS, Layouts, Targets, Themes} from '../../../constants'
+import {useTranslation} from 'react-i18next'
 
 const Toast = () => {
+	const {t} = useTranslation()
 	const {exit, target, toast} = useContext(AppContext).settings
 	const sharing = useEmitterState(sharingEmitter)
 	const {theme, layout} = useContext(AppContext).settings
@@ -52,7 +54,7 @@ const Toast = () => {
 			<Text
 				style={{color: theme === Themes.LIGHT ? COLORS.grey2 : COLORS.grey2}}
 			>
-				Keep this site open to continue sharing your connection
+				{t('keep')}
 			</Text>
 		</Container>
 	)

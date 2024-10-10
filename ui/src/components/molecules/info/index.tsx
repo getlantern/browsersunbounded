@@ -4,8 +4,10 @@ import {Text} from '../../atoms/typography'
 import {useContext, useState} from 'react'
 import { Popover } from 'react-tiny-popover'
 import {AppContext} from '../../../context'
+import {useTranslation} from 'react-i18next'
 
 const Info = () => {
+	const {t} = useTranslation()
 	const {theme, keepText, infoLink} = useContext(AppContext).settings
 	const [active, setActive] = useState(false)
 	return (
@@ -20,9 +22,9 @@ const Info = () => {
 						theme={theme}
 					>
 						<Text>
-							{'Join our network of digital volunteers and help unblock the internet around the world.'}
+							{t('intro')}
 							{/*<a href={'https://lantern.io'} target={'_blank'} rel={'noreferrer'}>Lantern</a>.*/}
-							{ !!keepText && ' Keep this site open to continue sharing your connection.' }
+							{ !!keepText && ` ${t('keep')}` }
 							{ !!infoLink.length && <LinkWrapper dangerouslySetInnerHTML={{__html: infoLink}} />}
 						</Text>
 					</Wrapper>

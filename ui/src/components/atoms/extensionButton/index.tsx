@@ -5,6 +5,7 @@ import {ChromeColor, FirefoxColor} from '../icons'
 import {useContext} from 'react'
 import {AppContext} from '../../../context'
 import {isFirefox} from '../../../utils/userAgent'
+import {useTranslation} from 'react-i18next'
 
 const StyledLink = styled.a`
 	display: flex;
@@ -27,6 +28,7 @@ interface Props {
 }
 
 const ExtensionButton = ({isSmall}: Props) => {
+	const {t} = useTranslation()
 	const {width} = useContext(AppContext)
 
 	const largePadding = width < 900 ? '12px 16px' : '12px 40px'
@@ -50,7 +52,7 @@ const ExtensionButton = ({isSmall}: Props) => {
 					lineHeight: '24px',
 				}}
 			>
-				{isSmall ? `Add to ${isFirefox() ? 'Firefox' : 'Chrome'}` : `Get Browsers Unbounded for ${isFirefox() ? 'Firefox' : 'Chrome'}`}
+				{isSmall ? `${t('installCtaBtnSm', {browser: isFirefox() ? 'Firefox' : 'Chrome'})}` : `${t('installCtaBtnLg', {browser: isFirefox() ? 'Firefox' : 'Chrome'})}`}
 			</Text>
 		</StyledLink>
 	)

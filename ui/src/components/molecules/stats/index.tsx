@@ -9,15 +9,17 @@ import {connectionsEmitter, lifetimeConnectionsEmitter} from '../../../utils/was
 import {humanizeCount} from '../../../utils/humanize'
 import {LifetimeConnectionsWrapper} from './styles'
 import {Layouts} from '../../../constants'
+import {useTranslation} from 'react-i18next'
 // import TwitterLink from '../../atoms/twitterLink'
 // import useSample from '../../../hooks/useSample'
 
 export const Connections = () => {
+	const {t} = useTranslation()
 	const connections = useEmitterState(connectionsEmitter)
 	const currentConnections = connections.filter(c => c.state === 1).length
 	return (
 		<>
-			<Text>People you're helping right now:</Text>
+			<Text>{t('now')}</Text>
 			<Text
 				style={{minWidth: 10}}
 			>
@@ -29,6 +31,7 @@ export const Connections = () => {
 
 
 const Stats = () => {
+	const {t} = useTranslation()
 	const {settings} = useContext(AppContext)
 	const {menu, layout} = settings
 	const connections = useEmitterState(connectionsEmitter)
@@ -47,7 +50,7 @@ const Stats = () => {
 			<Row
 				borderBottom
 			>
-				<Text style={{fontSize}}>{'People you\'re helping' + (true ? ' right now:' : ':')}</Text>
+				<Text style={{fontSize}}>{(t('now'))}</Text>
 				<Text style={{fontSize}}>{currentConnections}</Text>
 			</Row>
 			{/*<Row*/}
@@ -62,13 +65,13 @@ const Stats = () => {
 				{
 					menu ? (
 						<Text style={{fontSize}}>
-							Total people helped to date:
+							{t('total')}
 						</Text>
 					)
 					: (
 						<LifetimeConnectionsWrapper>
 							<Text style={{fontSize}}>
-								Total people helped to date:
+								{t('total')}
 							</Text>
 							{/*<TwitterLink connections={lifetimeConnections} />*/}
 						</LifetimeConnectionsWrapper>

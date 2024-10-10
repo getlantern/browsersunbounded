@@ -3,12 +3,14 @@ import {AppContext} from '../../../context'
 import {Container} from './styles'
 import ExtensionButton from '../../atoms/extensionButton'
 import {Text} from '../../atoms/typography'
+import {useTranslation} from 'react-i18next'
 
 interface Props {
 	isSmall?: boolean
 }
 
 const ExtensionCta = ({isSmall}: Props) => {
+	const {t} = useTranslation()
 	const {settings} = useContext(AppContext)
 	const {theme, menu} = settings
 
@@ -26,7 +28,7 @@ const ExtensionCta = ({isSmall}: Props) => {
 					lineHeight: '20px'
 				}}
 			>
-				Help even more people by installing the extension
+				{t('installCta')}
 			</Text>
 		</Container>
 	)

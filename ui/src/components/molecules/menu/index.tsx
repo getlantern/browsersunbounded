@@ -9,17 +9,18 @@ import {isFirefox} from '../../../utils/userAgent'
 import {useEmitterState} from '../../../hooks/useStateEmitter'
 import {lifetimeConnectionsEmitter} from '../../../utils/wasmInterface'
 import {humanizeCount} from '../../../utils/humanize'
+import {useTranslation} from 'react-i18next'
 
 const menuItems = (connected: number | string) => [
 	{
 		key: 'firefox',
-		label: 'Install Firefox Extension',
+		label: 'installFirefox',
 		href: APP_STORE_LINKS.firefox,
 		icon: <Firefox/>
 	},
 	{
 		key: 'chrome',
-		label: 'Install Chrome Extension',
+		label: 'installChrome',
 		href: APP_STORE_LINKS.chrome,
 		icon: <Chrome/>
 	},
@@ -31,13 +32,13 @@ const menuItems = (connected: number | string) => [
 	// },
 	{
 		key: 'donate',
-		label: 'Donate to Lantern',
+		label: 'donate',
 		href: 'https://lantern.io/donate',
 		icon: <Heart/>
 	},
 	{
 		key: 'more',
-		label: 'Learn More',
+		label: 'learn',
 		href: 'https://unbounded.lantern.io',
 		icon: <More/>
 	}
@@ -47,6 +48,7 @@ interface MenuProps {
 	setExpanded?: Dispatch<SetStateAction<boolean>> | null
 }
 const Menu = ({setExpanded} : MenuProps) => {
+	const {t} = useTranslation()
 	const {settings, width} = useContext(AppContext)
 	const lifetimeConnections = useEmitterState(lifetimeConnectionsEmitter)
 	const {theme, layout, target, collapse} = settings
@@ -108,7 +110,7 @@ const Menu = ({setExpanded} : MenuProps) => {
 									style={{color: theme === Themes.LIGHT ? COLORS.blue5 : COLORS.white}}
 								>
 									{item.icon}
-									{item.label}
+									{t(item.label)}
 								</a>
 							</MenuItem>
 						)
