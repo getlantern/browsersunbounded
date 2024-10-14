@@ -47,7 +47,8 @@
     "eject": "react-scripts eject",
     "predeploy": "yarn build:web",
     "deploy": "gh-pages -d build",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "translate": "NODE_ENV=production && node ./scripts/translate.js"
   },
   "eslintConfig": {
     "extends": [
