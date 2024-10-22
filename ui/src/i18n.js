@@ -7,6 +7,34 @@ import resources from './translations.json';
 // have a look at the Quick start guide
 // for passing in lng and translations on init
 
+const ACCEPTED_LOCALES = [
+	'en',
+	'en-US', // browser default
+	'ar',
+	'zh', // zh chinese fallback
+	'zh-Hans', // default zh
+	'zh-Hant-TW',
+	'ru',
+	'fa',
+	'es-419'
+];
+
+const detectorOptions = {
+	// order and from where user language should be detected
+	order: ['htmlTag', 'navigator', 'localStorage'],
+
+	// keys or params to lookup language from
+	lookupLocalStorage: 'locale',
+	lookupSessionStorage: 'i18nextLng',
+
+	// optional htmlTag with lang attribute, the default is:
+	// htmlTag: document.documentElement,
+
+	// optional conversion function used to modify the detected language code
+	// convertDetectedLanguage: 'Iso15897',
+	// convertDetectedLanguage: (lng) => lng.replace('-', '_')
+};
+
 i18n
 	// load translation using http -> see /public/locales (i.e. https://github.com/i18next/react-i18next/tree/master/example/react/public/locales)
 	// learn more: https://github.com/i18next/i18next-http-backend
@@ -20,6 +48,8 @@ i18n
 	// init i18next
 	// for all options read: https://www.i18next.com/overview/configuration-options
 	.init({
+		supportedLngs: ACCEPTED_LOCALES,
+		detection: detectorOptions,
 		resources,
 		fallbackLng: 'en',
 		debug: true,
