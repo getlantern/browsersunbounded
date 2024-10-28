@@ -7,7 +7,7 @@ interface Props {
   layout: Layouts
 }
 
-const getBorderRadius = (layout: Layouts) => {
+export const getBorderRadius = (layout: Layouts) => {
   switch (layout) {
     case Layouts.PANEL:
       return '16px';

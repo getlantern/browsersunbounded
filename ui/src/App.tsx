@@ -16,6 +16,7 @@ import {Targets, Layouts} from './constants'
 import {AppContextProvider} from './context'
 import useAutoUpdate, {AUTO_START_STORAGE_FLAG} from './hooks/useAutoUpdate'
 import './i18n'
+import Modal from './components/molecules/modal'
 
 interface Props {
   appId: number
@@ -92,6 +93,7 @@ const App = ({appId, embed}: Props) => {
       { settings.editor && <Editor embed={embed} /> }
       <Layout>
         <Suspense fallback={'Loading..'}>
+          <Modal />
           <Toast />
           { settings.layout === Layouts.BANNER && (
             <Banner />
