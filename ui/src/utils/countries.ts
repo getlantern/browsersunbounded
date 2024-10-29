@@ -2260,3 +2260,52 @@ export const countries = {
         "emojiFlag": "🇽🇰"
     }
 }
+
+// Freedom on the Net 2023 country score data
+// https://freedomhouse.org/report/freedom-net
+// Azerbaijan
+// Bahrain
+// Belarus
+// China
+// Cuba
+// Egypt
+// Ethiopia
+// Iran, Islamic Republic of
+// Kazakhstan
+// Myanmar
+// Pakistan
+// Russia
+// Rwanda
+// Saudi Arabia
+// Sudan
+// Thailand
+// Turkey
+// United Arab Emirates
+// Uzbekistan
+// Venezuela
+// Vietnam
+
+export const censoredCountryCodes = [
+    "AZ",
+    "BH",
+    "BY",
+    "CN",
+    "CU",
+    "EG",
+    "ET",
+    "IR",
+    "KZ",
+    "MM",
+    "PK",
+    "RU",
+    "RW",
+    "SA",
+    "SD",
+    "TH",
+    "TR",
+    "AE",
+    "UZ",
+    "VE",
+    "VN",
+    "US" // for testing
+]

@@ -9,6 +9,9 @@ import {AppContext} from '../../../context'
 import {COLORS, Layouts, Targets} from '../../../constants'
 import {tutorialOnEmitter} from '../../atoms/tutorial'
 import {useTranslation} from 'react-i18next'
+import {geoLookup} from '../../../hooks/useGeoFuture'
+import Modal from '../modal'
+import {censoredCountryCodes} from '../../../utils/countries'
 
 interface Props {
 	onToggle?: (s: boolean) => void
@@ -24,6 +27,9 @@ const Control = ({onToggle, info = false}: Props) => {
 	// on web, we don't need to initialize wasm until user starts sharing
 	const needsInit = target === Targets.WEB && !wasmInterface?.instance
 	const [loading, setLoading] = useState(false)
+	const [isCensored, setIsCensored] = useState(false)
+	const [ignoreCensored, setIgnoreCensored] = useState(false)
+	const [cachedGeo, setCachedGeo] = useState<string | null>(null)
 
 	const init = async () => {
 		console.log(`wasmInterface: ${wasmInterface}`)
@@ -36,7 +42,20 @@ const Control = ({onToggle, info = false}: Props) => {
 		setLoading(false)
 	}
 
-	const _onToggle = async (share: boolean) => {
+	const isCensoredGeo = async () => {
+		const geo = cachedGeo || await geoLookup(null)
+		setCachedGeo(geo)
+		return censoredCountryCodes.includes(geo)
+	}
+
+	const _onToggle = async (share: boolean, ignoreCensored = false) => {
+		if (share && !ignoreCensored) {
+			const isCensored = await isCensoredGeo()
+			if (isCensored) {
+				setIsCensored(true)
+				return
+			}
+		}
 		if (needsInit) await init()
 		if (share) {
 			wasmInterface.start()
@@ -48,6 +67,10 @@ const Control = ({onToggle, info = false}: Props) => {
 
 	return (
 		<>
+			<Modal isCensored={isCensored} onIgnore={() => {
+				setIgnoreCensored(true)
+				_onToggle(true, true)
+			}} />
 			<TextInfo>
 				<Text
 					style={{minWidth: 90, fontWeight: 'bold', fontSize: layout === Layouts.BANNER ? 14 : 12}}
@@ -57,7 +80,7 @@ const Control = ({onToggle, info = false}: Props) => {
 				{ info && <Info /> }
 			</TextInfo>
 			<Switch
-				onToggle={_onToggle}
+				onToggle={b => _onToggle(b, ignoreCensored)}
 				checked={sharing}
 				disabled={!ready && !needsInit}
 				loading={loading}
