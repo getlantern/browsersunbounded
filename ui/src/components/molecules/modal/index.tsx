@@ -1,7 +1,7 @@
 import {Container, Frame, StyledButton, StyledLink, Text, Title} from './styles'
 import {useContext, useState} from 'react'
 import {AppContext} from '../../../context'
-import {COLORS} from '../../../constants'
+import {COLORS, Themes} from '../../../constants'
 import {useTranslation} from 'react-i18next'
 import {createPortal} from 'react-dom'
 
@@ -23,7 +23,9 @@ const Modal = ({ onIgnore, isCensored }: {onIgnore: () => void, isCensored: bool
 			aria-hidden={!show}
 			theme={theme}
 		>
-			<Frame>
+			<Frame
+				theme={theme}
+			>
 				<div className={'header'}>
 					<svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
 						<g clipPath="url(#clip0_2009_4740)">
@@ -37,11 +39,16 @@ const Modal = ({ onIgnore, isCensored }: {onIgnore: () => void, isCensored: bool
 							</clipPath>
 						</defs>
 					</svg>
-					<Title>{t('censoredTitle')}</Title>
+					<Title theme={theme}>{t('censoredTitle')}</Title>
 				</div>
-				<Text>{t('censoredMsg1')}</Text>
-				<Text>{t('censoredMsg2')}</Text>
-				<StyledLink href={'https://www.lantern.io/download'} target="_blank" rel="noreferrer">
+				<Text theme={theme}>{t('censoredMsg1')}</Text>
+				<Text theme={theme}>{t('censoredMsg2')}</Text>
+				<StyledLink
+					href={'https://www.lantern.io/download'}
+					target="_blank"
+					rel="noreferrer"
+					style={{ backgroundColor: theme === Themes.LIGHT ? COLORS.blue5 : COLORS.blue4 }}
+				>
 					<Text style={{ color: COLORS.grey2, fontWeight: 500, fontSize: 16, lineHeight: '24px' }}>
 						{t('censoredBtn')}
 					</Text>
@@ -52,7 +59,7 @@ const Modal = ({ onIgnore, isCensored }: {onIgnore: () => void, isCensored: bool
 						onIgnore();
 					}}
 				>
-					<Text style={{ color: COLORS.blue5, fontWeight: 500, fontSize: 16, lineHeight: '24px' }}>
+					<Text style={{color: theme === Themes.LIGHT ? COLORS.blue5 : COLORS.grey1, fontWeight: 500, fontSize: 16, lineHeight: '24px' }}>
 						{t('censoredIgnore')}
 					</Text>
 				</StyledButton>

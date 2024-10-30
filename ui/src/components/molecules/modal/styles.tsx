@@ -28,8 +28,9 @@ const Container = styled.div`
 `
 
 const Frame = styled.div`
-    background: ${({theme}: { theme: Themes }) => theme === Themes.LIGHT ? COLORS.white : COLORS.white};
-		border-radius: 16px;
+    background: ${({theme}: { theme: Themes }) => theme === Themes.LIGHT ? COLORS.white : COLORS.grey6};
+    border: ${({theme}: { theme: Themes }) => theme === Themes.LIGHT ? `1px solid ${COLORS.grey3}` : `1px solid ${COLORS.grey4}`};
+    border-radius: 16px;
 		padding: 16px;
 		width: 100%;
 		max-width: 300px;
@@ -53,7 +54,7 @@ export const Title = styled.h2`
 	font-weight: 500;
 	font-size: 20px;
 	line-height: 32px;
-	color: ${({theme}: { theme: Themes }) => theme === Themes.LIGHT ? COLORS.black : COLORS.black};
+	color: ${({theme}: { theme: Themes }) => theme === Themes.LIGHT ? COLORS.black : COLORS.grey1};
 `
 
 
@@ -63,7 +64,7 @@ const Text = styled.p`
   font-weight: 500;
   font-size: 14px;
   line-height: 23px;
-  color: ${({theme}: { theme: Themes }) => theme === Themes.LIGHT ? COLORS.black : COLORS.black};
+  color: ${({theme}: { theme: Themes }) => theme === Themes.LIGHT ? COLORS.black : COLORS.grey1};
 `
 
 const StyledLink = styled.a`
@@ -71,7 +72,6 @@ const StyledLink = styled.a`
 	align-items: center;
 	justify-content: center;
 	flex-direction: row;
-	background-color: ${COLORS.blue5};
 	border-radius: 32px;
 	gap: 8px;
 	min-height: 56px;
