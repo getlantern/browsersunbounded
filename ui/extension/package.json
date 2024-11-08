@@ -1,7 +1,7 @@
 {
-  "name": "browsers-unbounded-extension",
+  "name": "unbounded-extension",
   "version": "0.0.0.5",
-  "description": "Use your browser to fight global internet censorship.",
+  "description": "Fight global internet censorship",
   "author": "Echo",
   "scripts": {
     "dev": "webextension-toolbox dev",

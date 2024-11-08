@@ -1,14 +1,14 @@
 {
   "appName": {
-    "message": "Browsers Unbounded",
+    "message": "Unbounded",
     "description": "The name of the application"
   },
   "appShortName": {
-    "message": "Browsers Unbounded",
+    "message": "Unbounded",
     "description": "The short_name (maximum of 12 characters recommended) is a short version of the app's name."
   },
   "appDescription": {
-    "message": "Use your browser to fight global internet censorship.",
+    "message": "Fight global internet censorship",
     "description": "The description of the application"
   }
 }
