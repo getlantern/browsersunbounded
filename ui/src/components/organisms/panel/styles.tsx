@@ -11,10 +11,6 @@ export const Container = styled.div`
 export const Header = styled.div`
 	display: flex;
   justify-content: space-between;
-  svg {
-    width: 100%;
-		height: auto;
-  }
 `
 
 export const BodyWrapper = styled.div`
