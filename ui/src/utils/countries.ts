@@ -2307,5 +2307,5 @@ export const censoredCountryCodes = [
     "UZ",
     "VE",
     "VN",
-    "US" // for testing
+    // "US" // for testing
 ]
