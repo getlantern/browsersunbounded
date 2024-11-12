@@ -124,7 +124,7 @@ export const WASM_CLIENT_CONFIG = {
 
 // @todo rm stubbing out store urls until extension is ready
 export const APP_STORE_LINKS = {
-	chrome: 'https://chrome.google.com/webstore/detail/browsers-unbounded/jonhnkjdlimggpmbehgkgpjgphoepfdj',
+	chrome: 'https://chromewebstore.google.com/detail/unbounded/jonhnkjdlimggpmbehgkgpjgphoepfdj',
 	// chrome: 'https://unbounded.lantern.io/coming-soon',
 	firefox: 'https://addons.mozilla.org/en-US/firefox/addon/unbounded/',
 	// firefox: 'https://unbounded.lantern.io/coming-soon',
