@@ -28,8 +28,7 @@ const Control = ({onToggle, info = false}: Props) => {
 	const needsInit = target === Targets.WEB && !wasmInterface?.instance
 	const [loading, setLoading] = useState(false)
 	const [isCensored, setIsCensored] = useState(false)
-	// const [ignoreCensored, setIgnoreCensored] = useState(false)
-	const [ignoreCensored, setIgnoreCensored] = useState(true) // @todo this is broken when embeded on partners websites - disabling it till we find a better solution
+	const [ignoreCensored, setIgnoreCensored] = useState(false)
 	const [cachedGeo, setCachedGeo] = useState<string | null>(null)
 
 	const init = async () => {

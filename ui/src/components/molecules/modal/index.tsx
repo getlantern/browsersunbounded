@@ -1,7 +1,7 @@
 import {Container, Frame, StyledButton, StyledLink, Text, Title} from './styles'
-import {useContext, useState} from 'react'
+import {useContext, useEffect, useState} from 'react'
 import {AppContext} from '../../../context'
-import {COLORS, Themes} from '../../../constants'
+import {COLORS, Layouts, Themes} from '../../../constants'
 import {useTranslation} from 'react-i18next'
 import {createPortal} from 'react-dom'
 
@@ -12,8 +12,14 @@ const Modal = ({ onIgnore, isCensored }: {onIgnore: () => void, isCensored: bool
 	const [show, setShow] = useState(true);
 
 	const modalRoot = document.getElementById('geo-modal');
+	const canRenderModal = !collapse || layout === Layouts.PANEL;
 
-	if (collapse || !isCensored) return null;
+	useEffect(() => {
+		// if the modal can't be rendered, we to auto ignore the censored state otherwise the user will be stuck
+		if (!canRenderModal) {
+			onIgnore();
+		}
+	}, [canRenderModal, isCensored]);
 
 	// Modal content to be rendered
 	const modalContent = (
@@ -67,7 +73,7 @@ const Modal = ({ onIgnore, isCensored }: {onIgnore: () => void, isCensored: bool
 		</Container>
 	);
 
-	return modalRoot ? createPortal(modalContent, modalRoot) : null;
+	return isCensored && modalRoot ? createPortal(modalContent, modalRoot) : null;
 };
 
 export default Modal;
