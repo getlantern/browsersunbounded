@@ -14,12 +14,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/google/uuid"
 	"github.com/quic-go/quic-go"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
-	"nhooyr.io/websocket"
 
 	"github.com/getlantern/broflake/common"
 	"github.com/getlantern/telemetry"
