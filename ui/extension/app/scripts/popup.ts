@@ -7,7 +7,7 @@ const popupApp = async () => {
 	// set body styles based on user theme
 	document.body.setAttribute(
 		'style',
-		`background-color: ${backgroundColor}; margin: 0; padding: 0; width: 330px; height: 606px; overflow: hidden;` // hide scrollbar on popup, inherit iframe scroll only
+		`background-color: ${backgroundColor}; margin: 0; padding: 0; width: 330px; height: 650px; overflow: hidden;` // hide scrollbar on popup, inherit iframe scroll only
 	)
 	const styleElement = document.createElement('style')
 	styleElement.textContent = 'html::-webkit-scrollbar{display:none !important}' + 'body::-webkit-scrollbar{display:none !important}'
@@ -18,7 +18,7 @@ const popupApp = async () => {
 	// set iframe styles based on user theme
 	iframe.setAttribute(
 		'style',
-		`background-color: ${backgroundColor}; width: 330px; height: 606px; border: none; margin: 0; padding: 0; overflow: hidden;` // 4px buffer seems needed to hide unnecessary scrollbars
+		`background-color: ${backgroundColor}; width: 330px; height: 650px; border: none; margin: 0; padding: 0; overflow: hidden;` // 4px buffer seems needed to hide unnecessary scrollbars
 	)
 	document.body.appendChild(iframe)
 	await bindPopup(iframe)
