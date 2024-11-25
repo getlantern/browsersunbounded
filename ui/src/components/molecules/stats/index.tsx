@@ -10,6 +10,7 @@ import {humanizeCount} from '../../../utils/humanize'
 import {LifetimeConnectionsWrapper} from './styles'
 import {Layouts} from '../../../constants'
 import {useTranslation} from 'react-i18next'
+import Love from '../love'
 // import TwitterLink from '../../atoms/twitterLink'
 // import useSample from '../../../hooks/useSample'
 
@@ -43,7 +44,8 @@ const Stats = () => {
 	// const totalChunks = sampledLifetimeChunks.map(c => c.size).reduce((p, c) => p + c, 0)
 	// const formattedTotalChunks = formatBytes(totalChunks, getIndex(totalChunks))
 
-	const fontSize = layout === Layouts.BANNER ? 14 : 12
+	// const fontSize = layout === Layouts.BANNER ? 14 : 12
+	const fontSize = 14
 
 	return (
 		<>
@@ -85,6 +87,9 @@ const Stats = () => {
 			{/*	<Text>Lifetime data proxied</Text>*/}
 			{/*	<Text>{formattedTotalChunks.toUpperCase()}</Text>*/}
 			{/*</Row>*/}
+			<div style={{marginTop: 16}}>
+				<Love />
+			</div>
 		</>
 	)
 }
