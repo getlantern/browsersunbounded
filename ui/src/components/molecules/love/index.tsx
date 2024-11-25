@@ -21,11 +21,11 @@ const translateWithComponents = (
 
 	return parts.map((part, index) => {
 		if (components[part]) {
-			return cloneElement(components[part] as ReactElement, { key: index })
+			return cloneElement(components[part] as ReactElement, {key: index})
 		}
 		return part
-	});
-};
+	})
+}
 
 const Love = () => {
 	const {settings} = useContext(AppContext)
@@ -34,13 +34,13 @@ const Love = () => {
 
 	const str: string = t('love')
 	const components: Record<string, ReactNode> = {
-		love: <Heart />,
+		love: <Heart/>,
 		lantern: (
 			<a href="https://lantern.io" target="_blank" rel="noopener">
 				Lantern
 			</a>
-		),
-	};
+		)
+	}
 
 	return (
 		<Container theme={theme}>
@@ -49,4 +49,4 @@ const Love = () => {
 	)
 }
 
-export default Love;
+export default Love
