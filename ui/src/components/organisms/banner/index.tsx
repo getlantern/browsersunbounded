@@ -15,6 +15,7 @@ import ExpandCollapse from '../../atoms/expandCollapse'
 import LogoLink from '../../atoms/logoLink'
 import Title from '../../molecules/title'
 import ExtensionCta from '../../molecules/extensionCta'
+import Love from '../../molecules/love'
 // import Tutorial from '../../atoms/tutorial' // removing this at request of nelson
 
 const Globe = lazy(() => import('../../molecules/globe'))
@@ -124,7 +125,7 @@ const Banner = () => {
 										style={{
 											fontSize: 14,
 											lineHeight: `28px`
-									}}
+										}}
 									/>
 								</div>
 								<Row
@@ -144,19 +145,22 @@ const Banner = () => {
 								<Stats/>
 								{
 									!menu && (target === Targets.WEB) && (
-										<ExtensionCta />
+										<ExtensionCta/>
 									)
 								}
+								<div style={{marginTop: 16}}>
+									<Love/>
+								</div>
 								<div
 									style={{width: '100%', height: !title && width > BREAKPOINT ? 80 : 24}}
 								/>
 								{/*<div*/}
 								{/*	style={{paddingLeft: 8, paddingRight: 8}}*/}
 								{/*>*/}
-									{/*<Footer*/}
-									{/*	social={true}*/}
-									{/*	donate={settings.donate}*/}
-									{/*/>*/}
+								{/*<Footer*/}
+								{/*	social={true}*/}
+								{/*	donate={settings.donate}*/}
+								{/*/>*/}
 								{/*</div>*/}
 							</Col>
 						</Body>

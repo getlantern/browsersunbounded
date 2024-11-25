@@ -15,6 +15,7 @@ import About from '../../molecules/about'
 import Menu from '../../molecules/menu'
 import LogoLink from '../../atoms/logoLink'
 import ExtensionCta from '../../molecules/extensionCta'
+import Love from '../../molecules/love'
 
 const Globe = lazy(() => import('../../molecules/globe'))
 
@@ -103,7 +104,7 @@ const Floating = () => {
 								{
 									expanded && (
 										<>
-											{ height > 650 ? <Stats/> : <Row><Connections/></Row> }
+											{height > 650 ? <Stats/> : <Row><Connections/></Row>}
 										</>
 									)
 								}
@@ -114,6 +115,9 @@ const Floating = () => {
 										</CtaWrapper>
 									)
 								}
+								<div style={{marginTop: 16}}>
+									<Love/>
+								</div>
 							</Col>
 						)
 					}

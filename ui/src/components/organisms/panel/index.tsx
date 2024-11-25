@@ -14,6 +14,7 @@ import {useLatch} from '../../../hooks/useLatch'
 import Menu from '../../molecules/menu'
 import LogoLink from '../../atoms/logoLink'
 import ExtensionCta from '../../molecules/extensionCta'
+import Love from '../../molecules/love'
 
 const Globe = lazy(() => import('../../molecules/globe'))
 
@@ -62,7 +63,7 @@ const Panel = () => {
 								onToggle={onToggle}
 							/>
 						</Row>
-						<Stats />
+						<Stats/>
 						{
 							!menu && (target === Targets.WEB) && (
 								<CtaWrapper>
@@ -70,6 +71,9 @@ const Panel = () => {
 								</CtaWrapper>
 							)
 						}
+						<div style={{marginTop: 16}}>
+							<Love/>
+						</div>
 						{
 							settings.collapse && settings.globe && (
 								<ExpandWrapper

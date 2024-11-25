@@ -10,7 +10,6 @@ import {humanizeCount} from '../../../utils/humanize'
 import {LifetimeConnectionsWrapper} from './styles'
 import {Layouts} from '../../../constants'
 import {useTranslation} from 'react-i18next'
-import Love from '../love'
 // import TwitterLink from '../../atoms/twitterLink'
 // import useSample from '../../../hooks/useSample'
 
@@ -87,9 +86,6 @@ const Stats = () => {
 			{/*	<Text>Lifetime data proxied</Text>*/}
 			{/*	<Text>{formattedTotalChunks.toUpperCase()}</Text>*/}
 			{/*</Row>*/}
-			<div style={{marginTop: 16}}>
-				<Love />
-			</div>
 		</>
 	)
 }
