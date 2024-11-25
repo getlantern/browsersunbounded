@@ -21,5 +21,6 @@ export const Container = styled.div`
       font-style: normal;
       font-weight: 400;
       line-height: 28px;
+			text-decoration: underline;
 	}
 `;
