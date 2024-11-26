@@ -27,7 +27,7 @@ OUTPUT_DIR="$(pwd)${BUILD_PATH}/${UNIX_TIME}"
 export REACT_APP_GEO_LOOKUP_URL="https://geo.getiantem.org/lookup"
 export REACT_APP_DISCOVERY_SRV="https://bf-freddie.herokuapp.com"
 export REACT_APP_DISCOVERY_ENDPOINT="/v1/signal"
-export REACT_APP_EGRESS_ADDR="wss://bf-egress.herokuapp.com"
+export REACT_APP_EGRESS_ADDR="wss://unbounded.iantem.io"
 export REACT_APP_EGRESS_ENDPOINT="/ws"
 export REACT_APP_NETSTATED_URL="https://netstated-d7bbec1ed55b.herokuapp.com/exec"
 

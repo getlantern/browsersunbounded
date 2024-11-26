@@ -36,7 +36,7 @@ const Love = () => {
 	const components: Record<string, ReactNode> = {
 		love: <Heart/>,
 		lantern: (
-			<a href="https://lantern.io" target="_blank" rel="noopener">
+			<a href="https://lantern.io" target="_blank" rel="noreferrer">
 				Lantern
 			</a>
 		)

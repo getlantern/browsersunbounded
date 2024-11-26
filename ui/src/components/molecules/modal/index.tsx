@@ -19,6 +19,7 @@ const Modal = ({ onIgnore, isCensored }: {onIgnore: () => void, isCensored: bool
 		if (!canRenderModal) {
 			onIgnore();
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [canRenderModal, isCensored]);
 
 	// Modal content to be rendered

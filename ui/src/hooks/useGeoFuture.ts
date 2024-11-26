@@ -207,6 +207,7 @@ export const useGeo = () => {
 			text: t('waiting'),
 			ellipse: true
 		})
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [sharing, active])
 
 	useEffect(() => {

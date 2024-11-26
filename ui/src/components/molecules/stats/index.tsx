@@ -8,7 +8,7 @@ import {useEmitterState} from '../../../hooks/useStateEmitter'
 import {connectionsEmitter, lifetimeConnectionsEmitter} from '../../../utils/wasmInterface'
 import {humanizeCount} from '../../../utils/humanize'
 import {LifetimeConnectionsWrapper} from './styles'
-import {Layouts} from '../../../constants'
+// import {Layouts} from '../../../constants'
 import {useTranslation} from 'react-i18next'
 // import TwitterLink from '../../atoms/twitterLink'
 // import useSample from '../../../hooks/useSample'
@@ -33,7 +33,7 @@ export const Connections = () => {
 const Stats = () => {
 	const {t} = useTranslation()
 	const {settings} = useContext(AppContext)
-	const {menu, layout} = settings
+	const {menu} = settings
 	const connections = useEmitterState(connectionsEmitter)
 	const lifetimeConnections = useEmitterState(lifetimeConnectionsEmitter)
 	// const sampledThroughput = useSample({emitter: averageThroughputEmitter, ms: 500})

@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import {COLORS, Layouts, SHADOWS, Themes} from '../../../constants'
+import {COLORS, Layouts, Themes} from '../../../constants'
 import {getBorderRadius} from '../../../layout/styles'
 
 const Container = styled.div`
