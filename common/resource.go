@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/json"
+	"errors"
 	"net"
 
 	"github.com/pion/webrtc/v3"
@@ -87,6 +88,52 @@ type SignalMsg struct {
 	Payload string
 }
 
+type ICECandidate struct {
+	statsID        string
+	Foundation     string             `json:"foundation"`
+	Priority       uint32             `json:"priority"`
+	Address        string             `json:"address"`
+	Protocol       webrtc.ICEProtocol `json:"protocol"`
+	Port           uint16             `json:"port"`
+	Typ            int                `json:"type"`
+	Component      uint16             `json:"component"`
+	RelatedAddress string             `json:"relatedAddress"`
+	RelatedPort    uint16             `json:"relatedPort"`
+	TCPType        string             `json:"tcpType"`
+}
+
+// we did an upgrade of pion/webrtc from 3.2.6 to 3.3.4, however marshaling and unmarshaling goes hand in hand
+// and this broke the decoding, because some clients/consumers out there were still on 3.2.6 before pion/webrtc implemented
+// encoding.TextMarshaler and encoding.TextUnmarshaler interfaces on ICECandidateType. This method will be a fallback to help unmarshal
+// older messages sent by older clients
+func fallBackIceCandidatesDecoder(raw []byte) ([]webrtc.ICECandidate, error) {
+	var candidates []ICECandidate
+	var webRTCCandidates []webrtc.ICECandidate
+	err := json.Unmarshal(raw, &candidates)
+	if err != nil {
+		return webRTCCandidates, err
+	}
+
+	for _, c := range candidates {
+		new := webrtc.ICECandidate{
+			Foundation:     c.Foundation,
+			Priority:       c.Priority,
+			Address:        c.Address,
+			Protocol:       c.Protocol,
+			Typ:            webrtc.ICECandidateType(c.Typ),
+			Port:           c.Port,
+			Component:      c.Component,
+			RelatedAddress: c.RelatedAddress,
+			RelatedPort:    c.RelatedPort,
+			TCPType:        c.TCPType,
+		}
+
+		webRTCCandidates = append(webRTCCandidates, new)
+	}
+
+	return webRTCCandidates, nil
+}
+
 func DecodeSignalMsg(raw []byte) (string, interface{}, error) {
 	var err error
 	var msg SignalMsg
@@ -109,7 +156,12 @@ func DecodeSignalMsg(raw []byte) (string, interface{}, error) {
 			return msg.ReplyTo, answer, err
 		case SignalMsgICE:
 			var candidates []webrtc.ICECandidate
+			var unMarshalTypeErr *json.UnmarshalTypeError
 			err := json.Unmarshal([]byte(msg.Payload), &candidates)
+			if errors.As(err, &unMarshalTypeErr) {
+				candidates, err = fallBackIceCandidatesDecoder([]byte(msg.Payload))
+				return msg.ReplyTo, candidates, err
+			}
 			return msg.ReplyTo, candidates, err
 		}
 	}

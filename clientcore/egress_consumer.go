@@ -36,6 +36,7 @@ func NewEgressConsumerWebSocket(options *EgressOptions, wg *sync.WaitGroup) *Wor
 			// like ($, 1)... OR just disallow just-in-time strategies, and make egress consumers
 			// pre-establish N websocket connections
 
+			options.ConnectTimeout = 15 * time.Second
 			ctx, cancel := context.WithTimeout(context.Background(), options.ConnectTimeout)
 			defer cancel()
 
